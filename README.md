@@ -11,11 +11,11 @@
 ![](/imgs/1.png)
 
 ## 2. 功能簡介
-- ### basic
+- ### [basic : 詳細內容參考 Business Response Fields](https://www.ailabtools.com/doc/ai-portrait/analysis/skin-analysis/api)
   ![](/imgs/basic/info.png)
-- ### advanced
+- ### [advanced : 詳細內容參考 Business Response Fields](https://www.ailabtools.com/doc/ai-portrait/analysis/skin-analysis-advanced/api)
   ![](/imgs/advanced/info.png)
-- ### pro
+- ### [pro : 詳細內容參考 Business Response Fields](https://www.ailabtools.com/doc/ai-portrait/analysis/skin-analysis-pro/api)
   ![](/imgs/pro/info.png)
 
 ## 3. 檢查項目(差異)
