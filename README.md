@@ -1,12 +1,12 @@
-# Skin analyze Pro API
+# Skin analyze API
 ###### tags: `#work`
 
 > ## [範例: pro專業版](https://www.ailabtools.com/portrait-skin-analysis-professional-example)
 
 ## 1. 價格: 12美金-2000點
-- basic: 每次15點
-- Advanced: 每次30點
-- Advanced: 每次70點
+- ### basic: 每次15點
+- ### Advanced: 每次30點
+- ### pro: 每次70點
 
 ![](/imgs/1.png)
 
