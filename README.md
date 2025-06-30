@@ -1,43 +1,16 @@
-# Skin analyze API
-###### tags: `#work`
+# 專案文件導向
 
-> ## [範例: pro專業版](https://www.ailabtools.com/portrait-skin-analysis-professional-example)
+## 📚 文件目錄
 
-## 1. 價格: 12美金-2000點
-- ### basic: 每次15點
-- ### Advanced: 每次30點
-- ### pro: 每次70點
+### 🔌 API 服務文件
+- [Skin Analyze API](./docs/api-services/skin-analyze.md) - 皮膚分析 API 完整說明
 
-![](/imgs/1.png)
+### 🤖 AI 系統分析
+- [AI數字人系統功能分析報告](./docs/ai-systems/ai-digital-human-analysis.md) - AI數字人系統需求與功能分析
 
-## 2. 功能簡介
-- ### [basic : 詳細內容參考 Business Response Fields](https://www.ailabtools.com/doc/ai-portrait/analysis/skin-analysis/api)
-  ![](/imgs/basic/info.png)
-- ### [advanced : 詳細內容參考 Business Response Fields](https://www.ailabtools.com/doc/ai-portrait/analysis/skin-analysis-advanced/api)
-  ![](/imgs/advanced/info.png)
-- ### [pro : 詳細內容參考 Business Response Fields](https://www.ailabtools.com/doc/ai-portrait/analysis/skin-analysis-pro/api)
-  ![](/imgs/pro/info.png)
+### 📂 資源文件
+- [圖片資源](./docs/assets/) - 所有文件相關的圖片和資源檔案
 
-## 3. 檢查項目(差異)
-![](/imgs/2.png)
+---
 
-## 4. 上傳圖片(限制)
-- ### basic
-  ![](/imgs/basic/limit.png)
-- ### advanced
-  ![](/imgs/advanced/limit.png)
-- ### pro
-  ![](/imgs/pro/limit.png)
-
-## 5. 輸入參數(差別)
-- ### basic
-  ![](/imgs/basic/args.png)
-
-- ### advanced
-  ![](/imgs/advanced/args.png)
-
-- ### pro
-  ![](/imgs/pro/args.png)
-
-## 檢驗項目 vs 評分標準
-  ![](/imgs/14.png)
+> 💡 **提示**: 這個專案採用文件分類管理，各類型文件請參考對應連結。
