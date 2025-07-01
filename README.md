@@ -8,8 +8,8 @@
 ### 🤖 AI 系統分析
 - [AI數字人系統功能分析報告](./docs/ai-systems/ai-digital-human-analysis.md) - AI數字人系統需求與功能分析
 
-### 📂 資源文件
-- [圖片資源](./docs/assets/) - 所有文件相關的圖片和資源檔案
+### 💰 報帳系統模組
+- [報帳模組 (TS)](./docs/bill-modules/README.md) - 發票上傳、OCR識別、報帳管理與報表匯出系統
 
 ---
 
