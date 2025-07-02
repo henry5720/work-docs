@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>報帳模組 MVP - 專案管理模式</title>
+    
+    <!-- 引入 CDN 資源 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左側邊欄 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-file-invoice-dollar"></i> 報帳專案</h2>
+                <button class="btn-add-project" onclick="showCreateProjectModal()">
+                    <i class="fas fa-plus"></i> 新增專案
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- 篩選區域 -->
+                <div class="filter-section">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="搜尋專案..." onkeyup="filterProjects()">
+                    </div>
+                    
+                    <div class="filter-dropdown">
+                        <select id="statusFilter" onchange="filterProjects()">
+                            <option value="all">所有狀態</option>
+                            <option value="pending">待處理</option>
+                            <option value="processing">處理中</option>
+                            <option value="completed">已完成</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 專案列表 -->
+                <div class="project-list" id="projectList">
+                    <!-- 將由 JavaScript 動態生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要內容區域 -->
+        <div class="main-content">
+            <div class="content-header">
+                <div class="project-info">
+                    <h1 id="currentProjectName">選擇專案開始管理報帳</h1>
+                    <div class="project-stats" id="projectStats" style="display: none;">
+                        <span class="stat-item">
+                            <i class="fas fa-receipt"></i>
+                            總筆數: <span id="totalCount">0</span>
+                        </span>
+                        <span class="stat-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            總金額: <span id="totalAmount">$0</span>
+                        </span>
+                        <span class="stat-item">
+                            <i class="fas fa-calendar"></i>
+                            最後更新: <span id="lastUpdate">-</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons" id="actionButtons" style="display: none;">
+                    <button class="btn-primary" onclick="showUploadModal()">
+                        <i class="fas fa-upload"></i> 上傳發票
+                    </button>
+                    <button class="btn-secondary" onclick="exportReport()">
+                        <i class="fas fa-file-export"></i> 匯出報表
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 報帳列表表格 -->
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table class="expense-table" id="expenseTable">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>類別</th>
+                            <th>發票號碼</th>
+                            <th>商家名稱</th>
+                            <th>金額</th>
+                            <th>幣別</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseTableBody">
+                        <!-- 將由 JavaScript 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 空狀態顯示 -->
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-file-invoice fa-3x"></i>
+                <h3>選擇或建立專案開始管理報帳</h3>
+                <p>您可以從左側選擇現有專案，或建立新的報帳專案來開始使用。</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增專案模態框 -->
+    <div class="modal" id="createProjectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新增報帳專案</h3>
+                <span class="close" onclick="hideCreateProjectModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="createProjectForm">
+                    <div class="form-group">
+                        <label for="projectName">專案名稱</label>
+                        <input type="text" id="projectName" required placeholder="請輸入專案名稱">
+                    </div>
+                    <div class="form-group">
+                        <label for="projectDescription">專案描述</label>
+                        <textarea id="projectDescription" placeholder="請輸入專案描述（可選）"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectBudget">預算（可選）</label>
+                        <input type="number" id="projectBudget" placeholder="請輸入預算金額">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="hideCreateProjectModal()">取消</button>
+                <button type="button" class="btn-primary" onclick="createProject()">建立專案</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 上傳發票模態框 -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>上傳發票</h3>
+                <span class="close" onclick="hideUploadModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
+                    <i class="fas fa-cloud-upload-alt fa-3x"></i>
+                    <p>拖拽發票圖片到此處，或點擊選擇檔案</p>
+                    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)">
+                    <button type="button" class="btn-upload" onclick="document.getElementById('fileInput').click()">
+                        選擇檔案
+                    </button>
+                </div>
+                
+                <!-- 預覽區域 -->
+                <div class="preview-area" id="previewArea" style="display: none;">
+                    <h4>檔案預覽</h4>
+                    <div class="file-list" id="fileList">
+                        <!-- 將由 JavaScript 動態生成 -->
+                    </div>
+                </div>
+                
+                <!-- OCR 識別結果 -->
+                <div class="ocr-results" id="ocrResults" style="display: none;">
+                    <h4>OCR 識別結果</h4>
+                    <form id="expenseForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expenseDate">日期</label>
+                                <input type="date" id="expenseDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="expenseCategory">類別</label>
+                                <select id="expenseCategory" required>
+                                    <option value="">請選擇類別</option>
+                                    <option value="餐飲">餐飲</option>
+                                    <option value="交通">交通</option>
+                                    <option value="住宿">住宿</option>
+                                    <option value="辦公用品">辦公用品</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="invoiceNumber">發票號碼</label>
+                                <input type="text" id="invoiceNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="merchantName">商家名稱</label>
+                                <input type="text" id="merchantName" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="amount">金額</label>
+                                <input type="number" id="amount" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="currency">幣別</label>
+                                <select id="currency" required>
+                                    <option value="TWD">TWD</option>
+                                    <option value="USD">USD</option>
+                                    <option value="JPY">JPY</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">備註</label>
+                            <textarea id="notes" placeholder="請輸入備註（可選）"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="hideUploadModal()">取消</button>
+                <button type="button" class="btn-primary" id="uploadBtn" onclick="uploadFiles()">上傳並識別</button>
+                <button type="button" class="btn-primary" id="saveExpenseBtn" onclick="saveExpense()" style="display: none;">儲存報帳</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 編輯報帳模態框 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>編輯報帳記錄</h3>
+                <span class="close" onclick="hideEditModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editExpenseForm">
+                    <input type="hidden" id="editExpenseId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editExpenseDate">日期</label>
+                            <input type="date" id="editExpenseDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editExpenseCategory">類別</label>
+                            <select id="editExpenseCategory" required>
+                                <option value="">請選擇類別</option>
+                                <option value="餐飲">餐飲</option>
+                                <option value="交通">交通</option>
+                                <option value="住宿">住宿</option>
+                                <option value="辦公用品">辦公用品</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editInvoiceNumber">發票號碼</label>
+                            <input type="text" id="editInvoiceNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editMerchantName">商家名稱</label>
+                            <input type="text" id="editMerchantName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editAmount">金額</label>
+                            <input type="number" id="editAmount" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCurrency">幣別</label>
+                            <select id="editCurrency" required>
+                                <option value="TWD">TWD</option>
+                                <option value="USD">USD</option>
+                                <option value="JPY">JPY</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editNotes">備註</label>
+                        <textarea id="editNotes" placeholder="請輸入備註（可選）"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="hideEditModal()">取消</button>
+                <button type="button" class="btn-primary" onclick="updateExpense()">更新</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading 覆層 -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>處理中...</p>
+        </div>
+    </div>
+    
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">操作成功</span>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html> 
