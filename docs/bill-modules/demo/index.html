@@ -3,11 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>報帳模組 MVP - 專案管理模式</title>
+    <title>報帳模組 MVP - 雙模式界面</title>
     
     <!-- 引入 CDN 資源 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <!-- Day.js CDN -->
+    <script src="https://unpkg.com/dayjs@1.11.13/dayjs.min.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/plugin/isBetween.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/plugin/isSameOrAfter.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/plugin/isSameOrBefore.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/plugin/localeData.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/plugin/localizedFormat.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/plugin/minMax.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/plugin/utc.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.13/locale/zh-tw.js"></script>
+    
+    <!-- FullCalendar CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales/zh-tw.global.min.js"></script>
+    
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,13 +31,29 @@
         <!-- 左側邊欄 -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-file-invoice-dollar"></i> 報帳專案</h2>
-                <button class="btn-add-project" onclick="showCreateProjectModal()">
+                <h2><i class="fas fa-file-invoice-dollar"></i> 報帳管理</h2>
+                
+                <!-- 模式切換按鈕 -->
+                <div class="mode-switch-container">
+                    <div class="mode-switch">
+                        <button class="mode-btn active" data-mode="project" onclick="switchMode('project')">
+                            <i class="fas fa-folder"></i>
+                            <span>專案模式</span>
+                        </button>
+                        <button class="mode-btn" data-mode="calendar" onclick="switchMode('calendar')">
+                            <i class="fas fa-calendar"></i>
+                            <span>日曆模式</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="btn-add-project" onclick="showCreateProjectModal()" id="addProjectBtn">
                     <i class="fas fa-plus"></i> 新增專案
                 </button>
             </div>
             
-            <div class="sidebar-content">
+            <!-- 專案模式側邊欄內容 -->
+            <div class="sidebar-content" id="projectSidebarContent">
                 <!-- 篩選區域 -->
                 <div class="filter-section">
                     <div class="search-box">
@@ -44,65 +76,135 @@
                     <!-- 將由 JavaScript 動態生成 -->
                 </div>
             </div>
+            
+            <!-- 日曆模式側邊欄內容 -->
+            <div class="sidebar-content calendar-sidebar" id="calendarSidebarContent" style="display: none;">
+                <!-- 日期篩選 -->
+                <div class="filter-section">
+                    <div class="date-range-filter">
+                        <label>日期範圍</label>
+                        <input type="date" id="startDateFilter" onchange="filterCalendarEvents()">
+                        <input type="date" id="endDateFilter" onchange="filterCalendarEvents()">
+                    </div>
+                    
+                    <div class="filter-dropdown">
+                        <select id="calendarCategoryFilter" onchange="filterCalendarEvents()">
+                            <option value="all">所有類別</option>
+                            <option value="餐飲">餐飲</option>
+                            <option value="交通">交通</option>
+                            <option value="住宿">住宿</option>
+                            <option value="辦公用品">辦公用品</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 選中日期的報帳詳情 -->
+                <div class="selected-date-details" id="selectedDateDetails" style="display: none;">
+                    <h3>選擇日期詳情</h3>
+                    <div class="date-info">
+                        <span id="selectedDateText"></span>
+                    </div>
+                    <div class="date-expenses" id="dateExpensesList">
+                        <!-- 動態生成 -->
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- 主要內容區域 -->
         <div class="main-content">
-            <div class="content-header">
-                <div class="project-info">
-                    <h1 id="currentProjectName">選擇專案開始管理報帳</h1>
-                    <div class="project-stats" id="projectStats" style="display: none;">
-                        <span class="stat-item">
-                            <i class="fas fa-receipt"></i>
-                            總筆數: <span id="totalCount">0</span>
-                        </span>
-                        <span class="stat-item">
-                            <i class="fas fa-dollar-sign"></i>
-                            總金額: <span id="totalAmount">$0</span>
-                        </span>
-                        <span class="stat-item">
-                            <i class="fas fa-calendar"></i>
-                            最後更新: <span id="lastUpdate">-</span>
-                        </span>
+            <!-- 專案模式內容 -->
+            <div class="project-mode-content" id="projectModeContent">
+                <div class="content-header">
+                    <div class="project-info">
+                        <h1 id="currentProjectName">選擇專案開始管理報帳</h1>
+                        <div class="project-stats" id="projectStats" style="display: none;">
+                            <span class="stat-item">
+                                <i class="fas fa-receipt"></i>
+                                總筆數: <span id="totalCount">0</span>
+                            </span>
+                            <span class="stat-item">
+                                <i class="fas fa-dollar-sign"></i>
+                                總金額: <span id="totalAmount">$0</span>
+                            </span>
+                            <span class="stat-item">
+                                <i class="fas fa-calendar"></i>
+                                最後更新: <span id="lastUpdate">-</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons" id="actionButtons" style="display: none;">
+                        <button class="btn-primary" onclick="showUploadModal()">
+                            <i class="fas fa-upload"></i> 上傳發票
+                        </button>
+                        <button class="btn-secondary" onclick="exportReport()">
+                            <i class="fas fa-file-export"></i> 匯出報表
+                        </button>
                     </div>
                 </div>
                 
-                <div class="action-buttons" id="actionButtons" style="display: none;">
-                    <button class="btn-primary" onclick="showUploadModal()">
-                        <i class="fas fa-upload"></i> 上傳發票
-                    </button>
-                    <button class="btn-secondary" onclick="exportReport()">
-                        <i class="fas fa-file-export"></i> 匯出報表
-                    </button>
+                <!-- 報帳列表表格 -->
+                <div class="table-container" id="tableContainer" style="display: none;">
+                    <table class="expense-table" id="expenseTable">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>類別</th>
+                                <th>發票號碼</th>
+                                <th>商家名稱</th>
+                                <th>金額</th>
+                                <th>幣別</th>
+                                <th>狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseTableBody">
+                            <!-- 將由 JavaScript 動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 空狀態顯示 -->
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-file-invoice fa-3x"></i>
+                    <h3>選擇或建立專案開始管理報帳</h3>
+                    <p>您可以從左側選擇現有專案，或建立新的報帳專案來開始使用。</p>
                 </div>
             </div>
             
-            <!-- 報帳列表表格 -->
-            <div class="table-container" id="tableContainer" style="display: none;">
-                <table class="expense-table" id="expenseTable">
-                    <thead>
-                        <tr>
-                            <th>日期</th>
-                            <th>類別</th>
-                            <th>發票號碼</th>
-                            <th>商家名稱</th>
-                            <th>金額</th>
-                            <th>幣別</th>
-                            <th>狀態</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="expenseTableBody">
-                        <!-- 將由 JavaScript 動態生成 -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- 空狀態顯示 -->
-            <div class="empty-state" id="emptyState">
-                <i class="fas fa-file-invoice fa-3x"></i>
-                <h3>選擇或建立專案開始管理報帳</h3>
-                <p>您可以從左側選擇現有專案，或建立新的報帳專案來開始使用。</p>
+            <!-- 日曆模式內容 -->
+            <div class="calendar-mode-content" id="calendarModeContent" style="display: none;">
+                <div class="content-header">
+                    <div class="calendar-info">
+                        <h1>日曆報帳管理</h1>
+                        <div class="calendar-stats" id="calendarStats">
+                            <span class="stat-item">
+                                <i class="fas fa-receipt"></i>
+                                本月總筆數: <span id="monthlyCount">0</span>
+                            </span>
+                            <span class="stat-item">
+                                <i class="fas fa-dollar-sign"></i>
+                                本月總金額: <span id="monthlyAmount">$0</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn-primary" onclick="showUploadModal()">
+                            <i class="fas fa-upload"></i> 新增報帳
+                        </button>
+                        <button class="btn-secondary" onclick="exportMonthlyReport()">
+                            <i class="fas fa-file-export"></i> 匯出月報表
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- FullCalendar 容器 -->
+                <div class="calendar-container" id="calendarContainer">
+                    <div id="fullcalendar"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -208,6 +310,14 @@
                                 </select>
                             </div>
                         </div>
+                        <!-- 日曆模式下選擇專案 -->
+                        <div class="form-group" id="projectSelectGroup" style="display: none;">
+                            <label for="expenseProject">專案</label>
+                            <select id="expenseProject">
+                                <option value="">請選擇專案</option>
+                                <!-- 動態填入 -->
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label for="notes">備註</label>
                             <textarea id="notes" placeholder="請輸入備註（可選）"></textarea>
@@ -301,7 +411,150 @@
         <i class="fas fa-check-circle"></i>
         <span id="toastMessage">操作成功</span>
     </div>
+
+    <!-- FullCalendar Script -->
+    <script>
+        // 全域日曆實例
+        let fullCalendarInstance = null;
+        
+        // 渲染 FullCalendar
+        function renderCalendar() {
+            const calendarEl = document.getElementById('fullcalendar');
+            if (calendarEl) {
+                console.log('Rendering FullCalendar...');
+                
+                // 如果已有實例，先銷毀
+                if (fullCalendarInstance) {
+                    fullCalendarInstance.destroy();
+                }
+                
+                // 創建新的日曆實例
+                fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'zh-tw',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                    },
+                    buttonText: {
+                        today: '今天',
+                        month: '月',
+                        week: '週',
+                        day: '日',
+                        list: '列表'
+                    },
+                    height: '100%', // 使用百分比高度佔滿容器
+                    contentHeight: 'auto', // 內容高度自動調整
+                    expandRows: true, // 展開行以填滿容器
+                    selectable: true,
+                    selectMirror: true,
+                    nowIndicator: true,
+                    eventDisplay: 'block',
+                    events: window.calendarEvents || [],
+                    
+                    // 事件點擊處理
+                    eventClick: function(info) {
+                        const event = info.event;
+                        const eventData = {
+                            id: event.id,
+                            title: event.title,
+                            category: event.extendedProps.category,
+                            amount: event.extendedProps.amount,
+                            merchant: event.extendedProps.merchant,
+                            invoice: event.extendedProps.invoice,
+                            date: event.startStr
+                        };
+                        
+                        if (window.showEventDetails) {
+                            window.showEventDetails(eventData);
+                        }
+                    },
+                    
+                    // 日期選擇處理
+                    dateClick: function(info) {
+                        const selectedDate = info.date;
+                        window.selectedDate = selectedDate;
+                        
+                        if (window.updateSelectedDateDetails) {
+                            window.updateSelectedDateDetails(selectedDate);
+                        }
+                    },
+                    
+                    // 事件顏色設置
+                    eventClassNames: function(arg) {
+                        const category = arg.event.extendedProps.category;
+                        return [`category-${category}`];
+                    },
+                    
+                    eventDidMount: function(info) {
+                        const category = info.event.extendedProps.category;
+                        if (category && window.getCategoryColor) {
+                            const color = window.getCategoryColor(category);
+                            info.el.style.backgroundColor = color;
+                            info.el.style.borderColor = color;
+                        }
+                    },
+                    
+                    // 月份切換時更新統計
+                    datesSet: function(info) {
+                        if (window.updateCalendarStats) {
+                            window.updateCalendarStats();
+                        }
+                    }
+                });
+                
+                fullCalendarInstance.render();
+                
+                                 // 初始化時更新事件
+                 if (window.calendarEvents) {
+                     refreshCalendarEvents();
+                 }
+            }
+        }
+        
+                 // 更新日曆事件
+         function refreshCalendarEvents() {
+             if (fullCalendarInstance && window.calendarEvents) {
+                 console.log('Updating FullCalendar events:', window.calendarEvents.length);
+                 
+                 // 清除現有事件
+                 fullCalendarInstance.removeAllEvents();
+                 
+                 // 添加新事件
+                 const events = window.calendarEvents.map(event => ({
+                     id: event.id,
+                     title: event.title,
+                     start: event.start,
+                     end: event.end,
+                     allDay: event.allDay || false,
+                     extendedProps: {
+                         category: event.category,
+                         amount: event.amount,
+                         merchant: event.merchant,
+                         invoice: event.invoice,
+                         projectId: event.projectId
+                     }
+                 }));
+                 
+                 fullCalendarInstance.addEventSource(events);
+                 fullCalendarInstance.refetchEvents();
+             }
+         }
+         
+         // 將函數暴露到全域
+         window.renderCalendar = renderCalendar;
+         window.refreshCalendarEvents = refreshCalendarEvents;
+        
+        // DOM 加載完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                console.log('DOM loaded, initializing FullCalendar...');
+                renderCalendar();
+            }, 200);
+        });
+    </script>
     
     <script src="script.js"></script>
 </body>
-</html> 
+</html>

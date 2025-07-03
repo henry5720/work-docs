@@ -45,6 +45,55 @@ body {
     gap: 8px;
 }
 
+/* 模式切換按鈕樣式 */
+.mode-switch-container {
+    margin-bottom: 16px;
+}
+
+.mode-switch {
+    display: flex;
+    background: rgba(62, 61, 61, 0.1);
+    border-radius: 8px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #3E3D3D;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-direction: column;
+}
+
+.mode-btn i {
+    font-size: 16px;
+}
+
+.mode-btn span {
+    font-size: 10px;
+}
+
+.mode-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.mode-btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
 .btn-add-project {
     width: 100%;
     padding: 12px 16px;
@@ -71,6 +120,12 @@ body {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+}
+
+/* 日曆模式側邊欄特殊樣式 */
+.calendar-sidebar {
+    display: flex;
+    flex-direction: column;
 }
 
 /* 篩選區域 */
@@ -114,6 +169,98 @@ body {
     font-size: 14px;
     background: white;
     cursor: pointer;
+}
+
+/* 日期範圍篩選 */
+.date-range-filter {
+    margin-bottom: 12px;
+}
+
+.date-range-filter label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #3E3D3D;
+    font-size: 14px;
+}
+
+.date-range-filter input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s ease;
+}
+
+.date-range-filter input:focus {
+    outline: none;
+    border-color: #ADDEAC;
+    box-shadow: 0 0 0 3px rgba(173, 222, 172, 0.1);
+}
+
+/* 選中日期詳情 */
+.selected-date-details {
+    flex: 1;
+    background: #F8F9FA;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.selected-date-details h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #3E3D3D;
+}
+
+.date-info {
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 6px;
+    font-weight: 500;
+    color: #67BE5F;
+}
+
+.date-expenses {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.date-expense-item {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #ADDEAC;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.expense-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.expense-item-title {
+    font-weight: 600;
+    color: #3E3D3D;
+    font-size: 14px;
+}
+
+.expense-item-amount {
+    color: #67BE5F;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.expense-item-details {
+    font-size: 12px;
+    color: #6B7280;
 }
 
 /* 專案列表 */
@@ -207,6 +354,26 @@ body {
     display: flex;
     flex-direction: column;
     background: #F7F7F7;
+    min-height: 100vh;
+}
+
+/* 專案模式和日曆模式內容 */
+.project-mode-content,
+.calendar-mode-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0; /* 確保可以收縮 */
+}
+
+/* 日曆模式內容特別設定 */
+.calendar-mode-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* 允許收縮 */
+    overflow: hidden; /* 防止超出 */
 }
 
 .content-header {
@@ -218,14 +385,16 @@ body {
     align-items: flex-start;
 }
 
-.project-info h1 {
+.project-info h1,
+.calendar-info h1 {
     font-size: 24px;
     font-weight: 700;
     color: #3E3D3D;
     margin-bottom: 8px;
 }
 
-.project-stats {
+.project-stats,
+.calendar-stats {
     display: flex;
     gap: 24px;
     margin-top: 12px;
@@ -246,6 +415,202 @@ body {
 .action-buttons {
     display: flex;
     gap: 12px;
+}
+
+/* 日曆容器 - 調整為佔滿剩餘空間 */
+.calendar-container {
+    flex: 1;
+    margin: 24px 32px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px; /* 合理的最小高度 */
+    max-height: calc(100vh - 150px); /* 設定最大高度，防止超出畫面 */
+    overflow: hidden; /* 防止內容超出容器 */
+}
+
+/* FullCalendar 容器調整為佔滿剩餘空間 */
+#fullcalendar {
+    flex: 1;
+    min-height: 0; /* 允許收縮 */
+    height: 100%;
+    overflow: hidden; /* 防止超出 */
+}
+
+/* FullCalendar 自定義樣式 */
+.fc {
+    font-family: inherit;
+    height: 100% !important;
+}
+
+.fc-toolbar {
+    background: #F8F9FA;
+    border-bottom: 1px solid #E0E0E0;
+    padding: 16px;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
+}
+
+.fc-toolbar-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #3E3D3D;
+}
+
+.fc-button {
+    background: #F8F9FA;
+    border: 1px solid #E0E0E0;
+    color: #3E3D3D;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin: 0 2px;
+}
+
+.fc-button:hover:not(:disabled) {
+    background: #E8F5E8;
+    border-color: #ADDEAC;
+    color: #3E3D3D;
+}
+
+.fc-button:focus {
+    box-shadow: 0 0 0 3px rgba(173, 222, 172, 0.2);
+}
+
+.fc-button-active {
+    background: #ADDEAC !important;
+    border-color: #80CB7D !important;
+    color: #3E3D3D !important;
+}
+
+.fc-button-active:hover {
+    background: #67BE5F !important;
+    border-color: #67BE5F !important;
+}
+
+.fc-view-harness {
+    background: white;
+    border: 1px solid #E0E0E0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    flex: 1;
+    min-height: 0; /* 允許收縮 */
+    overflow: auto; /* 確保可以滾動 */
+}
+
+.fc-scroller {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    flex: 1;
+    max-height: none; /* 移除高度限制 */
+}
+
+.fc-col-header {
+    background: #F8F9FA;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.fc-col-header-cell {
+    padding: 12px 8px;
+    font-weight: 600;
+    color: #3E3D3D;
+}
+
+.fc-daygrid-day {
+    border: 1px solid #F8F9FA;
+    min-height: 120px;
+    overflow: visible; /* 確保內容可見 */
+}
+
+.fc-daygrid-body {
+    overflow: visible !important; /* 確保 body 可見 */
+}
+
+.fc-daygrid-day:hover {
+    background: rgba(173, 222, 172, 0.05);
+}
+
+.fc-day-today {
+    background-color: rgba(173, 222, 172, 0.1) !important;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+    color: #3E3D3D;
+    font-weight: 600;
+}
+
+.fc-event {
+    background-color: #67BE5F;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 1px 0;
+}
+
+.fc-event:hover {
+    background-color: #ADDEAC;
+    color: #3E3D3D;
+}
+
+.fc-event-title {
+    font-weight: 500;
+}
+
+.fc-more-link {
+    background: #F8F9FA;
+    color: #67BE5F;
+    font-weight: 500;
+    border: 1px solid #E0E0E0;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    text-decoration: none;
+}
+
+.fc-more-link:hover {
+    background: #E8F5E8;
+    border-color: #ADDEAC;
+}
+
+.fc-daygrid-day-number {
+    padding: 8px;
+    font-weight: 500;
+    color: #3E3D3D;
+}
+
+.fc-daygrid-day-number:hover {
+    background: rgba(173, 222, 172, 0.1);
+    border-radius: 4px;
+}
+
+/* 類別顏色樣式 */
+.fc-event.category-餐飲 {
+    background-color: #FF6B6B;
+}
+
+.fc-event.category-交通 {
+    background-color: #4ECDC4;
+}
+
+.fc-event.category-住宿 {
+    background-color: #45B7D1;
+}
+
+.fc-event.category-辦公用品 {
+    background-color: #FFA07A;
+}
+
+.fc-event.category-其他 {
+    background-color: #98D8C8;
 }
 
 /* 按鈕樣式 */
@@ -394,10 +759,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     text-align: center;
     color: #6B7280;
-    padding: 64px 32px;
+    padding: 120px 32px 64px;
+    background: white;
+    margin: 24px 32px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .empty-state i {
@@ -761,4 +1130,29 @@ body {
     .expense-table {
         min-width: 800px;
     }
-} 
+    
+    .calendar-container {
+        margin: 16px;
+        padding: 16px;
+        max-height: calc(100vh - 200px); /* 行動裝置最大高度 */
+        min-height: 400px; /* 行動裝置最小高度 */
+        overflow: hidden; /* 防止超出 */
+    }
+    
+    .mode-switch {
+        flex-direction: row;
+    }
+    
+    .mode-btn {
+        flex-direction: row;
+        padding: 8px 12px;
+    }
+    
+    .mode-btn i {
+        font-size: 14px;
+    }
+    
+    .mode-btn span {
+        font-size: 12px;
+    }
+}

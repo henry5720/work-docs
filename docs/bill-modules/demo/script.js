@@ -5,6 +5,11 @@ let projects = [];
 let currentProject = null;
 let expenses = [];
 let selectedFiles = [];
+let currentMode = 'project'; // 'project' 或 'calendar'
+let selectedDate = null;
+
+// 將 calendarEvents 定義為全域變數，供 React 組件使用
+window.calendarEvents = [];
 
 // 初始化應用程式
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,23 +21,39 @@ function initializeApp() {
     loadMockData();
     renderProjectList();
     showEmptyState();
+    updateCalendarEvents();
+    // 延遲渲染日曆以確保 React 組件已載入
+    setTimeout(() => {
+        if (window.renderCalendar) {
+            window.renderCalendar();
+        }
+    }, 500);
 }
 
-// 載入模擬數據
+// 載入模擬數據 - 使用當前月份的日期
 function loadMockData() {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    // 生成當前月份的日期
+    const getDateInCurrentMonth = (day) => {
+        return new Date(currentYear, currentMonth, day).toISOString().split('T')[0];
+    };
+    
     // 模擬專案數據
     projects = [
         {
             id: 1,
-            name: '2024年第一季差旅費',
-            description: '第一季出差相關費用報帳',
+            name: '2024年第四季差旅費',
+            description: '第四季出差相關費用報帳',
             budget: 50000,
             status: 'processing',
-            createdAt: '2024-01-15',
+            createdAt: getDateInCurrentMonth(1),
             expenses: [
                 {
                     id: 1,
-                    date: '2024-01-20',
+                    date: getDateInCurrentMonth(5),
                     category: '交通',
                     invoiceNumber: 'TW12345678',
                     merchantName: '台灣高鐵',
@@ -43,9 +64,9 @@ function loadMockData() {
                 },
                 {
                     id: 2,
-                    date: '2024-01-20',
+                    date: getDateInCurrentMonth(5),
                     category: '住宿',
-                    invoiceNumber: 'HT20240120',
+                    invoiceNumber: 'HT20241205',
                     merchantName: '日月千禧酒店',
                     amount: 4500,
                     currency: 'TWD',
@@ -54,7 +75,7 @@ function loadMockData() {
                 },
                 {
                     id: 3,
-                    date: '2024-01-21',
+                    date: getDateInCurrentMonth(6),
                     category: '餐飲',
                     invoiceNumber: 'RT87654321',
                     merchantName: '王品牛排',
@@ -62,6 +83,28 @@ function loadMockData() {
                     currency: 'TWD',
                     status: 'approved',
                     notes: '客戶拜訪用餐'
+                },
+                {
+                    id: 7,
+                    date: getDateInCurrentMonth(10),
+                    category: '交通',
+                    invoiceNumber: 'TW88888888',
+                    merchantName: '桃園機場捷運',
+                    amount: 160,
+                    currency: 'TWD',
+                    status: 'approved',
+                    notes: '機場接送'
+                },
+                {
+                    id: 8,
+                    date: getDateInCurrentMonth(15),
+                    category: '餐飲',
+                    invoiceNumber: 'RT99999999',
+                    merchantName: '鼎泰豐',
+                    amount: 2200,
+                    currency: 'TWD',
+                    status: 'pending',
+                    notes: '商務午餐'
                 }
             ]
         },
@@ -71,18 +114,29 @@ function loadMockData() {
             description: '辦公室文具用品採購報帳',
             budget: 15000,
             status: 'pending',
-            createdAt: '2024-02-01',
+            createdAt: getDateInCurrentMonth(2),
             expenses: [
                 {
                     id: 4,
-                    date: '2024-02-05',
+                    date: getDateInCurrentMonth(8),
                     category: '辦公用品',
-                    invoiceNumber: 'OF20240205',
+                    invoiceNumber: 'OF20241208',
                     merchantName: '誠品文具',
                     amount: 3200,
                     currency: 'TWD',
                     status: 'pending',
                     notes: '筆記本、原子筆等文具'
+                },
+                {
+                    id: 9,
+                    date: getDateInCurrentMonth(12),
+                    category: '辦公用品',
+                    invoiceNumber: 'OF20241212',
+                    merchantName: '統一超商',
+                    amount: 450,
+                    currency: 'TWD',
+                    status: 'approved',
+                    notes: '影印紙、文件夾'
                 }
             ]
         },
@@ -92,22 +146,315 @@ function loadMockData() {
             description: '月度會議相關費用',
             budget: 8000,
             status: 'completed',
-            createdAt: '2024-01-01',
+            createdAt: getDateInCurrentMonth(3),
             expenses: [
                 {
                     id: 5,
-                    date: '2024-01-10',
+                    date: getDateInCurrentMonth(4),
                     category: '餐飲',
-                    invoiceNumber: 'CF20240110',
+                    invoiceNumber: 'CF20241204',
                     merchantName: '85度C',
                     amount: 450,
                     currency: 'TWD',
                     status: 'approved',
                     notes: '會議茶點'
+                },
+                {
+                    id: 6,
+                    date: getDateInCurrentMonth(18),
+                    category: '餐飲',
+                    invoiceNumber: 'CF20241218',
+                    merchantName: 'Starbucks',
+                    amount: 680,
+                    currency: 'TWD',
+                    status: 'approved',
+                    notes: '下午會議茶點'
                 }
             ]
         }
     ];
+}
+
+// 模式切換功能
+function switchMode(mode) {
+    if (currentMode === mode) return;
+    
+    currentMode = mode;
+    
+    // 更新按鈕狀態
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+    
+    // 切換內容顯示
+    if (mode === 'project') {
+        showProjectMode();
+    } else {
+        showCalendarMode();
+    }
+}
+
+// 顯示專案模式
+function showProjectMode() {
+    document.getElementById('projectSidebarContent').style.display = 'block';
+    document.getElementById('calendarSidebarContent').style.display = 'none';
+    document.getElementById('projectModeContent').style.display = 'flex';
+    document.getElementById('calendarModeContent').style.display = 'none';
+    document.getElementById('addProjectBtn').style.display = 'flex';
+    
+    // 重新渲染專案列表
+    renderProjectList();
+    updateMainContent();
+}
+
+// 顯示日曆模式
+function showCalendarMode() {
+    document.getElementById('projectSidebarContent').style.display = 'none';
+    document.getElementById('calendarSidebarContent').style.display = 'block';
+    document.getElementById('projectModeContent').style.display = 'none';
+    document.getElementById('calendarModeContent').style.display = 'flex';
+    document.getElementById('addProjectBtn').style.display = 'none';
+    
+    // 更新日曆統計和事件
+    updateCalendarStats();
+    updateCalendarEvents();
+    
+    // 重新渲染日曆
+    setTimeout(() => {
+        if (window.renderCalendar) {
+            window.renderCalendar();
+        }
+    }, 100);
+}
+
+// 更新日曆統計資訊
+function updateCalendarStats() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    let monthlyCount = 0;
+    let monthlyAmount = 0;
+    
+    projects.forEach(project => {
+        project.expenses.forEach(expense => {
+            const expenseDate = new Date(expense.date);
+            if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
+                monthlyCount++;
+                monthlyAmount += expense.amount;
+            }
+        });
+    });
+    
+    document.getElementById('monthlyCount').textContent = monthlyCount;
+    document.getElementById('monthlyAmount').textContent = `$${monthlyAmount.toLocaleString()}`;
+}
+
+// 更新日曆事件
+function updateCalendarEvents() {
+    // 清空現有事件
+    window.calendarEvents = [];
+    
+    projects.forEach(project => {
+        project.expenses.forEach(expense => {
+            const expenseDate = new Date(expense.date);
+            const event = {
+                id: expense.id,
+                title: `${expense.merchantName} - $${expense.amount}`,
+                start: expenseDate,
+                end: expenseDate,
+                allDay: true,
+                category: expense.category,
+                amount: expense.amount,
+                merchant: expense.merchantName,
+                invoice: expense.invoiceNumber,
+                projectId: project.id,
+                expense: expense,
+                project: project
+            };
+            window.calendarEvents.push(event);
+        });
+    });
+    
+    console.log('Calendar events updated:', window.calendarEvents.length, 'events');
+    
+    // 如果 FullCalendar 已初始化，直接更新事件
+    if (window.refreshCalendarEvents && typeof window.refreshCalendarEvents === 'function') {
+        window.refreshCalendarEvents();
+    }
+}
+
+// 獲取類別顏色
+function getCategoryColor(category) {
+    const colors = {
+        '餐飲': '#FF6B6B',
+        '交通': '#4ECDC4',
+        '住宿': '#45B7D1',
+        '辦公用品': '#FFA07A',
+        '其他': '#98D8C8'
+    };
+    return colors[category] || '#67BE5F';
+}
+
+// 顯示事件詳情（從日曆點擊事件觸發）
+function showEventDetails(event) {
+    console.log('Event details:', event);
+    
+    // 更新側邊欄選中日期詳情
+    if (event.date) {
+        updateSelectedDateDetails(new Date(event.date));
+    }
+    
+    // 顯示 toast 通知
+    const merchant = event.merchant || '未知商家';
+    const amount = event.amount || 0;
+    const category = event.category || '未分類';
+    showToast(`${merchant}: $${amount} (${category})`, 'info');
+}
+
+// 更新選中日期詳情
+function updateSelectedDateDetails(date) {
+    selectedDate = date;
+    const dateStr = new Date(date).toISOString().split('T')[0];
+    
+    // 找到該日期的所有報帳記錄
+    const dayExpenses = [];
+    projects.forEach(project => {
+        project.expenses.forEach(expense => {
+            if (expense.date === dateStr) {
+                dayExpenses.push({
+                    ...expense,
+                    projectName: project.name
+                });
+            }
+        });
+    });
+    
+    const detailsContainer = document.getElementById('selectedDateDetails');
+    const dateText = document.getElementById('selectedDateText');
+    const expensesList = document.getElementById('dateExpensesList');
+    
+    if (dayExpenses.length > 0) {
+        detailsContainer.style.display = 'block';
+        dateText.textContent = new Date(date).toLocaleDateString('zh-TW');
+        
+        expensesList.innerHTML = '';
+        dayExpenses.forEach(expense => {
+            const item = document.createElement('div');
+            item.className = 'date-expense-item';
+            item.innerHTML = `
+                <div class="expense-item-header">
+                    <span class="expense-item-title">${expense.merchantName}</span>
+                    <span class="expense-item-amount">$${expense.amount.toLocaleString()}</span>
+                </div>
+                <div class="expense-item-details">
+                    ${expense.category} • ${expense.projectName} • ${expense.invoiceNumber}
+                </div>
+            `;
+            expensesList.appendChild(item);
+        });
+    } else {
+        detailsContainer.style.display = 'none';
+    }
+}
+
+// 日曆事件篩選
+function filterCalendarEvents() {
+    const startDate = document.getElementById('startDateFilter').value;
+    const endDate = document.getElementById('endDateFilter').value;
+    const category = document.getElementById('calendarCategoryFilter').value;
+    
+    // 基本篩選邏輯
+    updateCalendarEvents();
+    
+    // 如果有篩選條件，進一步篩選
+    if (startDate || endDate || category !== 'all') {
+        const filteredEvents = window.calendarEvents.filter(event => {
+            const eventDate = event.start instanceof Date ? 
+                event.start.toISOString().split('T')[0] : 
+                new Date(event.start).toISOString().split('T')[0];
+            
+            // 日期範圍篩選
+            if (startDate && eventDate < startDate) return false;
+            if (endDate && eventDate > endDate) return false;
+            
+            // 類別篩選
+            if (category !== 'all' && event.category !== category) return false;
+            
+            return true;
+        });
+        
+        // 更新篩選後的事件
+        window.calendarEvents = filteredEvents;
+    }
+    
+    // 通知 FullCalendar 更新事件
+    if (window.refreshCalendarEvents && typeof window.refreshCalendarEvents === 'function') {
+        window.refreshCalendarEvents();
+    }
+}
+
+// 匯出月度報表
+function exportMonthlyReport() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const monthlyExpenses = [];
+    projects.forEach(project => {
+        project.expenses.forEach(expense => {
+            const expenseDate = new Date(expense.date);
+            if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
+                monthlyExpenses.push({
+                    ...expense,
+                    projectName: project.name
+                });
+            }
+        });
+    });
+    
+    if (monthlyExpenses.length === 0) {
+        showToast('本月沒有可匯出的資料', 'warning');
+        return;
+    }
+    
+    showLoading();
+    
+    setTimeout(() => {
+        hideLoading();
+        generateMonthlyExcelReport(monthlyExpenses);
+        showToast('月度報表匯出成功！', 'success');
+    }, 1500);
+}
+
+// 生成月度 Excel 報表
+function generateMonthlyExcelReport(expenses) {
+    const headers = ['日期', '專案', '類別', '發票號碼', '商家名稱', '金額', '幣別', '狀態', '備註'];
+    const csvContent = [
+        headers.join(','),
+        ...expenses.map(expense => [
+            expense.date,
+            expense.projectName,
+            expense.category,
+            expense.invoiceNumber,
+            expense.merchantName,
+            expense.amount,
+            expense.currency,
+            getExpenseStatusText(expense.status),
+            expense.notes || ''
+        ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `月度報帳明細_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // 渲染專案列表
@@ -212,7 +559,10 @@ function renderExpenseTable() {
         return;
     }
     
-    currentProject.expenses.forEach(expense => {
+    // 按日期排序（最新的在前面）
+    const sortedExpenses = [...currentProject.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    sortedExpenses.forEach(expense => {
         const row = createExpenseRow(expense);
         tbody.appendChild(row);
     });
@@ -342,15 +692,46 @@ function createProject() {
     hideCreateProjectModal();
     showToast('專案建立成功！', 'success');
     
+    // 更新專案選擇下拉選單
+    updateProjectSelectOptions();
+    
     // 自動選中新建的專案
-    selectProject(newProject);
+    if (currentMode === 'project') {
+        selectProject(newProject);
+    }
+}
+
+// 更新專案選擇下拉選單
+function updateProjectSelectOptions() {
+    const projectSelect = document.getElementById('expenseProject');
+    if (projectSelect) {
+        projectSelect.innerHTML = '<option value="">請選擇專案</option>';
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.id;
+            option.textContent = project.name;
+            projectSelect.appendChild(option);
+        });
+    }
 }
 
 // 顯示上傳模態框
 function showUploadModal() {
-    if (!currentProject) {
-        showToast('請先選擇專案', 'error');
-        return;
+    // 在日曆模式下，顯示專案選擇
+    if (currentMode === 'calendar') {
+        document.getElementById('projectSelectGroup').style.display = 'block';
+        updateProjectSelectOptions();
+        
+        // 如果有選中日期，自動填入日期
+        if (selectedDate) {
+            document.getElementById('expenseDate').value = new Date(selectedDate).toISOString().split('T')[0];
+        }
+    } else {
+        document.getElementById('projectSelectGroup').style.display = 'none';
+        if (!currentProject) {
+            showToast('請先選擇專案', 'error');
+            return;
+        }
     }
     
     document.getElementById('uploadModal').classList.add('show');
@@ -372,6 +753,11 @@ function resetUploadModal() {
     document.getElementById('uploadBtn').style.display = 'inline-flex';
     document.getElementById('saveExpenseBtn').style.display = 'none';
     document.getElementById('expenseForm').reset();
+    
+    // 日曆模式下重新設置選中日期
+    if (currentMode === 'calendar' && selectedDate) {
+        document.getElementById('expenseDate').value = new Date(selectedDate).toISOString().split('T')[0];
+    }
 }
 
 // 處理檔案選擇
@@ -449,13 +835,19 @@ function uploadFiles() {
 
 // 模擬 OCR 識別
 function simulateOCR() {
+    const today = new Date();
+    const defaultDate = selectedDate ? new Date(selectedDate) : today;
+    
     // 模擬 OCR 識別結果
+    const categories = ['餐飲', '交通', '住宿', '辦公用品', '其他'];
+    const merchants = ['星巴克', '麥當勞', '7-ELEVEN', '全聯福利中心', '家樂福', '統一超商', '台灣大車隊'];
+    
     const mockOCRData = {
-        date: new Date().toISOString().split('T')[0],
-        category: '餐飲',
+        date: defaultDate.toISOString().split('T')[0],
+        category: categories[Math.floor(Math.random() * categories.length)],
         invoiceNumber: 'TW' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0'),
-        merchantName: '模擬商家名稱',
-        amount: Math.floor(Math.random() * 5000) + 100,
+        merchantName: merchants[Math.floor(Math.random() * merchants.length)],
+        amount: Math.floor(Math.random() * 2000) + 100,
         currency: 'TWD'
     };
     
@@ -501,10 +893,39 @@ function saveExpense() {
         status: 'pending'
     };
     
-    currentProject.expenses.push(newExpense);
+    // 根據模式決定新增到哪個專案
+    let targetProject;
+    if (currentMode === 'calendar') {
+        const projectId = parseInt(document.getElementById('expenseProject').value);
+        if (!projectId) {
+            showToast('請選擇專案', 'error');
+            return;
+        }
+        targetProject = projects.find(p => p.id === projectId);
+    } else {
+        targetProject = currentProject;
+    }
+    
+    if (!targetProject) {
+        showToast('找不到目標專案', 'error');
+        return;
+    }
+    
+    targetProject.expenses.push(newExpense);
     
     // 更新 UI
-    updateMainContent();
+    if (currentMode === 'project') {
+        updateMainContent();
+    } else {
+        updateCalendarStats();
+        updateCalendarEvents();
+        setTimeout(() => {
+            if (window.renderCalendar) {
+                window.renderCalendar();
+            }
+        }, 100);
+    }
+    
     hideUploadModal();
     showToast('費用記錄已儲存！', 'success');
 }
@@ -552,8 +973,16 @@ function updateExpense() {
     
     // 更新 UI
     updateMainContent();
+    updateCalendarEvents();
     hideEditModal();
     showToast('費用記錄已更新！', 'success');
+    
+    // 重新渲染日曆
+    setTimeout(() => {
+        if (window.renderCalendar) {
+            window.renderCalendar();
+        }
+    }, 100);
 }
 
 // 刪除費用記錄
@@ -564,7 +993,15 @@ function deleteExpense(expenseId) {
     if (index > -1) {
         currentProject.expenses.splice(index, 1);
         updateMainContent();
+        updateCalendarEvents();
         showToast('費用記錄已刪除！', 'success');
+        
+        // 重新渲染日曆
+        setTimeout(() => {
+            if (window.renderCalendar) {
+                window.renderCalendar();
+            }
+        }, 100);
     }
 }
 
@@ -642,6 +1079,7 @@ function showToast(message, type = 'success') {
     const icon = toast.querySelector('i');
     icon.className = type === 'error' ? 'fas fa-exclamation-circle' :
                     type === 'warning' ? 'fas fa-exclamation-triangle' :
+                    type === 'info' ? 'fas fa-info-circle' :
                     'fas fa-check-circle';
     
     toast.classList.add('show');
@@ -680,4 +1118,9 @@ document.addEventListener('dragover', function(event) {
 
 document.addEventListener('drop', function(event) {
     event.preventDefault();
-}); 
+});
+
+// 將全域函數暴露給 React 組件使用
+window.showEventDetails = showEventDetails;
+window.updateSelectedDateDetails = updateSelectedDateDetails;
+window.getCategoryColor = getCategoryColor;
