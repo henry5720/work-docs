@@ -1934,3 +1934,154 @@ body {
 .toast.warning {
     background: #f59e0b;
 }
+
+/* Dropzone 自定義樣式 */
+.dropzone {
+    border: 2px dashed #d1d5db !important;
+    border-radius: 8px !important;
+    background: #f9fafb !important;
+    padding: 40px 20px !important;
+    text-align: center;
+    min-height: 120px !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+.dropzone:hover,
+.dropzone.dz-drag-hover {
+    border-color: #addeac !important;
+    background: #f0f9ff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dropzone .dz-message {
+    margin: 0 !important;
+    text-align: center;
+    color: #6b7280;
+}
+
+/* 簡化預覽樣式，使用dropzone預設布局 */
+.dropzone .dz-preview {
+    position: relative !important;
+    display: inline-block !important;
+    vertical-align: top !important;
+    margin: 16px !important;
+    min-height: 100px !important;
+    background: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px !important;
+}
+
+.dropzone .dz-preview .dz-image {
+    border-radius: 4px !important;
+    overflow: hidden !important;
+}
+
+.dropzone .dz-preview .dz-details {
+    opacity: 1 !important;
+    background: transparent !important;
+    color: #374151 !important;
+    padding: 8px 0 !important;
+}
+
+.dropzone .dz-preview .dz-filename {
+    font-weight: 500 !important;
+    color: #1f2937 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.dropzone .dz-preview .dz-size {
+    color: #6b7280 !important;
+    font-size: 12px !important;
+}
+
+.dropzone .dz-preview .dz-remove {
+    position: absolute !important;
+    top: 4px !important;
+    right: 4px !important;
+    background: #ef4444 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 12px !important;
+    line-height: 18px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.dropzone .dz-preview .dz-remove:hover {
+    background: #dc2626 !important;
+    transform: scale(1.1) !important;
+}
+
+.dropzone .dz-preview .dz-progress {
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    right: 8px !important;
+    height: 4px !important;
+    background: #e5e7eb !important;
+    border-radius: 2px !important;
+    overflow: hidden !important;
+}
+
+.dropzone .dz-preview .dz-upload {
+    background: #3b82f6 !important;
+    height: 100% !important;
+    border-radius: 2px !important;
+    transition: width 0.3s ease !important;
+}
+
+/* 成功和錯誤狀態 */
+.dropzone .dz-preview.dz-success .dz-progress {
+    background: #10b981 !important;
+}
+
+.dropzone .dz-preview.dz-error .dz-progress {
+    background: #ef4444 !important;
+}
+
+.dropzone .dz-preview .dz-success-mark,
+.dropzone .dz-preview .dz-error-mark {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    font-size: 24px !important;
+    color: white !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    line-height: 40px !important;
+    text-align: center !important;
+}
+
+.dropzone .dz-preview .dz-success-mark {
+    background: rgba(16, 185, 129, 0.9) !important;
+}
+
+.dropzone .dz-preview .dz-error-mark {
+    background: rgba(239, 68, 68, 0.9) !important;
+}
+
+.dropzone .dz-preview .dz-error-message {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    margin-top: 4px !important;
+    z-index: 1000 !important;
+}

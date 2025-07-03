@@ -9,6 +9,8 @@
     <!-- 引入 CDN 資源 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css">
 
     <!-- Day.js CDN -->
     <script src="https://unpkg.com/dayjs@1.11.13/dayjs.min.js"></script>
@@ -306,121 +308,114 @@
 
                 <!-- OCR 上傳區域 -->
                 <div class="ocr-upload-section" id="ocrUploadSection">
-                    <div class="upload-area" id="uploadArea" ondrop="dropHandler(event)"
-                        ondragover="dragOverHandler(event)">
-                        <i class="fas fa-cloud-upload-alt fa-3x"></i>
-                        <p>拖拽發票圖片到此處，或點擊選擇檔案</p>
+                    <div class="upload-area" id="uploadArea" ondrop="drop(event)" ondragover="dragOver(event)">
+                        <i class="fas fa-file-invoice fa-2x"></i>
+                        <p>拖拽或點擊上傳發票圖片</p>
                         <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)" />
                         <button type="button" class="btn-upload" onclick="document.getElementById('fileInput').click()">
                             選擇檔案
                         </button>
                     </div>
-
-                    <!-- 預覽區域 -->
+                    
+                    <!-- 檔案預覽 -->
                     <div class="preview-area" id="previewArea" style="display: none">
-                        <h4>檔案預覽</h4>
-                        <div class="file-list" id="fileList">
-                            <!-- 將由 JavaScript 動態生成 -->
+                        <h4>已選擇的檔案</h4>
+                        <div class="file-list" id="fileList"></div>
+                        <div class="ocr-upload-buttons">
+                            <button type="button" class="btn-primary" id="uploadBtn" onclick="uploadFiles()">
+                                <i class="fas fa-upload"></i> 上傳並識別
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                <!-- 直接填寫表單區域 -->
+                
+                <!-- 手動填寫表單區域 -->
                 <div class="manual-form-section" id="manualFormSection" style="display: none">
                     <div class="form-intro">
                         <h4>手動填寫報帳資訊</h4>
                         <p>請填寫以下報帳相關資訊</p>
                     </div>
                 </div>
-
-                <!-- OCR 識別結果 / 表單填寫區域 -->
-                <div class="form-results" id="formResults" style="display: none">
-                    <h4 id="formResultsTitle">OCR 識別結果</h4>
+                
+                <!-- OCR 表單區域 -->
+                <div class="ocr-form-section" id="ocrFormSection">
+                    <div class="form-intro">
+                        <h4>報帳表單</h4>
+                        <p>請填寫報帳資訊，上傳發票後系統會自動填入識別結果</p>
+                    </div>
+                    
                     <form id="expenseForm">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="applicantName">申請人</label>
-                                <input type="text" id="applicantName" required placeholder="請輸入申請人姓名" />
+                                <label for="applicantName">申請人 *</label>
+                                <input type="text" id="applicantName" required />
                             </div>
                             <div class="form-group">
-                                <label for="department">部門</label>
-                                <input type="text" id="department" required placeholder="請輸入部門名稱" />
+                                <label for="department">部門 *</label>
+                                <input type="text" id="department" required />
                             </div>
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="position">職稱</label>
-                                <input type="text" id="position" required placeholder="請輸入職稱" />
+                                <label for="position">職位</label>
+                                <input type="text" id="position" />
                             </div>
                             <div class="form-group">
-                                <label for="expenseDate">支出日期</label>
+                                <label for="expenseDate">費用日期 *</label>
                                 <input type="date" id="expenseDate" required />
                             </div>
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="invoiceNumber">發票號碼</label>
-                                <input type="text" id="invoiceNumber" required placeholder="請輸入發票號碼" />
+                                <label for="expenseSubject">費用科目 *</label>
+                                <input type="text" id="expenseSubject" required />
                             </div>
                             <div class="form-group">
-                                <label for="expenseSubject">科目(支出名稱)</label>
-                                <select id="expenseSubject" required>
-                                    <option value="">請選擇科目</option>
-                                    <option value="餐費">餐費</option>
-                                    <option value="交通費">交通費</option>
-                                    <option value="住宿費">住宿費</option>
-                                    <option value="辦公用品">辦公用品</option>
-                                    <option value="差旅費">差旅費</option>
-                                    <option value="通訊費">通訊費</option>
-                                    <option value="文具用品">文具用品</option>
-                                    <option value="其他">其他</option>
-                                </select>
+                                <label for="expenseContent">費用內容 *</label>
+                                <input type="text" id="expenseContent" required />
                             </div>
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="expenseContent">內容</label>
-                                <input type="text" id="expenseContent" required placeholder="請輸入支出內容" />
+                                <label for="expensePurpose">費用用途 *</label>
+                                <input type="text" id="expensePurpose" required />
                             </div>
                             <div class="form-group">
-                                <label for="expensePurpose">用途</label>
-                                <input type="text" id="expensePurpose" required placeholder="請輸入用途說明" />
+                                <label for="invoiceNumber">發票號碼 *</label>
+                                <input type="text" id="invoiceNumber" required />
                             </div>
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="amount">金額</label>
-                                <input type="number" id="amount" step="0.01" required placeholder="請輸入金額" />
+                                <label for="amount">金額 *</label>
+                                <input type="number" id="amount" step="0.01" required oninput="calculateTWDAmount()" />
                             </div>
                             <div class="form-group">
                                 <label for="currency">幣別</label>
-                                <select id="currency" required onchange="calculateTWDAmount()">
+                                <select id="currency" onchange="calculateTWDAmount()">
                                     <option value="TWD">TWD</option>
                                     <option value="USD">USD</option>
                                     <option value="JPY">JPY</option>
                                     <option value="EUR">EUR</option>
-                                    <option value="CNY">CNY</option>
                                 </select>
                             </div>
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="exchangeRate">匯率</label>
-                                <input type="number" id="exchangeRate" step="0.0001" placeholder="匯率 (自動計算)" readonly />
+                                <input type="number" id="exchangeRate" step="0.0001" value="1" oninput="calculateTWDAmount()" />
                             </div>
                             <div class="form-group">
                                 <label for="twdAmount">台幣金額</label>
-                                <input type="number" id="twdAmount" step="0.01" placeholder="台幣金額 (自動計算)" readonly />
+                                <input type="number" id="twdAmount" step="0.01" readonly />
                             </div>
                         </div>
-                        <!-- 日曆模式下選擇專案 -->
-                        <div class="form-group" id="projectSelectGroup" style="display: none">
-                            <label for="expenseProject">專案</label>
-                            <select id="expenseProject">
-                                <option value="">請選擇專案</option>
-                                <!-- 動態填入 -->
-                            </select>
-                        </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="status">審核狀態</label>
@@ -439,26 +434,16 @@
                         <div class="form-group">
                             <label for="additionalFiles">上傳更多檔案</label>
                             <div class="additional-files-section">
-                                <div class="additional-upload-area" id="additionalUploadArea" 
-                                     ondrop="dropAdditionalFiles(event)" ondragover="dragOverAdditionalFiles(event)">
-                                    <i class="fas fa-paperclip fa-2x"></i>
-                                    <p>上傳收據、證明文件等 (可選)</p>
-                                    <input type="file" id="additionalFilesInput" accept="image/*,application/pdf,.doc,.docx" 
-                                           multiple onchange="handleAdditionalFilesSelect(event)" />
-                                    <button type="button" class="btn-upload-small" 
-                                            onclick="document.getElementById('additionalFilesInput').click()">
-                                        選擇檔案
-                                    </button>
-                                </div>
-                                
-                                <!-- 附加檔案預覽 -->
-                                <div class="additional-files-preview" id="additionalFilesPreview" style="display: none">
-                                    <h5>已選擇的檔案</h5>
-                                    <div class="additional-files-list" id="additionalFilesList">
-                                        <!-- 將由 JavaScript 動態生成 -->
-                                    </div>
+                                <div class="additional-upload-area" id="additionalDropzone">
+                                    <!-- Dropzone 會自動生成內容 -->
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" onclick="saveExpense()">
+                                <i class="fas fa-save"></i> 儲存報帳記錄
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -466,17 +451,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="hideUploadModal()">
                     取消
-                </button>
-                <button type="button" class="btn-primary" id="uploadBtn" onclick="uploadFiles()">
-                    上傳並識別
-                </button>
-                <button type="button" class="btn-primary" id="saveExpenseBtn" onclick="saveExpense()"
-                    style="display: none">
-                    儲存報帳
-                </button>
-                <button type="button" class="btn-primary" id="manualSaveBtn" onclick="saveExpense()"
-                    style="display: none">
-                    新增報帳
                 </button>
             </div>
         </div>
@@ -487,88 +461,84 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>編輯報帳記錄</h3>
-                <span class="close" onclick="hideEditModal()">&times;</span>
+                <button type="button" class="modal-close" onclick="hideEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <form id="editExpenseForm">
-                    <input type="hidden" id="editExpenseId" />
+                    <input type="hidden" id="editExpenseId">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editApplicantName">申請人</label>
-                            <input type="text" id="editApplicantName" required placeholder="請輸入申請人姓名" />
+                            <label for="editApplicantName">申請人 *</label>
+                            <input type="text" id="editApplicantName" required />
                         </div>
                         <div class="form-group">
-                            <label for="editDepartment">部門</label>
-                            <input type="text" id="editDepartment" required placeholder="請輸入部門名稱" />
+                            <label for="editDepartment">部門 *</label>
+                            <input type="text" id="editDepartment" required />
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editPosition">職稱</label>
-                            <input type="text" id="editPosition" required placeholder="請輸入職稱" />
+                            <label for="editPosition">職位</label>
+                            <input type="text" id="editPosition" />
                         </div>
                         <div class="form-group">
-                            <label for="editExpenseDate">支出日期</label>
+                            <label for="editExpenseDate">費用日期 *</label>
                             <input type="date" id="editExpenseDate" required />
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editInvoiceNumber">發票號碼</label>
-                            <input type="text" id="editInvoiceNumber" required placeholder="請輸入發票號碼" />
+                            <label for="editExpenseSubject">費用科目 *</label>
+                            <input type="text" id="editExpenseSubject" required />
                         </div>
                         <div class="form-group">
-                            <label for="editExpenseSubject">科目(支出名稱)</label>
-                            <select id="editExpenseSubject" required>
-                                <option value="">請選擇科目</option>
-                                <option value="餐費">餐費</option>
-                                <option value="交通費">交通費</option>
-                                <option value="住宿費">住宿費</option>
-                                <option value="辦公用品">辦公用品</option>
-                                <option value="差旅費">差旅費</option>
-                                <option value="通訊費">通訊費</option>
-                                <option value="文具用品">文具用品</option>
-                                <option value="其他">其他</option>
-                            </select>
+                            <label for="editExpenseContent">費用內容 *</label>
+                            <input type="text" id="editExpenseContent" required />
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editExpenseContent">內容</label>
-                            <input type="text" id="editExpenseContent" required placeholder="請輸入支出內容" />
+                            <label for="editExpensePurpose">費用用途 *</label>
+                            <input type="text" id="editExpensePurpose" required />
                         </div>
                         <div class="form-group">
-                            <label for="editExpensePurpose">用途</label>
-                            <input type="text" id="editExpensePurpose" required placeholder="請輸入用途說明" />
+                            <label for="editInvoiceNumber">發票號碼 *</label>
+                            <input type="text" id="editInvoiceNumber" required />
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="editAmount">金額</label>
-                            <input type="number" id="editAmount" step="0.01" required placeholder="請輸入金額"
-                                onchange="calculateEditTWDAmount()" />
+                            <label for="editAmount">金額 *</label>
+                            <input type="number" id="editAmount" step="0.01" required oninput="calculateEditTWDAmount()" />
                         </div>
                         <div class="form-group">
                             <label for="editCurrency">幣別</label>
-                            <select id="editCurrency" required onchange="calculateEditTWDAmount()">
+                            <select id="editCurrency" onchange="calculateEditTWDAmount()">
                                 <option value="TWD">TWD</option>
                                 <option value="USD">USD</option>
                                 <option value="JPY">JPY</option>
                                 <option value="EUR">EUR</option>
-                                <option value="CNY">CNY</option>
                             </select>
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editExchangeRate">匯率</label>
-                            <input type="number" id="editExchangeRate" step="0.0001" placeholder="匯率 (自動計算)" readonly />
+                            <input type="number" id="editExchangeRate" step="0.0001" value="1" oninput="calculateEditTWDAmount()" />
                         </div>
                         <div class="form-group">
                             <label for="editTwdAmount">台幣金額</label>
-                            <input type="number" id="editTwdAmount" step="0.01" placeholder="台幣金額 (自動計算)" readonly />
+                            <input type="number" id="editTwdAmount" step="0.01" readonly />
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editStatus">審核狀態</label>
@@ -587,35 +557,20 @@
                     <div class="form-group">
                         <label for="editAdditionalFiles">上傳更多檔案</label>
                         <div class="additional-files-section">
-                            <div class="additional-upload-area" id="editAdditionalUploadArea" 
-                                 ondrop="dropEditAdditionalFiles(event)" ondragover="dragOverEditAdditionalFiles(event)">
-                                <i class="fas fa-paperclip fa-2x"></i>
-                                <p>上傳收據、證明文件等 (可選)</p>
-                                <input type="file" id="editAdditionalFilesInput" accept="image/*,application/pdf,.doc,.docx" 
-                                       multiple onchange="handleEditAdditionalFilesSelect(event)" />
-                                <button type="button" class="btn-upload-small" 
-                                        onclick="document.getElementById('editAdditionalFilesInput').click()">
-                                    選擇檔案
-                                </button>
-                            </div>
-                            
-                            <!-- 附加檔案預覽 -->
-                            <div class="additional-files-preview" id="editAdditionalFilesPreview" style="display: none">
-                                <h5>已選擇的檔案</h5>
-                                <div class="additional-files-list" id="editAdditionalFilesList">
-                                    <!-- 將由 JavaScript 動態生成 -->
-                                </div>
+                            <div class="additional-upload-area" id="editAdditionalDropzone">
+                                <!-- Dropzone 會自動生成內容 -->
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
+            
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="hideEditModal()">
                     取消
                 </button>
                 <button type="button" class="btn-primary" onclick="updateExpense()">
-                    更新
+                    更新記錄
                 </button>
             </div>
         </div>
@@ -624,15 +579,15 @@
     <!-- Loading 覆層 -->
     <div class="loading-overlay" id="loadingOverlay" style="display: none">
         <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin fa-2x"></i>
-            <p>處理中...</p>
+            <i class="fas fa-sync fa-spin fa-3x"></i>
+            <p>正在處理中...</p>
         </div>
     </div>
 
     <!-- Toast 通知 -->
     <div class="toast" id="toast">
         <i class="fas fa-check-circle"></i>
-        <span id="toastMessage">操作成功</span>
+        <span id="toastMessage">操作成功！</span>
     </div>
 
     <!-- FullCalendar Script -->
@@ -781,6 +736,7 @@
         });
     </script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
     <script src="script.js"></script>
 </body>
 

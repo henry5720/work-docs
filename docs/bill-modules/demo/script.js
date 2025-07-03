@@ -10,6 +10,8 @@ let selectedEditAdditionalFiles = []; // 新增：編輯時的附加檔案陣列
 let currentMode = "project";
 let selectedDate = null;
 let isOCREnabled = true; // 新增：OCR開關狀態
+let additionalDropzone = null; // 新增：附加檔案dropzone實例
+let editAdditionalDropzone = null; // 新增：編輯時的附加檔案dropzone實例
 
 // 匯率資料
 const exchangeRates = {
@@ -23,8 +25,138 @@ const exchangeRates = {
 // 將 calendarEvents 定義為全域變數
 window.calendarEvents = [];
 
+// 初始化 Dropzone
+function initializeDropzones() {
+    // 先銷毀已存在的實例
+    if (additionalDropzone) {
+        additionalDropzone.destroy();
+        additionalDropzone = null;
+    }
+    if (editAdditionalDropzone) {
+        editAdditionalDropzone.destroy();
+        editAdditionalDropzone = null;
+    }
+    
+    // 主要附加檔案 Dropzone
+    const additionalElement = document.getElementById('additionalDropzone');
+    if (additionalElement && !additionalElement.dropzone) {
+        additionalDropzone = new Dropzone('#additionalDropzone', {
+            url: '/placeholder', // 實際使用時替換為真實上傳URL
+            autoProcessQueue: false,
+            addRemoveLinks: true,
+            maxFiles: 10,
+            parallelUploads: 10,
+            acceptedFiles: 'image/*,application/pdf,.doc,.docx',
+            clickable: true, // 啟用點擊上傳
+            dictDefaultMessage: `
+                <i class="fas fa-paperclip fa-2x" style="color: #9ca3af; margin-bottom: 12px; display: block;"></i>
+                <div style="font-size: 16px; color: #6b7280; margin-bottom: 8px;">拖拽檔案到此處或點擊上傳</div>
+                <div style="font-size: 14px; color: #9ca3af;">支援 PDF、Word、圖片等格式</div>
+            `,
+            dictRemoveFile: '移除',
+            dictFileTooBig: '檔案過大 (最大 {{maxFilesize}}MB)',
+            dictInvalidFileType: '不支援的檔案格式',
+            dictMaxFilesExceeded: '超出最大檔案數量限制 (最多 {{maxFiles}} 個)',
+            dictFallbackMessage: '您的瀏覽器不支援拖拽上傳',
+            dictResponseError: '上傳失敗 ({{statusCode}})',
+            maxFilesize: 10, // 10MB
+            
+            init: function() {
+                this.on('addedfile', function(file) {
+                    selectedAdditionalFiles.push(file);
+                    console.log('附加檔案已添加:', file.name);
+                });
+                
+                this.on('removedfile', function(file) {
+                    const index = selectedAdditionalFiles.indexOf(file);
+                    if (index > -1) {
+                        selectedAdditionalFiles.splice(index, 1);
+                        console.log('附加檔案已移除:', file.name);
+                    }
+                });
+                
+                this.on('dragover', function() {
+                    this.element.classList.add('dz-drag-hover');
+                });
+                
+                this.on('dragleave', function() {
+                    this.element.classList.remove('dz-drag-hover');
+                });
+                
+                this.on('drop', function() {
+                    this.element.classList.remove('dz-drag-hover');
+                });
+                
+                this.on('error', function(file, message) {
+                    console.log('檔案上傳錯誤:', message);
+                    showToast(`檔案上傳失敗: ${message}`, 'error');
+                });
+            }
+        });
+    }
+    
+    // 編輯時的附加檔案 Dropzone
+    const editElement = document.getElementById('editAdditionalDropzone');
+    if (editElement && !editElement.dropzone) {
+        editAdditionalDropzone = new Dropzone('#editAdditionalDropzone', {
+            url: '/placeholder', // 實際使用時替換為真實上傳URL
+            autoProcessQueue: false,
+            addRemoveLinks: true,
+            maxFiles: 10,
+            parallelUploads: 10,
+            acceptedFiles: 'image/*,application/pdf,.doc,.docx',
+            clickable: true, // 啟用點擊上傳
+            dictDefaultMessage: `
+                <i class="fas fa-paperclip fa-2x" style="color: #9ca3af; margin-bottom: 12px; display: block;"></i>
+                <div style="font-size: 16px; color: #6b7280; margin-bottom: 8px;">拖拽檔案到此處或點擊上傳</div>
+                <div style="font-size: 14px; color: #9ca3af;">支援 PDF、Word、圖片等格式</div>
+            `,
+            dictRemoveFile: '移除',
+            dictFileTooBig: '檔案過大 (最大 {{maxFilesize}}MB)',
+            dictInvalidFileType: '不支援的檔案格式',
+            dictMaxFilesExceeded: '超出最大檔案數量限制 (最多 {{maxFiles}} 個)',
+            dictFallbackMessage: '您的瀏覽器不支援拖拽上傳',
+            dictResponseError: '上傳失敗 ({{statusCode}})',
+            maxFilesize: 10, // 10MB
+            
+            init: function() {
+                this.on('addedfile', function(file) {
+                    selectedEditAdditionalFiles.push(file);
+                    console.log('編輯附加檔案已添加:', file.name);
+                });
+                
+                this.on('removedfile', function(file) {
+                    const index = selectedEditAdditionalFiles.indexOf(file);
+                    if (index > -1) {
+                        selectedEditAdditionalFiles.splice(index, 1);
+                        console.log('編輯附加檔案已移除:', file.name);
+                    }
+                });
+                
+                this.on('dragover', function() {
+                    this.element.classList.add('dz-drag-hover');
+                });
+                
+                this.on('dragleave', function() {
+                    this.element.classList.remove('dz-drag-hover');
+                });
+                
+                this.on('drop', function() {
+                    this.element.classList.remove('dz-drag-hover');
+                });
+                
+                this.on('error', function(file, message) {
+                    console.log('編輯檔案上傳錯誤:', message);
+                    showToast(`檔案上傳失敗: ${message}`, 'error');
+                });
+            }
+        });
+    }
+}
+
 // 初始化應用程式
 document.addEventListener("DOMContentLoaded", function () {
+    initializeDropzones();
     initializeApp();
     initializeResponsiveFeatures();
 });
@@ -935,95 +1067,47 @@ function toggleOCRMode() {
     
     const ocrUploadSection = document.getElementById('ocrUploadSection');
     const manualFormSection = document.getElementById('manualFormSection');
-    const formResults = document.getElementById('formResults');
-    const formResultsTitle = document.getElementById('formResultsTitle');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const saveExpenseBtn = document.getElementById('saveExpenseBtn');
-    const manualSaveBtn = document.getElementById('manualSaveBtn');
+    const ocrFormSection = document.getElementById('ocrFormSection');
     const ocrDescription = document.getElementById('ocrDescription');
     
     if (isOCREnabled) {
         // 啟用OCR模式
         ocrUploadSection.style.display = 'block';
         manualFormSection.style.display = 'none';
-        formResults.style.display = 'none';
-        formResultsTitle.textContent = 'OCR 識別結果';
-        uploadBtn.style.display = 'inline-flex';
-        saveExpenseBtn.style.display = 'none';
-        manualSaveBtn.style.display = 'none';
+        ocrFormSection.style.display = 'block';
         ocrDescription.textContent = '上傳發票圖片，系統將自動識別發票資訊並填入表單';
     } else {
-        // 關閉OCR模式，直接顯示表單
+        // 手動填寫模式
         ocrUploadSection.style.display = 'none';
         manualFormSection.style.display = 'block';
-        formResults.style.display = 'block';
-        formResultsTitle.textContent = '請填寫報帳資訊';
-        uploadBtn.style.display = 'none';
-        saveExpenseBtn.style.display = 'none';
-        manualSaveBtn.style.display = 'inline-flex';
-        ocrDescription.textContent = '手動填寫報帳資訊，不使用OCR自動識別功能';
+        ocrFormSection.style.display = 'block';
+        ocrDescription.textContent = '直接手動填寫報帳表單';
         
-        // 填入預設值
+        // 在手動模式下設定預設值
         setDefaultFormValues();
     }
 }
 
-// 設定預設表單值
 function setDefaultFormValues() {
-    document.getElementById("applicantName").value = "王小明";
-    document.getElementById("department").value = "業務部";
-    document.getElementById("position").value = "業務經理";
-    document.getElementById("currency").value = "TWD";
-    document.getElementById("status").value = "pending";
-    calculateTWDAmount();
-
-    if (currentMode === "calendar" && selectedDate) {
-        document.getElementById("expenseDate").value = new Date(selectedDate)
-            .toISOString()
-            .split("T")[0];
-    }
-}
-
-// 上傳模態框
-function showUploadModal() {
-    if (currentMode === "calendar") {
-        document.getElementById("projectSelectGroup").style.display = "block";
-        updateProjectSelectOptions();
-
-        if (selectedDate) {
-            document.getElementById("expenseDate").value = new Date(selectedDate)
-                .toISOString()
-                .split("T")[0];
-        }
-    } else {
-        document.getElementById("projectSelectGroup").style.display = "none";
-        if (!currentProject) {
-            showToast("請先選擇專案", "error");
-            return;
-        }
-    }
-
-    document.getElementById("uploadModal").classList.add("show");
-    resetUploadModal();
-}
-
-function hideUploadModal() {
-    document.getElementById("uploadModal").classList.remove("show");
-    resetUploadModal();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expenseDate').value = today;
+    document.getElementById('currency').value = 'TWD';
+    document.getElementById('exchangeRate').value = '1';
+    document.getElementById('status').value = 'pending';
 }
 
 function resetUploadModal() {
     selectedFiles = [];
     selectedAdditionalFiles = []; // 重置附加檔案
     document.getElementById("fileInput").value = "";
-    document.getElementById("additionalFilesInput").value = "";
     document.getElementById("previewArea").style.display = "none";
-    document.getElementById("additionalFilesPreview").style.display = "none";
-    document.getElementById("formResults").style.display = "none";
     document.getElementById("uploadBtn").style.display = "inline-flex";
-    document.getElementById("saveExpenseBtn").style.display = "none";
-    document.getElementById("manualSaveBtn").style.display = "none";
     document.getElementById("expenseForm").reset();
+    
+    // 清除 Dropzone 檔案
+    if (additionalDropzone) {
+        additionalDropzone.removeAllFiles(true);
+    }
     
     // 重置OCR開關狀態
     document.getElementById('ocrToggle').checked = true;
@@ -1031,6 +1115,32 @@ function resetUploadModal() {
     
     // 重置顯示狀態
     toggleOCRMode();
+}
+
+function hideEditModal() {
+    document.getElementById("editModal").classList.remove("show");
+    document.getElementById("editExpenseForm").reset();
+    selectedEditAdditionalFiles = []; // 清空編輯時的附加檔案
+    
+    // 清除編輯時的 Dropzone 檔案
+    if (editAdditionalDropzone) {
+        editAdditionalDropzone.removeAllFiles(true);
+    }
+}
+
+// 上傳模態框
+function showUploadModal() {
+    document.getElementById("uploadModal").classList.add("show");
+    
+    // 確保dropzone已初始化
+    setTimeout(() => {
+        initializeDropzones();
+    }, 100);
+}
+
+function hideUploadModal() {
+    document.getElementById("uploadModal").classList.remove("show");
+    resetUploadModal();
 }
 
 // 檔案處理
@@ -1178,6 +1288,9 @@ function showFormResults() {
 
 // 儲存費用記錄
 function saveExpense() {
+    // 獲取dropzone檔案
+    const dropzoneFiles = additionalDropzone ? additionalDropzone.files : [];
+    
     const formData = {
         applicantName: document.getElementById("applicantName").value,
         department: document.getElementById("department").value,
@@ -1193,15 +1306,14 @@ function saveExpense() {
         twdAmount: parseFloat(document.getElementById("twdAmount").value),
         status: document.getElementById("status").value,
         notes: document.getElementById("notes").value,
-        additionalFiles: selectedAdditionalFiles.map(file => file.name), // 儲存附加檔案資訊
-        hasAdditionalFiles: selectedAdditionalFiles.length > 0
+        additionalFiles: dropzoneFiles.map(file => file.name), // 儲存附加檔案資訊
+        hasAdditionalFiles: dropzoneFiles.length > 0
     };
 
     // 驗證必填欄位
     if (
         !formData.applicantName ||
         !formData.department ||
-        !formData.position ||
         !formData.expenseDate ||
         !formData.expenseSubject ||
         !formData.expenseContent ||
@@ -1254,8 +1366,8 @@ function saveExpense() {
     hideUploadModal();
     
     let message = "費用記錄已儲存！";
-    if (selectedAdditionalFiles.length > 0) {
-        message += ` 已上傳 ${selectedAdditionalFiles.length} 個附加檔案。`;
+    if (dropzoneFiles.length > 0) {
+        message += ` 已上傳 ${dropzoneFiles.length} 個附加檔案。`;
     }
     showToast(message, "success");
 }
@@ -1286,18 +1398,12 @@ function editExpense(expenseId) {
     document.getElementById("editStatus").value = expense.status || "pending";
     document.getElementById("editNotes").value = expense.notes || "";
 
-    // 隱藏編輯時的附加檔案預覽
-    document.getElementById("editAdditionalFilesPreview").style.display = "none";
-
     document.getElementById("editModal").classList.add("show");
-}
-
-function hideEditModal() {
-    document.getElementById("editModal").classList.remove("show");
-    document.getElementById("editExpenseForm").reset();
-    selectedEditAdditionalFiles = []; // 清空編輯時的附加檔案
-    document.getElementById("editAdditionalFilesInput").value = "";
-    document.getElementById("editAdditionalFilesPreview").style.display = "none";
+    
+    // 確保編輯模態框的dropzone已初始化
+    setTimeout(() => {
+        initializeDropzones();
+    }, 100);
 }
 
 function updateExpense() {
@@ -1305,6 +1411,9 @@ function updateExpense() {
     const expense = currentProject.expenses.find((exp) => exp.id === expenseId);
 
     if (!expense) return;
+
+    // 獲取編輯時的dropzone檔案
+    const editDropzoneFiles = editAdditionalDropzone ? editAdditionalDropzone.files : [];
 
     // 更新費用資料
     expense.applicantName = document.getElementById("editApplicantName").value;
@@ -1327,8 +1436,8 @@ function updateExpense() {
     expense.notes = document.getElementById("editNotes").value;
     
     // 更新附加檔案
-    if (selectedEditAdditionalFiles.length > 0) {
-        expense.additionalFiles = selectedEditAdditionalFiles.map(file => file.name);
+    if (editDropzoneFiles.length > 0) {
+        expense.additionalFiles = editDropzoneFiles.map(file => file.name);
         expense.hasAdditionalFiles = true;
     }
 
@@ -1339,8 +1448,8 @@ function updateExpense() {
     hideEditModal();
     
     let message = "費用記錄已更新！";
-    if (selectedEditAdditionalFiles.length > 0) {
-        message += ` 已更新 ${selectedEditAdditionalFiles.length} 個附加檔案。`;
+    if (editDropzoneFiles.length > 0) {
+        message += ` 已更新 ${editDropzoneFiles.length} 個附加檔案。`;
     }
     showToast(message, "success");
 
@@ -1733,147 +1842,6 @@ document.addEventListener(
     { passive: false }
 );
 
-// 附加檔案處理函數
-function handleAdditionalFilesSelect(event) {
-    const files = Array.from(event.target.files);
-    selectedAdditionalFiles = [...selectedAdditionalFiles, ...files];
-    showAdditionalFilesPreview();
-}
-
-function dragOverAdditionalFiles(event) {
-    event.preventDefault();
-    document.getElementById("additionalUploadArea").classList.add("dragover");
-}
-
-function dropAdditionalFiles(event) {
-    event.preventDefault();
-    document.getElementById("additionalUploadArea").classList.remove("dragover");
-    
-    const files = Array.from(event.dataTransfer.files);
-    selectedAdditionalFiles = [...selectedAdditionalFiles, ...files];
-    showAdditionalFilesPreview();
-}
-
-function showAdditionalFilesPreview() {
-    const previewArea = document.getElementById("additionalFilesPreview");
-    const filesList = document.getElementById("additionalFilesList");
-    
-    if (selectedAdditionalFiles.length === 0) {
-        previewArea.style.display = "none";
-        return;
-    }
-    
-    filesList.innerHTML = "";
-    
-    selectedAdditionalFiles.forEach((file, index) => {
-        const fileItem = createAdditionalFileItem(file, index, false);
-        filesList.appendChild(fileItem);
-    });
-    
-    previewArea.style.display = "block";
-}
-
-function createAdditionalFileItem(file, index, isEdit = false) {
-    const fileItem = document.createElement("div");
-    fileItem.className = "additional-file-item";
-    
-    const fileIcon = getFileIcon(file.name);
-    const fileSize = formatFileSize(file.size);
-    const removeFunction = isEdit ? "removeEditAdditionalFile" : "removeAdditionalFile";
-    
-    fileItem.innerHTML = `
-        <div class="additional-file-info">
-            <i class="fas ${fileIcon.icon} additional-file-icon ${fileIcon.class}"></i>
-            <span class="additional-file-name">${file.name}</span>
-            <span class="additional-file-size">(${fileSize})</span>
-        </div>
-        <i class="fas fa-times additional-file-remove" onclick="${removeFunction}(${index})"></i>
-    `;
-    
-    return fileItem;
-}
-
-function getFileIcon(fileName) {
-    const extension = fileName.split('.').pop().toLowerCase();
-    
-    switch (extension) {
-        case 'pdf':
-            return { icon: 'fa-file-pdf', class: 'file-type-pdf' };
-        case 'doc':
-        case 'docx':
-            return { icon: 'fa-file-word', class: 'file-type-doc' };
-        case 'jpg':
-        case 'jpeg':
-        case 'png':
-        case 'gif':
-        case 'bmp':
-        case 'webp':
-            return { icon: 'fa-file-image', class: 'file-type-image' };
-        default:
-            return { icon: 'fa-file', class: 'file-type-default' };
-    }
-}
-
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function removeAdditionalFile(index) {
-    selectedAdditionalFiles.splice(index, 1);
-    showAdditionalFilesPreview();
-}
-
-// 編輯模態框的附加檔案處理函數
-function handleEditAdditionalFilesSelect(event) {
-    const files = Array.from(event.target.files);
-    selectedEditAdditionalFiles = [...selectedEditAdditionalFiles, ...files];
-    showEditAdditionalFilesPreview();
-}
-
-function dragOverEditAdditionalFiles(event) {
-    event.preventDefault();
-    document.getElementById("editAdditionalUploadArea").classList.add("dragover");
-}
-
-function dropEditAdditionalFiles(event) {
-    event.preventDefault();
-    document.getElementById("editAdditionalUploadArea").classList.remove("dragover");
-    
-    const files = Array.from(event.dataTransfer.files);
-    selectedEditAdditionalFiles = [...selectedEditAdditionalFiles, ...files];
-    showEditAdditionalFilesPreview();
-}
-
-function showEditAdditionalFilesPreview() {
-    const previewArea = document.getElementById("editAdditionalFilesPreview");
-    const filesList = document.getElementById("editAdditionalFilesList");
-    
-    if (selectedEditAdditionalFiles.length === 0) {
-        previewArea.style.display = "none";
-        return;
-    }
-    
-    filesList.innerHTML = "";
-    
-    selectedEditAdditionalFiles.forEach((file, index) => {
-        const fileItem = createAdditionalFileItem(file, index, true);
-        filesList.appendChild(fileItem);
-    });
-    
-    previewArea.style.display = "block";
-}
-
-function removeEditAdditionalFile(index) {
-    selectedEditAdditionalFiles.splice(index, 1);
-    showEditAdditionalFilesPreview();
-}
-
 // 將函數暴露到全域
 window.showEventDetails = showEventDetails;
 window.updateSelectedDateDetails = updateSelectedDateDetails;
@@ -1886,12 +1854,3 @@ window.closeMobileSidebar = closeMobileSidebar;
 window.renderMobileCards = renderMobileCards;
 window.toggleOCRMode = toggleOCRMode;
 window.setDefaultFormValues = setDefaultFormValues;
-window.showFormResults = showFormResults;
-window.handleAdditionalFilesSelect = handleAdditionalFilesSelect;
-window.dragOverAdditionalFiles = dragOverAdditionalFiles;
-window.dropAdditionalFiles = dropAdditionalFiles;
-window.removeAdditionalFile = removeAdditionalFile;
-window.handleEditAdditionalFilesSelect = handleEditAdditionalFilesSelect;
-window.dragOverEditAdditionalFiles = dragOverEditAdditionalFiles;
-window.dropEditAdditionalFiles = dropEditAdditionalFiles;
-window.removeEditAdditionalFile = removeEditAdditionalFile;
