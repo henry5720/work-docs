@@ -160,7 +160,7 @@
 
                     <div class="action-buttons" id="actionButtons" style="display: none">
                         <button class="btn-primary" onclick="showUploadModal()">
-                            <i class="fas fa-upload"></i> 上傳發票
+                            <i class="fas fa-plus"></i> 新增報帳
                         </button>
                         <button class="btn-secondary" onclick="exportReport()">
                             <i class="fas fa-file-export"></i> 匯出報表
@@ -229,7 +229,7 @@
 
                     <div class="action-buttons">
                         <button class="btn-primary" onclick="showUploadModal()">
-                            <i class="fas fa-upload"></i> 新增報帳
+                            <i class="fas fa-plus"></i> 新增報帳
                         </button>
                         <button class="btn-secondary" onclick="exportMonthlyReport()">
                             <i class="fas fa-file-export"></i> 匯出月報表
@@ -283,31 +283,59 @@
     <div class="modal" id="uploadModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>上傳發票</h3>
+                <h3>新增報帳記錄</h3>
                 <span class="close" onclick="hideUploadModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="upload-area" id="uploadArea" ondrop="dropHandler(event)"
-                    ondragover="dragOverHandler(event)">
-                    <i class="fas fa-cloud-upload-alt fa-3x"></i>
-                    <p>拖拽發票圖片到此處，或點擊選擇檔案</p>
-                    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)" />
-                    <button type="button" class="btn-upload" onclick="document.getElementById('fileInput').click()">
-                        選擇檔案
-                    </button>
+                <!-- OCR 開關選項 -->
+                <div class="ocr-toggle-section">
+                    <div class="ocr-toggle-header">
+                        <h4>辨識方式</h4>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="ocrToggle" checked onchange="toggleOCRMode()">
+                            <label for="ocrToggle" class="toggle-label">
+                                <span class="toggle-text">啟用OCR發票辨識</span>
+                                <div class="toggle-slider"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <p class="ocr-description">
+                        <span id="ocrDescription">上傳發票圖片，系統將自動識別發票資訊並填入表單</span>
+                    </p>
                 </div>
 
-                <!-- 預覽區域 -->
-                <div class="preview-area" id="previewArea" style="display: none">
-                    <h4>檔案預覽</h4>
-                    <div class="file-list" id="fileList">
-                        <!-- 將由 JavaScript 動態生成 -->
+                <!-- OCR 上傳區域 -->
+                <div class="ocr-upload-section" id="ocrUploadSection">
+                    <div class="upload-area" id="uploadArea" ondrop="dropHandler(event)"
+                        ondragover="dragOverHandler(event)">
+                        <i class="fas fa-cloud-upload-alt fa-3x"></i>
+                        <p>拖拽發票圖片到此處，或點擊選擇檔案</p>
+                        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)" />
+                        <button type="button" class="btn-upload" onclick="document.getElementById('fileInput').click()">
+                            選擇檔案
+                        </button>
+                    </div>
+
+                    <!-- 預覽區域 -->
+                    <div class="preview-area" id="previewArea" style="display: none">
+                        <h4>檔案預覽</h4>
+                        <div class="file-list" id="fileList">
+                            <!-- 將由 JavaScript 動態生成 -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- OCR 識別結果 -->
-                <div class="ocr-results" id="ocrResults" style="display: none">
-                    <h4>OCR 識別結果</h4>
+                <!-- 直接填寫表單區域 -->
+                <div class="manual-form-section" id="manualFormSection" style="display: none">
+                    <div class="form-intro">
+                        <h4>手動填寫報帳資訊</h4>
+                        <p>請填寫以下報帳相關資訊</p>
+                    </div>
+                </div>
+
+                <!-- OCR 識別結果 / 表單填寫區域 -->
+                <div class="form-results" id="formResults" style="display: none">
+                    <h4 id="formResultsTitle">OCR 識別結果</h4>
                     <form id="expenseForm">
                         <div class="form-row">
                             <div class="form-group">
@@ -406,6 +434,32 @@
                                 <textarea id="notes" placeholder="請輸入備註（可選）"></textarea>
                             </div>
                         </div>
+                        
+                        <!-- 上傳更多檔案區域 -->
+                        <div class="form-group">
+                            <label for="additionalFiles">上傳更多檔案</label>
+                            <div class="additional-files-section">
+                                <div class="additional-upload-area" id="additionalUploadArea" 
+                                     ondrop="dropAdditionalFiles(event)" ondragover="dragOverAdditionalFiles(event)">
+                                    <i class="fas fa-paperclip fa-2x"></i>
+                                    <p>上傳收據、證明文件等 (可選)</p>
+                                    <input type="file" id="additionalFilesInput" accept="image/*,application/pdf,.doc,.docx" 
+                                           multiple onchange="handleAdditionalFilesSelect(event)" />
+                                    <button type="button" class="btn-upload-small" 
+                                            onclick="document.getElementById('additionalFilesInput').click()">
+                                        選擇檔案
+                                    </button>
+                                </div>
+                                
+                                <!-- 附加檔案預覽 -->
+                                <div class="additional-files-preview" id="additionalFilesPreview" style="display: none">
+                                    <h5>已選擇的檔案</h5>
+                                    <div class="additional-files-list" id="additionalFilesList">
+                                        <!-- 將由 JavaScript 動態生成 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -419,6 +473,10 @@
                 <button type="button" class="btn-primary" id="saveExpenseBtn" onclick="saveExpense()"
                     style="display: none">
                     儲存報帳
+                </button>
+                <button type="button" class="btn-primary" id="manualSaveBtn" onclick="saveExpense()"
+                    style="display: none">
+                    新增報帳
                 </button>
             </div>
         </div>
@@ -522,6 +580,32 @@
                         <div class="form-group">
                             <label for="editNotes">備註</label>
                             <textarea id="editNotes" placeholder="請輸入備註（可選）"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- 上傳更多檔案區域 -->
+                    <div class="form-group">
+                        <label for="editAdditionalFiles">上傳更多檔案</label>
+                        <div class="additional-files-section">
+                            <div class="additional-upload-area" id="editAdditionalUploadArea" 
+                                 ondrop="dropEditAdditionalFiles(event)" ondragover="dragOverEditAdditionalFiles(event)">
+                                <i class="fas fa-paperclip fa-2x"></i>
+                                <p>上傳收據、證明文件等 (可選)</p>
+                                <input type="file" id="editAdditionalFilesInput" accept="image/*,application/pdf,.doc,.docx" 
+                                       multiple onchange="handleEditAdditionalFilesSelect(event)" />
+                                <button type="button" class="btn-upload-small" 
+                                        onclick="document.getElementById('editAdditionalFilesInput').click()">
+                                    選擇檔案
+                                </button>
+                            </div>
+                            
+                            <!-- 附加檔案預覽 -->
+                            <div class="additional-files-preview" id="editAdditionalFilesPreview" style="display: none">
+                                <h5>已選擇的檔案</h5>
+                                <div class="additional-files-list" id="editAdditionalFilesList">
+                                    <!-- 將由 JavaScript 動態生成 -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>

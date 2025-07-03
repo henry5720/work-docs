@@ -5,8 +5,11 @@ let projects = [];
 let currentProject = null;
 let expenses = [];
 let selectedFiles = [];
+let selectedAdditionalFiles = []; // 新增：附加檔案陣列
+let selectedEditAdditionalFiles = []; // 新增：編輯時的附加檔案陣列
 let currentMode = "project";
 let selectedDate = null;
+let isOCREnabled = true; // 新增：OCR開關狀態
 
 // 匯率資料
 const exchangeRates = {
@@ -697,6 +700,16 @@ function createExpenseCard(expense) {
     const statusText = expense.status === "completed" ? "已完成" : "待處理";
     const statusClass = expense.status === "completed" ? "approved" : "pending";
 
+    // 附加檔案顯示
+    const attachmentSection = expense.hasAdditionalFiles && expense.additionalFiles 
+        ? `<div class="expense-card-detail">
+               <div class="expense-card-detail-label">附加檔案</div>
+               <div class="expense-card-detail-value">
+                   <i class="fas fa-paperclip"></i> ${expense.additionalFiles.length} 個檔案
+               </div>
+           </div>` 
+        : '';
+
     card.innerHTML = `
         <div class="expense-card-header">
             <div>
@@ -737,6 +750,7 @@ function createExpenseCard(expense) {
                 <div class="expense-card-detail-value">${expense.invoiceNumber || "-"
         }</div>
             </div>
+            ${attachmentSection}
             <div class="expense-card-detail">
                 <div class="expense-card-detail-label">備註</div>
                 <div class="expense-card-detail-value">${expense.notes || "-"
@@ -770,6 +784,11 @@ function createExpenseRow(expense) {
     const statusText = expense.status === "completed" ? "已完成" : "待處理";
     const statusClass = expense.status === "completed" ? "approved" : "pending";
 
+    // 附加檔案顯示
+    const attachmentInfo = expense.hasAdditionalFiles && expense.additionalFiles 
+        ? `<i class="fas fa-paperclip" title="已上傳 ${expense.additionalFiles.length} 個附加檔案"></i>` 
+        : '';
+
     row.innerHTML = `
         <td>${new Date(
         expense.applicationDate || expense.expenseDate
@@ -778,7 +797,7 @@ function createExpenseRow(expense) {
         <td>${expense.department || "-"}</td>
         <td>${expense.position || "-"}</td>
         <td>${new Date(expense.expenseDate).toLocaleDateString("zh-TW")}</td>
-        <td>${expense.invoiceNumber || "-"}</td>
+        <td>${expense.invoiceNumber || "-"} ${attachmentInfo}</td>
         <td>${expense.expenseSubject || "-"}</td>
         <td>${expense.expenseContent || "-"}</td>
         <td>${expense.expensePurpose || "-"}</td>
@@ -910,6 +929,61 @@ function updateProjectSelectOptions() {
     }
 }
 
+// OCR 切換功能
+function toggleOCRMode() {
+    isOCREnabled = document.getElementById('ocrToggle').checked;
+    
+    const ocrUploadSection = document.getElementById('ocrUploadSection');
+    const manualFormSection = document.getElementById('manualFormSection');
+    const formResults = document.getElementById('formResults');
+    const formResultsTitle = document.getElementById('formResultsTitle');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const saveExpenseBtn = document.getElementById('saveExpenseBtn');
+    const manualSaveBtn = document.getElementById('manualSaveBtn');
+    const ocrDescription = document.getElementById('ocrDescription');
+    
+    if (isOCREnabled) {
+        // 啟用OCR模式
+        ocrUploadSection.style.display = 'block';
+        manualFormSection.style.display = 'none';
+        formResults.style.display = 'none';
+        formResultsTitle.textContent = 'OCR 識別結果';
+        uploadBtn.style.display = 'inline-flex';
+        saveExpenseBtn.style.display = 'none';
+        manualSaveBtn.style.display = 'none';
+        ocrDescription.textContent = '上傳發票圖片，系統將自動識別發票資訊並填入表單';
+    } else {
+        // 關閉OCR模式，直接顯示表單
+        ocrUploadSection.style.display = 'none';
+        manualFormSection.style.display = 'block';
+        formResults.style.display = 'block';
+        formResultsTitle.textContent = '請填寫報帳資訊';
+        uploadBtn.style.display = 'none';
+        saveExpenseBtn.style.display = 'none';
+        manualSaveBtn.style.display = 'inline-flex';
+        ocrDescription.textContent = '手動填寫報帳資訊，不使用OCR自動識別功能';
+        
+        // 填入預設值
+        setDefaultFormValues();
+    }
+}
+
+// 設定預設表單值
+function setDefaultFormValues() {
+    document.getElementById("applicantName").value = "王小明";
+    document.getElementById("department").value = "業務部";
+    document.getElementById("position").value = "業務經理";
+    document.getElementById("currency").value = "TWD";
+    document.getElementById("status").value = "pending";
+    calculateTWDAmount();
+
+    if (currentMode === "calendar" && selectedDate) {
+        document.getElementById("expenseDate").value = new Date(selectedDate)
+            .toISOString()
+            .split("T")[0];
+    }
+}
+
 // 上傳模態框
 function showUploadModal() {
     if (currentMode === "calendar") {
@@ -940,26 +1014,23 @@ function hideUploadModal() {
 
 function resetUploadModal() {
     selectedFiles = [];
+    selectedAdditionalFiles = []; // 重置附加檔案
     document.getElementById("fileInput").value = "";
+    document.getElementById("additionalFilesInput").value = "";
     document.getElementById("previewArea").style.display = "none";
-    document.getElementById("ocrResults").style.display = "none";
+    document.getElementById("additionalFilesPreview").style.display = "none";
+    document.getElementById("formResults").style.display = "none";
     document.getElementById("uploadBtn").style.display = "inline-flex";
     document.getElementById("saveExpenseBtn").style.display = "none";
+    document.getElementById("manualSaveBtn").style.display = "none";
     document.getElementById("expenseForm").reset();
-
-    // 設置預設值
-    document.getElementById("applicantName").value = "王小明";
-    document.getElementById("department").value = "業務部";
-    document.getElementById("position").value = "業務經理";
-    document.getElementById("currency").value = "TWD";
-    document.getElementById("status").value = "pending";
-    calculateTWDAmount();
-
-    if (currentMode === "calendar" && selectedDate) {
-        document.getElementById("expenseDate").value = new Date(selectedDate)
-            .toISOString()
-            .split("T")[0];
-    }
+    
+    // 重置OCR開關狀態
+    document.getElementById('ocrToggle').checked = true;
+    isOCREnabled = true;
+    
+    // 重置顯示狀態
+    toggleOCRMode();
 }
 
 // 檔案處理
@@ -1017,6 +1088,12 @@ function removeFile(index) {
 
 // OCR 功能
 function uploadFiles() {
+    if (!isOCREnabled) {
+        // 如果OCR未啟用，直接顯示表單
+        showFormResults();
+        return;
+    }
+    
     if (selectedFiles.length === 0) {
         showToast("請先選擇檔案", "error");
         return;
@@ -1027,7 +1104,7 @@ function uploadFiles() {
     setTimeout(() => {
         hideLoading();
         simulateOCR();
-        showOCRResults();
+        showFormResults();
     }, 2000);
 }
 
@@ -1074,10 +1151,29 @@ function simulateOCR() {
     calculateTWDAmount();
 }
 
-function showOCRResults() {
-    document.getElementById("ocrResults").style.display = "block";
-    document.getElementById("uploadBtn").style.display = "none";
-    document.getElementById("saveExpenseBtn").style.display = "inline-flex";
+function showFormResults() {
+    const formResults = document.getElementById("formResults");
+    const formResultsTitle = document.getElementById("formResultsTitle");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const saveExpenseBtn = document.getElementById("saveExpenseBtn");
+    const manualSaveBtn = document.getElementById("manualSaveBtn");
+    
+    formResults.style.display = "block";
+    
+    if (isOCREnabled) {
+        formResultsTitle.textContent = 'OCR 識別結果';
+        uploadBtn.style.display = "none";
+        saveExpenseBtn.style.display = "inline-flex";
+        manualSaveBtn.style.display = "none";
+    } else {
+        formResultsTitle.textContent = '請填寫報帳資訊';
+        uploadBtn.style.display = "none";
+        saveExpenseBtn.style.display = "none";
+        manualSaveBtn.style.display = "inline-flex";
+        
+        // 手動模式下填入預設值
+        setDefaultFormValues();
+    }
 }
 
 // 儲存費用記錄
@@ -1097,6 +1193,8 @@ function saveExpense() {
         twdAmount: parseFloat(document.getElementById("twdAmount").value),
         status: document.getElementById("status").value,
         notes: document.getElementById("notes").value,
+        additionalFiles: selectedAdditionalFiles.map(file => file.name), // 儲存附加檔案資訊
+        hasAdditionalFiles: selectedAdditionalFiles.length > 0
     };
 
     // 驗證必填欄位
@@ -1154,13 +1252,21 @@ function saveExpense() {
     }
 
     hideUploadModal();
-    showToast("費用記錄已儲存！", "success");
+    
+    let message = "費用記錄已儲存！";
+    if (selectedAdditionalFiles.length > 0) {
+        message += ` 已上傳 ${selectedAdditionalFiles.length} 個附加檔案。`;
+    }
+    showToast(message, "success");
 }
 
 // 編輯費用記錄
 function editExpense(expenseId) {
     const expense = currentProject.expenses.find((exp) => exp.id === expenseId);
     if (!expense) return;
+
+    // 重置編輯時的附加檔案
+    selectedEditAdditionalFiles = [];
 
     // 填入編輯表單
     document.getElementById("editExpenseId").value = expense.id;
@@ -1180,12 +1286,18 @@ function editExpense(expenseId) {
     document.getElementById("editStatus").value = expense.status || "pending";
     document.getElementById("editNotes").value = expense.notes || "";
 
+    // 隱藏編輯時的附加檔案預覽
+    document.getElementById("editAdditionalFilesPreview").style.display = "none";
+
     document.getElementById("editModal").classList.add("show");
 }
 
 function hideEditModal() {
     document.getElementById("editModal").classList.remove("show");
     document.getElementById("editExpenseForm").reset();
+    selectedEditAdditionalFiles = []; // 清空編輯時的附加檔案
+    document.getElementById("editAdditionalFilesInput").value = "";
+    document.getElementById("editAdditionalFilesPreview").style.display = "none";
 }
 
 function updateExpense() {
@@ -1213,13 +1325,24 @@ function updateExpense() {
     );
     expense.status = document.getElementById("editStatus").value;
     expense.notes = document.getElementById("editNotes").value;
+    
+    // 更新附加檔案
+    if (selectedEditAdditionalFiles.length > 0) {
+        expense.additionalFiles = selectedEditAdditionalFiles.map(file => file.name);
+        expense.hasAdditionalFiles = true;
+    }
 
     currentProject.lastUpdated = new Date().toISOString().split("T")[0];
 
     updateMainContent();
     updateCalendarEvents();
     hideEditModal();
-    showToast("費用記錄已更新！", "success");
+    
+    let message = "費用記錄已更新！";
+    if (selectedEditAdditionalFiles.length > 0) {
+        message += ` 已更新 ${selectedEditAdditionalFiles.length} 個附加檔案。`;
+    }
+    showToast(message, "success");
 
     setTimeout(() => {
         if (window.renderCalendar) {
@@ -1610,6 +1733,147 @@ document.addEventListener(
     { passive: false }
 );
 
+// 附加檔案處理函數
+function handleAdditionalFilesSelect(event) {
+    const files = Array.from(event.target.files);
+    selectedAdditionalFiles = [...selectedAdditionalFiles, ...files];
+    showAdditionalFilesPreview();
+}
+
+function dragOverAdditionalFiles(event) {
+    event.preventDefault();
+    document.getElementById("additionalUploadArea").classList.add("dragover");
+}
+
+function dropAdditionalFiles(event) {
+    event.preventDefault();
+    document.getElementById("additionalUploadArea").classList.remove("dragover");
+    
+    const files = Array.from(event.dataTransfer.files);
+    selectedAdditionalFiles = [...selectedAdditionalFiles, ...files];
+    showAdditionalFilesPreview();
+}
+
+function showAdditionalFilesPreview() {
+    const previewArea = document.getElementById("additionalFilesPreview");
+    const filesList = document.getElementById("additionalFilesList");
+    
+    if (selectedAdditionalFiles.length === 0) {
+        previewArea.style.display = "none";
+        return;
+    }
+    
+    filesList.innerHTML = "";
+    
+    selectedAdditionalFiles.forEach((file, index) => {
+        const fileItem = createAdditionalFileItem(file, index, false);
+        filesList.appendChild(fileItem);
+    });
+    
+    previewArea.style.display = "block";
+}
+
+function createAdditionalFileItem(file, index, isEdit = false) {
+    const fileItem = document.createElement("div");
+    fileItem.className = "additional-file-item";
+    
+    const fileIcon = getFileIcon(file.name);
+    const fileSize = formatFileSize(file.size);
+    const removeFunction = isEdit ? "removeEditAdditionalFile" : "removeAdditionalFile";
+    
+    fileItem.innerHTML = `
+        <div class="additional-file-info">
+            <i class="fas ${fileIcon.icon} additional-file-icon ${fileIcon.class}"></i>
+            <span class="additional-file-name">${file.name}</span>
+            <span class="additional-file-size">(${fileSize})</span>
+        </div>
+        <i class="fas fa-times additional-file-remove" onclick="${removeFunction}(${index})"></i>
+    `;
+    
+    return fileItem;
+}
+
+function getFileIcon(fileName) {
+    const extension = fileName.split('.').pop().toLowerCase();
+    
+    switch (extension) {
+        case 'pdf':
+            return { icon: 'fa-file-pdf', class: 'file-type-pdf' };
+        case 'doc':
+        case 'docx':
+            return { icon: 'fa-file-word', class: 'file-type-doc' };
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+        case 'bmp':
+        case 'webp':
+            return { icon: 'fa-file-image', class: 'file-type-image' };
+        default:
+            return { icon: 'fa-file', class: 'file-type-default' };
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function removeAdditionalFile(index) {
+    selectedAdditionalFiles.splice(index, 1);
+    showAdditionalFilesPreview();
+}
+
+// 編輯模態框的附加檔案處理函數
+function handleEditAdditionalFilesSelect(event) {
+    const files = Array.from(event.target.files);
+    selectedEditAdditionalFiles = [...selectedEditAdditionalFiles, ...files];
+    showEditAdditionalFilesPreview();
+}
+
+function dragOverEditAdditionalFiles(event) {
+    event.preventDefault();
+    document.getElementById("editAdditionalUploadArea").classList.add("dragover");
+}
+
+function dropEditAdditionalFiles(event) {
+    event.preventDefault();
+    document.getElementById("editAdditionalUploadArea").classList.remove("dragover");
+    
+    const files = Array.from(event.dataTransfer.files);
+    selectedEditAdditionalFiles = [...selectedEditAdditionalFiles, ...files];
+    showEditAdditionalFilesPreview();
+}
+
+function showEditAdditionalFilesPreview() {
+    const previewArea = document.getElementById("editAdditionalFilesPreview");
+    const filesList = document.getElementById("editAdditionalFilesList");
+    
+    if (selectedEditAdditionalFiles.length === 0) {
+        previewArea.style.display = "none";
+        return;
+    }
+    
+    filesList.innerHTML = "";
+    
+    selectedEditAdditionalFiles.forEach((file, index) => {
+        const fileItem = createAdditionalFileItem(file, index, true);
+        filesList.appendChild(fileItem);
+    });
+    
+    previewArea.style.display = "block";
+}
+
+function removeEditAdditionalFile(index) {
+    selectedEditAdditionalFiles.splice(index, 1);
+    showEditAdditionalFilesPreview();
+}
+
 // 將函數暴露到全域
 window.showEventDetails = showEventDetails;
 window.updateSelectedDateDetails = updateSelectedDateDetails;
@@ -1620,3 +1884,14 @@ window.toggleMobileSidebar = toggleMobileSidebar;
 window.openMobileSidebar = openMobileSidebar;
 window.closeMobileSidebar = closeMobileSidebar;
 window.renderMobileCards = renderMobileCards;
+window.toggleOCRMode = toggleOCRMode;
+window.setDefaultFormValues = setDefaultFormValues;
+window.showFormResults = showFormResults;
+window.handleAdditionalFilesSelect = handleAdditionalFilesSelect;
+window.dragOverAdditionalFiles = dragOverAdditionalFiles;
+window.dropAdditionalFiles = dropAdditionalFiles;
+window.removeAdditionalFile = removeAdditionalFile;
+window.handleEditAdditionalFilesSelect = handleEditAdditionalFilesSelect;
+window.dragOverEditAdditionalFiles = dragOverEditAdditionalFiles;
+window.dropEditAdditionalFiles = dropEditAdditionalFiles;
+window.removeEditAdditionalFile = removeEditAdditionalFile;
