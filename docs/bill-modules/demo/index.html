@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>報帳模組 MVP - 雙模式界面</title>
-    
+
     <!-- 引入 CDN 資源 -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
-    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+
     <!-- Day.js CDN -->
     <script src="https://unpkg.com/dayjs@1.11.13/dayjs.min.js"></script>
     <script src="https://unpkg.com/dayjs@1.11.13/plugin/isBetween.js"></script>
@@ -19,20 +20,40 @@
     <script src="https://unpkg.com/dayjs@1.11.13/plugin/minMax.js"></script>
     <script src="https://unpkg.com/dayjs@1.11.13/plugin/utc.js"></script>
     <script src="https://unpkg.com/dayjs@1.11.13/locale/zh-tw.js"></script>
-    
+
     <!-- FullCalendar CDN -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales/zh-tw.global.min.js"></script>
-    
-    <link rel="stylesheet" href="styles.css">
+
+    <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
     <div class="app-container">
+        <!-- 行動裝置頂部導航 -->
+        <div class="mobile-header">
+            <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="mobile-title">報帳管理</h1>
+            <button class="mobile-add-btn" onclick="showUploadModal()">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- 側邊欄遮罩 -->
+        <div class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
         <!-- 左側邊欄 -->
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-file-invoice-dollar"></i> 報帳管理</h2>
-                
+                <div class="sidebar-title-row">
+                    <h2><i class="fas fa-file-invoice-dollar"></i> 報帳管理</h2>
+                    <button class="sidebar-close" onclick="closeMobileSidebar()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
                 <!-- 模式切換按鈕 -->
                 <div class="mode-switch-container">
                     <div class="mode-switch">
@@ -46,21 +67,21 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <button class="btn-add-project" onclick="showCreateProjectModal()" id="addProjectBtn">
                     <i class="fas fa-plus"></i> 新增專案
                 </button>
             </div>
-            
+
             <!-- 專案模式側邊欄內容 -->
             <div class="sidebar-content" id="projectSidebarContent">
                 <!-- 篩選區域 -->
                 <div class="filter-section">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="搜尋專案..." onkeyup="filterProjects()">
+                        <input type="text" id="searchInput" placeholder="搜尋專案..." onkeyup="filterProjects()" />
                     </div>
-                    
+
                     <div class="filter-dropdown">
                         <select id="statusFilter" onchange="filterProjects()">
                             <option value="all">所有狀態</option>
@@ -69,23 +90,23 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- 專案列表 -->
                 <div class="project-list" id="projectList">
                     <!-- 將由 JavaScript 動態生成 -->
                 </div>
             </div>
-            
+
             <!-- 日曆模式側邊欄內容 -->
-            <div class="sidebar-content calendar-sidebar" id="calendarSidebarContent" style="display: none;">
+            <div class="sidebar-content calendar-sidebar" id="calendarSidebarContent" style="display: none">
                 <!-- 日期篩選 -->
                 <div class="filter-section">
                     <div class="date-range-filter">
                         <label>日期範圍</label>
-                        <input type="date" id="startDateFilter" onchange="filterCalendarEvents()">
-                        <input type="date" id="endDateFilter" onchange="filterCalendarEvents()">
+                        <input type="date" id="startDateFilter" onchange="filterCalendarEvents()" />
+                        <input type="date" id="endDateFilter" onchange="filterCalendarEvents()" />
                     </div>
-                    
+
                     <div class="filter-dropdown">
                         <select id="calendarCategoryFilter" onchange="filterCalendarEvents()">
                             <option value="all">所有類別</option>
@@ -100,9 +121,9 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- 選中日期的報帳詳情 -->
-                <div class="selected-date-details" id="selectedDateDetails" style="display: none;">
+                <div class="selected-date-details" id="selectedDateDetails" style="display: none">
                     <h3>選擇日期詳情</h3>
                     <div class="date-info">
                         <span id="selectedDateText"></span>
@@ -113,7 +134,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 主要內容區域 -->
         <div class="main-content">
             <!-- 專案模式內容 -->
@@ -121,7 +142,7 @@
                 <div class="content-header">
                     <div class="project-info">
                         <h1 id="currentProjectName">選擇專案開始管理報帳</h1>
-                        <div class="project-stats" id="projectStats" style="display: none;">
+                        <div class="project-stats" id="projectStats" style="display: none">
                             <span class="stat-item">
                                 <i class="fas fa-receipt"></i>
                                 總筆數: <span id="totalCount">0</span>
@@ -136,8 +157,8 @@
                             </span>
                         </div>
                     </div>
-                    
-                    <div class="action-buttons" id="actionButtons" style="display: none;">
+
+                    <div class="action-buttons" id="actionButtons" style="display: none">
                         <button class="btn-primary" onclick="showUploadModal()">
                             <i class="fas fa-upload"></i> 上傳發票
                         </button>
@@ -146,33 +167,41 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- 報帳列表表格 -->
-                <div class="table-container" id="tableContainer" style="display: none;">
-                    <table class="expense-table" id="expenseTable">
-                        <thead>
-                            <tr>
-                                <th>申請日期</th>
-                                <th>申請人</th>
-                                <th>部門</th>
-                                <th>職稱</th>
-                                <th>支出日期</th>
-                                <th>發票號碼</th>
-                                <th>科目</th>
-                                <th>內容</th>
-                                <th>用途</th>
-                                <th>金額(台幣)</th>
-                                <th>備註</th>
-                                <th>審核狀態</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenseTableBody">
-                            <!-- 將由 JavaScript 動態生成 -->
-                        </tbody>
-                    </table>
+                <div class="table-container" id="tableContainer" style="display: none">
+                    <!-- 桌面版表格 -->
+                    <div class="desktop-table">
+                        <table class="expense-table" id="expenseTable">
+                            <thead>
+                                <tr>
+                                    <th>申請日期</th>
+                                    <th>申請人</th>
+                                    <th>部門</th>
+                                    <th>職稱</th>
+                                    <th>支出日期</th>
+                                    <th>發票號碼</th>
+                                    <th>科目</th>
+                                    <th>內容</th>
+                                    <th>用途</th>
+                                    <th>金額(台幣)</th>
+                                    <th>備註</th>
+                                    <th>審核狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseTableBody">
+                                <!-- 將由 JavaScript 動態生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 行動版卡片列表 -->
+                    <div class="mobile-cards" id="mobileCards" style="display: none">
+                        <!-- 將由 JavaScript 動態生成 -->
+                    </div>
                 </div>
-                
+
                 <!-- 空狀態顯示 -->
                 <div class="empty-state" id="emptyState">
                     <i class="fas fa-file-invoice fa-3x"></i>
@@ -180,9 +209,9 @@
                     <p>您可以從左側選擇現有專案，或建立新的報帳專案來開始使用。</p>
                 </div>
             </div>
-            
+
             <!-- 日曆模式內容 -->
-            <div class="calendar-mode-content" id="calendarModeContent" style="display: none;">
+            <div class="calendar-mode-content" id="calendarModeContent" style="display: none">
                 <div class="content-header">
                     <div class="calendar-info">
                         <h1>日曆報帳管理</h1>
@@ -197,7 +226,7 @@
                             </span>
                         </div>
                     </div>
-                    
+
                     <div class="action-buttons">
                         <button class="btn-primary" onclick="showUploadModal()">
                             <i class="fas fa-upload"></i> 新增報帳
@@ -207,7 +236,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- FullCalendar 容器 -->
                 <div class="calendar-container" id="calendarContainer">
                     <div id="fullcalendar"></div>
@@ -215,7 +244,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- 新增專案模態框 -->
     <div class="modal" id="createProjectModal">
         <div class="modal-content">
@@ -227,7 +256,7 @@
                 <form id="createProjectForm">
                     <div class="form-group">
                         <label for="projectName">專案名稱</label>
-                        <input type="text" id="projectName" required placeholder="請輸入專案名稱">
+                        <input type="text" id="projectName" required placeholder="請輸入專案名稱" />
                     </div>
                     <div class="form-group">
                         <label for="projectDescription">專案描述</label>
@@ -235,17 +264,21 @@
                     </div>
                     <div class="form-group">
                         <label for="projectBudget">預算（可選）</label>
-                        <input type="number" id="projectBudget" placeholder="請輸入預算金額">
+                        <input type="number" id="projectBudget" placeholder="請輸入預算金額" />
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="hideCreateProjectModal()">取消</button>
-                <button type="button" class="btn-primary" onclick="createProject()">建立專案</button>
+                <button type="button" class="btn-secondary" onclick="hideCreateProjectModal()">
+                    取消
+                </button>
+                <button type="button" class="btn-primary" onclick="createProject()">
+                    建立專案
+                </button>
             </div>
         </div>
     </div>
-    
+
     <!-- 上傳發票模態框 -->
     <div class="modal" id="uploadModal">
         <div class="modal-content">
@@ -254,51 +287,52 @@
                 <span class="close" onclick="hideUploadModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="upload-area" id="uploadArea" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
+                <div class="upload-area" id="uploadArea" ondrop="dropHandler(event)"
+                    ondragover="dragOverHandler(event)">
                     <i class="fas fa-cloud-upload-alt fa-3x"></i>
                     <p>拖拽發票圖片到此處，或點擊選擇檔案</p>
-                    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)">
+                    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)" />
                     <button type="button" class="btn-upload" onclick="document.getElementById('fileInput').click()">
                         選擇檔案
                     </button>
                 </div>
-                
+
                 <!-- 預覽區域 -->
-                <div class="preview-area" id="previewArea" style="display: none;">
+                <div class="preview-area" id="previewArea" style="display: none">
                     <h4>檔案預覽</h4>
                     <div class="file-list" id="fileList">
                         <!-- 將由 JavaScript 動態生成 -->
                     </div>
                 </div>
-                
+
                 <!-- OCR 識別結果 -->
-                <div class="ocr-results" id="ocrResults" style="display: none;">
+                <div class="ocr-results" id="ocrResults" style="display: none">
                     <h4>OCR 識別結果</h4>
                     <form id="expenseForm">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="applicantName">申請人</label>
-                                <input type="text" id="applicantName" required placeholder="請輸入申請人姓名">
+                                <input type="text" id="applicantName" required placeholder="請輸入申請人姓名" />
                             </div>
                             <div class="form-group">
                                 <label for="department">部門</label>
-                                <input type="text" id="department" required placeholder="請輸入部門名稱">
+                                <input type="text" id="department" required placeholder="請輸入部門名稱" />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="position">職稱</label>
-                                <input type="text" id="position" required placeholder="請輸入職稱">
+                                <input type="text" id="position" required placeholder="請輸入職稱" />
                             </div>
                             <div class="form-group">
                                 <label for="expenseDate">支出日期</label>
-                                <input type="date" id="expenseDate" required>
+                                <input type="date" id="expenseDate" required />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="invoiceNumber">發票號碼</label>
-                                <input type="text" id="invoiceNumber" required placeholder="請輸入發票號碼">
+                                <input type="text" id="invoiceNumber" required placeholder="請輸入發票號碼" />
                             </div>
                             <div class="form-group">
                                 <label for="expenseSubject">科目(支出名稱)</label>
@@ -318,17 +352,17 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="expenseContent">內容</label>
-                                <input type="text" id="expenseContent" required placeholder="請輸入支出內容">
+                                <input type="text" id="expenseContent" required placeholder="請輸入支出內容" />
                             </div>
                             <div class="form-group">
                                 <label for="expensePurpose">用途</label>
-                                <input type="text" id="expensePurpose" required placeholder="請輸入用途說明">
+                                <input type="text" id="expensePurpose" required placeholder="請輸入用途說明" />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="amount">金額</label>
-                                <input type="number" id="amount" step="0.01" required placeholder="請輸入金額">
+                                <input type="number" id="amount" step="0.01" required placeholder="請輸入金額" />
                             </div>
                             <div class="form-group">
                                 <label for="currency">幣別</label>
@@ -344,15 +378,15 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="exchangeRate">匯率</label>
-                                <input type="number" id="exchangeRate" step="0.0001" placeholder="匯率 (自動計算)" readonly>
+                                <input type="number" id="exchangeRate" step="0.0001" placeholder="匯率 (自動計算)" readonly />
                             </div>
                             <div class="form-group">
                                 <label for="twdAmount">台幣金額</label>
-                                <input type="number" id="twdAmount" step="0.01" placeholder="台幣金額 (自動計算)" readonly>
+                                <input type="number" id="twdAmount" step="0.01" placeholder="台幣金額 (自動計算)" readonly />
                             </div>
                         </div>
                         <!-- 日曆模式下選擇專案 -->
-                        <div class="form-group" id="projectSelectGroup" style="display: none;">
+                        <div class="form-group" id="projectSelectGroup" style="display: none">
                             <label for="expenseProject">專案</label>
                             <select id="expenseProject">
                                 <option value="">請選擇專案</option>
@@ -376,13 +410,20 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="hideUploadModal()">取消</button>
-                <button type="button" class="btn-primary" id="uploadBtn" onclick="uploadFiles()">上傳並識別</button>
-                <button type="button" class="btn-primary" id="saveExpenseBtn" onclick="saveExpense()" style="display: none;">儲存報帳</button>
+                <button type="button" class="btn-secondary" onclick="hideUploadModal()">
+                    取消
+                </button>
+                <button type="button" class="btn-primary" id="uploadBtn" onclick="uploadFiles()">
+                    上傳並識別
+                </button>
+                <button type="button" class="btn-primary" id="saveExpenseBtn" onclick="saveExpense()"
+                    style="display: none">
+                    儲存報帳
+                </button>
             </div>
         </div>
     </div>
-    
+
     <!-- 編輯報帳模態框 -->
     <div class="modal" id="editModal">
         <div class="modal-content">
@@ -392,31 +433,31 @@
             </div>
             <div class="modal-body">
                 <form id="editExpenseForm">
-                    <input type="hidden" id="editExpenseId">
+                    <input type="hidden" id="editExpenseId" />
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editApplicantName">申請人</label>
-                            <input type="text" id="editApplicantName" required placeholder="請輸入申請人姓名">
+                            <input type="text" id="editApplicantName" required placeholder="請輸入申請人姓名" />
                         </div>
                         <div class="form-group">
                             <label for="editDepartment">部門</label>
-                            <input type="text" id="editDepartment" required placeholder="請輸入部門名稱">
+                            <input type="text" id="editDepartment" required placeholder="請輸入部門名稱" />
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editPosition">職稱</label>
-                            <input type="text" id="editPosition" required placeholder="請輸入職稱">
+                            <input type="text" id="editPosition" required placeholder="請輸入職稱" />
                         </div>
                         <div class="form-group">
                             <label for="editExpenseDate">支出日期</label>
-                            <input type="date" id="editExpenseDate" required>
+                            <input type="date" id="editExpenseDate" required />
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editInvoiceNumber">發票號碼</label>
-                            <input type="text" id="editInvoiceNumber" required placeholder="請輸入發票號碼">
+                            <input type="text" id="editInvoiceNumber" required placeholder="請輸入發票號碼" />
                         </div>
                         <div class="form-group">
                             <label for="editExpenseSubject">科目(支出名稱)</label>
@@ -436,17 +477,18 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editExpenseContent">內容</label>
-                            <input type="text" id="editExpenseContent" required placeholder="請輸入支出內容">
+                            <input type="text" id="editExpenseContent" required placeholder="請輸入支出內容" />
                         </div>
                         <div class="form-group">
                             <label for="editExpensePurpose">用途</label>
-                            <input type="text" id="editExpensePurpose" required placeholder="請輸入用途說明">
+                            <input type="text" id="editExpensePurpose" required placeholder="請輸入用途說明" />
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editAmount">金額</label>
-                            <input type="number" id="editAmount" step="0.01" required placeholder="請輸入金額" onchange="calculateEditTWDAmount()">
+                            <input type="number" id="editAmount" step="0.01" required placeholder="請輸入金額"
+                                onchange="calculateEditTWDAmount()" />
                         </div>
                         <div class="form-group">
                             <label for="editCurrency">幣別</label>
@@ -462,11 +504,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editExchangeRate">匯率</label>
-                            <input type="number" id="editExchangeRate" step="0.0001" placeholder="匯率 (自動計算)" readonly>
+                            <input type="number" id="editExchangeRate" step="0.0001" placeholder="匯率 (自動計算)" readonly />
                         </div>
                         <div class="form-group">
                             <label for="editTwdAmount">台幣金額</label>
-                            <input type="number" id="editTwdAmount" step="0.01" placeholder="台幣金額 (自動計算)" readonly>
+                            <input type="number" id="editTwdAmount" step="0.01" placeholder="台幣金額 (自動計算)" readonly />
                         </div>
                     </div>
                     <div class="form-row">
@@ -485,20 +527,24 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="hideEditModal()">取消</button>
-                <button type="button" class="btn-primary" onclick="updateExpense()">更新</button>
+                <button type="button" class="btn-secondary" onclick="hideEditModal()">
+                    取消
+                </button>
+                <button type="button" class="btn-primary" onclick="updateExpense()">
+                    更新
+                </button>
             </div>
         </div>
     </div>
-    
+
     <!-- Loading 覆層 -->
-    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-overlay" id="loadingOverlay" style="display: none">
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-spin fa-2x"></i>
             <p>處理中...</p>
         </div>
     </div>
-    
+
     <!-- Toast 通知 -->
     <div class="toast" id="toast">
         <i class="fas fa-check-circle"></i>
@@ -509,45 +555,45 @@
     <script>
         // 全域日曆實例
         let fullCalendarInstance = null;
-        
+
         // 渲染 FullCalendar
         function renderCalendar() {
-            const calendarEl = document.getElementById('fullcalendar');
+            const calendarEl = document.getElementById("fullcalendar");
             if (calendarEl) {
-                console.log('Rendering FullCalendar...');
-                
+                console.log("Rendering FullCalendar...");
+
                 // 如果已有實例，先銷毀
                 if (fullCalendarInstance) {
                     fullCalendarInstance.destroy();
                 }
-                
+
                 // 創建新的日曆實例
                 fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
-                    locale: 'zh-tw',
+                    initialView: "dayGridMonth",
+                    locale: "zh-tw",
                     headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                        left: "prev,next today",
+                        center: "title",
+                        right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
                     },
                     buttonText: {
-                        today: '今天',
-                        month: '月',
-                        week: '週',
-                        day: '日',
-                        list: '列表'
+                        today: "今天",
+                        month: "月",
+                        week: "週",
+                        day: "日",
+                        list: "列表",
                     },
-                    height: '100%', // 使用百分比高度佔滿容器
-                    contentHeight: 'auto', // 內容高度自動調整
+                    height: "100%", // 使用百分比高度佔滿容器
+                    contentHeight: "auto", // 內容高度自動調整
                     expandRows: true, // 展開行以填滿容器
                     selectable: true,
                     selectMirror: true,
                     nowIndicator: true,
-                    eventDisplay: 'block',
+                    eventDisplay: "block",
                     events: window.calendarEvents || [],
-                    
+
                     // 事件點擊處理
-                    eventClick: function(info) {
+                    eventClick: function (info) {
                         const event = info.event;
                         const eventData = {
                             id: event.id,
@@ -556,31 +602,31 @@
                             amount: event.extendedProps.amount,
                             merchant: event.extendedProps.merchant,
                             invoice: event.extendedProps.invoice,
-                            date: event.startStr
+                            date: event.startStr,
                         };
-                        
+
                         if (window.showEventDetails) {
                             window.showEventDetails(eventData);
                         }
                     },
-                    
+
                     // 日期選擇處理
-                    dateClick: function(info) {
+                    dateClick: function (info) {
                         const selectedDate = info.date;
                         window.selectedDate = selectedDate;
-                        
+
                         if (window.updateSelectedDateDetails) {
                             window.updateSelectedDateDetails(selectedDate);
                         }
                     },
-                    
+
                     // 事件顏色設置
-                    eventClassNames: function(arg) {
+                    eventClassNames: function (arg) {
                         const category = arg.event.extendedProps.category;
                         return [`category-${category}`];
                     },
-                    
-                    eventDidMount: function(info) {
+
+                    eventDidMount: function (info) {
                         const category = info.event.extendedProps.category;
                         if (category && window.getCategoryColor) {
                             const color = window.getCategoryColor(category);
@@ -588,67 +634,70 @@
                             info.el.style.borderColor = color;
                         }
                     },
-                    
+
                     // 月份切換時更新統計
-                    datesSet: function(info) {
+                    datesSet: function (info) {
                         if (window.updateCalendarStats) {
                             window.updateCalendarStats();
                         }
-                    }
+                    },
                 });
-                
+
                 fullCalendarInstance.render();
-                
-                                 // 初始化時更新事件
-                 if (window.calendarEvents) {
-                     refreshCalendarEvents();
-                 }
+
+                // 初始化時更新事件
+                if (window.calendarEvents) {
+                    refreshCalendarEvents();
+                }
             }
         }
-        
-                 // 更新日曆事件
-         function refreshCalendarEvents() {
-             if (fullCalendarInstance && window.calendarEvents) {
-                 console.log('Updating FullCalendar events:', window.calendarEvents.length);
-                 
-                 // 清除現有事件
-                 fullCalendarInstance.removeAllEvents();
-                 
-                 // 添加新事件
-                 const events = window.calendarEvents.map(event => ({
-                     id: event.id,
-                     title: event.title,
-                     start: event.start,
-                     end: event.end,
-                     allDay: event.allDay || false,
-                     extendedProps: {
-                         category: event.category,
-                         amount: event.amount,
-                         merchant: event.merchant,
-                         invoice: event.invoice,
-                         projectId: event.projectId
-                     }
-                 }));
-                 
-                 fullCalendarInstance.addEventSource(events);
-                 fullCalendarInstance.refetchEvents();
-             }
-         }
-         
-         // 將函數暴露到全域
-         window.renderCalendar = renderCalendar;
-         window.refreshCalendarEvents = refreshCalendarEvents;
-        
+
+        // 更新日曆事件
+        function refreshCalendarEvents() {
+            if (fullCalendarInstance && window.calendarEvents) {
+                console.log(
+                    "Updating FullCalendar events:",
+                    window.calendarEvents.length
+                );
+
+                // 清除現有事件
+                fullCalendarInstance.removeAllEvents();
+
+                // 添加新事件
+                const events = window.calendarEvents.map((event) => ({
+                    id: event.id,
+                    title: event.title,
+                    start: event.start,
+                    end: event.end,
+                    allDay: event.allDay || false,
+                    extendedProps: {
+                        category: event.category,
+                        amount: event.amount,
+                        merchant: event.merchant,
+                        invoice: event.invoice,
+                        projectId: event.projectId,
+                    },
+                }));
+
+                fullCalendarInstance.addEventSource(events);
+                fullCalendarInstance.refetchEvents();
+            }
+        }
+
+        // 將函數暴露到全域
+        window.renderCalendar = renderCalendar;
+        window.refreshCalendarEvents = refreshCalendarEvents;
+
         // DOM 加載完成後初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener("DOMContentLoaded", function () {
             setTimeout(() => {
-                console.log('DOM loaded, initializing FullCalendar...');
+                console.log("DOM loaded, initializing FullCalendar...");
                 renderCalendar();
             }, 200);
         });
     </script>
-    
+
     <script src="script.js"></script>
 </body>
-</html>
+
 </html>

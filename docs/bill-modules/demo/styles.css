@@ -6,10 +6,91 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    background-color: #F7F7F7;
-    color: #3E3D3D;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", sans-serif;
+    background-color: #f7f7f7;
+    color: #3e3d3d;
     line-height: 1.6;
+}
+
+/* 行動裝置頂部導航 */
+.mobile-header {
+    display: flex;
+    background: linear-gradient(135deg, #addeac 0%, #80cb7d 100%);
+    color: #3e3d3d;
+    padding: 12px 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-menu-toggle,
+.mobile-add-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #3e3d3d;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s ease;
+}
+
+.mobile-menu-toggle:hover,
+.mobile-add-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.mobile-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* 側邊欄遮罩 */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* 側邊欄標題行 */
+.sidebar-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.sidebar-close {
+    display: none;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #3e3d3d;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s ease;
+}
+
+.sidebar-close:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* 主要布局 */
@@ -19,21 +100,60 @@ body {
     overflow: hidden;
 }
 
+.main-content {
+    width: 100%;
+    padding-top: 60px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f7f7f7;
+    min-height: 100vh;
+}
+
+/* 桌面版樣式 */
+@media (min-width: 769px) {
+    .mobile-header {
+        display: none !important;
+    }
+
+    .sidebar {
+        position: static !important;
+        left: auto !important;
+        width: 320px !important;
+        height: auto !important;
+    }
+
+    .sidebar-close {
+        display: none !important;
+    }
+
+    .main-content {
+        padding-top: 0 !important;
+        width: calc(100% - 320px) !important;
+    }
+}
+
 /* 側邊欄樣式 */
 .sidebar {
     width: 320px;
     background: white;
-    border-right: 1px solid #E0E0E0;
+    border-right: 1px solid #e0e0e0;
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transition: left 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: -320px;
+    height: 100vh;
+    z-index: 1000;
 }
 
 .sidebar-header {
     padding: 24px 20px;
-    border-bottom: 1px solid #E0E0E0;
-    background: linear-gradient(135deg, #ADDEAC 0%, #80CB7D 100%);
-    color: #3E3D3D;
+    border-bottom: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #addeac 0%, #80cb7d 100%);
+    color: #3e3d3d;
 }
 
 .sidebar-header h2 {
@@ -64,7 +184,7 @@ body {
     background: transparent;
     border: none;
     border-radius: 6px;
-    color: #3E3D3D;
+    color: #3e3d3d;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 12px;
@@ -100,7 +220,7 @@ body {
     background: rgba(62, 61, 61, 0.15);
     border: 1px solid rgba(62, 61, 61, 0.2);
     border-radius: 8px;
-    color: #3E3D3D;
+    color: #3e3d3d;
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 14px;
@@ -143,13 +263,13 @@ body {
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #6B7280;
+    color: #6b7280;
 }
 
 .search-box input {
     width: 100%;
     padding: 12px 12px 12px 40px;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
     transition: border-color 0.2s ease;
@@ -157,14 +277,14 @@ body {
 
 .search-box input:focus {
     outline: none;
-    border-color: #ADDEAC;
+    border-color: #addeac;
     box-shadow: 0 0 0 3px rgba(173, 222, 172, 0.1);
 }
 
 .filter-dropdown select {
     width: 100%;
     padding: 12px;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
     background: white;
@@ -180,14 +300,14 @@ body {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    color: #3E3D3D;
+    color: #3e3d3d;
     font-size: 14px;
 }
 
 .date-range-filter input {
     width: 100%;
     padding: 12px;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
     margin-bottom: 8px;
@@ -196,14 +316,14 @@ body {
 
 .date-range-filter input:focus {
     outline: none;
-    border-color: #ADDEAC;
+    border-color: #addeac;
     box-shadow: 0 0 0 3px rgba(173, 222, 172, 0.1);
 }
 
 /* 選中日期詳情 */
 .selected-date-details {
     flex: 1;
-    background: #F8F9FA;
+    background: #f8f9fa;
     border-radius: 8px;
     padding: 16px;
     margin-top: 16px;
@@ -213,7 +333,7 @@ body {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 12px;
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .date-info {
@@ -222,7 +342,7 @@ body {
     background: white;
     border-radius: 6px;
     font-weight: 500;
-    color: #67BE5F;
+    color: #67be5f;
 }
 
 .date-expenses {
@@ -235,7 +355,7 @@ body {
     background: white;
     padding: 12px;
     border-radius: 6px;
-    border-left: 4px solid #ADDEAC;
+    border-left: 4px solid #addeac;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -248,19 +368,19 @@ body {
 
 .expense-item-title {
     font-weight: 600;
-    color: #3E3D3D;
+    color: #3e3d3d;
     font-size: 14px;
 }
 
 .expense-item-amount {
-    color: #67BE5F;
+    color: #67be5f;
     font-weight: 600;
     font-size: 14px;
 }
 
 .expense-item-details {
     font-size: 12px;
-    color: #6B7280;
+    color: #6b7280;
 }
 
 /* 專案列表 */
@@ -272,7 +392,7 @@ body {
 
 .project-item {
     padding: 16px;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -281,25 +401,25 @@ body {
 }
 
 .project-item:hover {
-    border-color: #ADDEAC;
+    border-color: #addeac;
     box-shadow: 0 2px 8px rgba(173, 222, 172, 0.3);
     transform: translateY(-1px);
 }
 
 .project-item.active {
-    border-color: #ADDEAC;
-    background: #E8F5E8;
+    border-color: #addeac;
+    background: #e8f5e8;
     box-shadow: 0 4px 12px rgba(173, 222, 172, 0.3);
 }
 
 .project-item.active::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
     width: 4px;
-    background: #ADDEAC;
+    background: #addeac;
     border-radius: 0 4px 4px 0;
 }
 
@@ -307,12 +427,12 @@ body {
     font-weight: 600;
     font-size: 16px;
     margin-bottom: 4px;
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .project-description {
     font-size: 13px;
-    color: #6B7280;
+    color: #6b7280;
     margin-bottom: 8px;
     line-height: 1.4;
 }
@@ -322,7 +442,7 @@ body {
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
-    color: #6B7280;
+    color: #6b7280;
 }
 
 .project-status {
@@ -348,14 +468,7 @@ body {
     color: #065f46;
 }
 
-/* 主要內容區域 */
-.main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: #F7F7F7;
-    min-height: 100vh;
-}
+/* 主要內容區域 - 移除重複定義 */
 
 /* 專案模式和日曆模式內容 */
 .project-mode-content,
@@ -364,7 +477,8 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    min-height: 0; /* 確保可以收縮 */
+    min-height: 0;
+    /* 確保可以收縮 */
 }
 
 /* 日曆模式內容特別設定 */
@@ -372,8 +486,10 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0; /* 允許收縮 */
-    overflow: hidden; /* 防止超出 */
+    min-height: 0;
+    /* 允許收縮 */
+    overflow: hidden;
+    /* 防止超出 */
 }
 
 .content-header {
@@ -389,7 +505,7 @@ body {
 .calendar-info h1 {
     font-size: 24px;
     font-weight: 700;
-    color: #3E3D3D;
+    color: #3e3d3d;
     margin-bottom: 8px;
 }
 
@@ -405,11 +521,11 @@ body {
     align-items: center;
     gap: 6px;
     font-size: 14px;
-    color: #6B7280;
+    color: #6b7280;
 }
 
 .stat-item i {
-    color: #ADDEAC;
+    color: #addeac;
 }
 
 .action-buttons {
@@ -427,17 +543,22 @@ body {
     padding: 24px;
     display: flex;
     flex-direction: column;
-    min-height: 500px; /* 合理的最小高度 */
-    max-height: calc(100vh - 150px); /* 設定最大高度，防止超出畫面 */
-    overflow: hidden; /* 防止內容超出容器 */
+    min-height: 500px;
+    /* 合理的最小高度 */
+    max-height: calc(100vh - 150px);
+    /* 設定最大高度，防止超出畫面 */
+    overflow: hidden;
+    /* 防止內容超出容器 */
 }
 
 /* FullCalendar 容器調整為佔滿剩餘空間 */
 #fullcalendar {
     flex: 1;
-    min-height: 0; /* 允許收縮 */
+    min-height: 0;
+    /* 允許收縮 */
     height: 100%;
-    overflow: hidden; /* 防止超出 */
+    overflow: hidden;
+    /* 防止超出 */
 }
 
 /* FullCalendar 自定義樣式 */
@@ -447,8 +568,8 @@ body {
 }
 
 .fc-toolbar {
-    background: #F8F9FA;
-    border-bottom: 1px solid #E0E0E0;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
     padding: 16px;
     border-radius: 8px 8px 0 0;
     margin-bottom: 0;
@@ -457,13 +578,13 @@ body {
 .fc-toolbar-title {
     font-size: 20px;
     font-weight: 600;
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .fc-button {
-    background: #F8F9FA;
-    border: 1px solid #E0E0E0;
-    color: #3E3D3D;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    color: #3e3d3d;
     padding: 8px 16px;
     border-radius: 6px;
     font-weight: 500;
@@ -472,9 +593,9 @@ body {
 }
 
 .fc-button:hover:not(:disabled) {
-    background: #E8F5E8;
-    border-color: #ADDEAC;
-    color: #3E3D3D;
+    background: #e8f5e8;
+    border-color: #addeac;
+    color: #3e3d3d;
 }
 
 .fc-button:focus {
@@ -482,52 +603,57 @@ body {
 }
 
 .fc-button-active {
-    background: #ADDEAC !important;
-    border-color: #80CB7D !important;
-    color: #3E3D3D !important;
+    background: #addeac !important;
+    border-color: #80cb7d !important;
+    color: #3e3d3d !important;
 }
 
 .fc-button-active:hover {
-    background: #67BE5F !important;
-    border-color: #67BE5F !important;
+    background: #67be5f !important;
+    border-color: #67be5f !important;
 }
 
 .fc-view-harness {
     background: white;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #e0e0e0;
     border-top: none;
     border-radius: 0 0 8px 8px;
     flex: 1;
-    min-height: 0; /* 允許收縮 */
-    overflow: auto; /* 確保可以滾動 */
+    min-height: 0;
+    /* 允許收縮 */
+    overflow: auto;
+    /* 確保可以滾動 */
 }
 
 .fc-scroller {
     overflow-y: auto !important;
     overflow-x: hidden;
     flex: 1;
-    max-height: none; /* 移除高度限制 */
+    max-height: none;
+    /* 移除高度限制 */
 }
 
 .fc-col-header {
-    background: #F8F9FA;
-    border-bottom: 1px solid #E0E0E0;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .fc-col-header-cell {
     padding: 12px 8px;
     font-weight: 600;
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .fc-daygrid-day {
-    border: 1px solid #F8F9FA;
+    border: 1px solid #f8f9fa;
     min-height: 120px;
-    overflow: visible; /* 確保內容可見 */
+    overflow: visible;
+    /* 確保內容可見 */
 }
 
 .fc-daygrid-body {
-    overflow: visible !important; /* 確保 body 可見 */
+    overflow: visible !important;
+    /* 確保 body 可見 */
 }
 
 .fc-daygrid-day:hover {
@@ -539,12 +665,12 @@ body {
 }
 
 .fc-day-today .fc-daygrid-day-number {
-    color: #3E3D3D;
+    color: #3e3d3d;
     font-weight: 600;
 }
 
 .fc-event {
-    background-color: #67BE5F;
+    background-color: #67be5f;
     border: none;
     border-radius: 4px;
     color: white;
@@ -557,8 +683,8 @@ body {
 }
 
 .fc-event:hover {
-    background-color: #ADDEAC;
-    color: #3E3D3D;
+    background-color: #addeac;
+    color: #3e3d3d;
 }
 
 .fc-event-title {
@@ -566,10 +692,10 @@ body {
 }
 
 .fc-more-link {
-    background: #F8F9FA;
-    color: #67BE5F;
+    background: #f8f9fa;
+    color: #67be5f;
     font-weight: 500;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
     padding: 2px 6px;
     font-size: 11px;
@@ -577,14 +703,14 @@ body {
 }
 
 .fc-more-link:hover {
-    background: #E8F5E8;
-    border-color: #ADDEAC;
+    background: #e8f5e8;
+    border-color: #addeac;
 }
 
 .fc-daygrid-day-number {
     padding: 8px;
     font-weight: 500;
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .fc-daygrid-day-number:hover {
@@ -594,42 +720,42 @@ body {
 
 /* 類別顏色樣式 */
 .fc-event.category-餐費 {
-    background-color: #FF6B6B;
+    background-color: #ff6b6b;
 }
 
 .fc-event.category-交通費 {
-    background-color: #4ECDC4;
+    background-color: #4ecdc4;
 }
 
 .fc-event.category-住宿費 {
-    background-color: #45B7D1;
+    background-color: #45b7d1;
 }
 
 .fc-event.category-辦公用品 {
-    background-color: #FFA07A;
+    background-color: #ffa07a;
 }
 
 .fc-event.category-差旅費 {
-    background-color: #9B59B6;
+    background-color: #9b59b6;
 }
 
 .fc-event.category-通訊費 {
-    background-color: #F39C12;
+    background-color: #f39c12;
 }
 
 .fc-event.category-文具用品 {
-    background-color: #2ECC71;
+    background-color: #2ecc71;
 }
 
 .fc-event.category-其他 {
-    background-color: #98D8C8;
+    background-color: #98d8c8;
 }
 
 /* 按鈕樣式 */
 .btn-primary {
     padding: 12px 20px;
-    background: linear-gradient(135deg, #ADDEAC 0%, #80CB7D 100%);
-    color: #3E3D3D;
+    background: linear-gradient(135deg, #addeac 0%, #80cb7d 100%);
+    color: #3e3d3d;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -649,8 +775,8 @@ body {
 .btn-secondary {
     padding: 12px 20px;
     background: white;
-    color: #3E3D3D;
-    border: 1px solid #E0E0E0;
+    color: #3e3d3d;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
@@ -662,8 +788,8 @@ body {
 }
 
 .btn-secondary:hover {
-    background: #E8F5E8;
-    border-color: #ADDEAC;
+    background: #e8f5e8;
+    border-color: #addeac;
     transform: translateY(-1px);
 }
 
@@ -674,7 +800,8 @@ body {
     background: white;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: auto;
+    max-height: calc(100vh - 180px);
 }
 
 .expense-table {
@@ -684,25 +811,25 @@ body {
 }
 
 .expense-table thead {
-    background: #E0F0E0;
+    background: #e0f0e0;
 }
 
 .expense-table th {
     padding: 16px 20px;
     text-align: left;
     font-weight: 600;
-    color: #3E3D3D;
-    border-bottom: 1px solid #E0E0E0;
+    color: #3e3d3d;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .expense-table td {
     padding: 16px 20px;
-    border-bottom: 1px solid #E0E0E0;
-    color: #3E3D3D;
+    border-bottom: 1px solid #e0e0e0;
+    color: #3e3d3d;
 }
 
 .expense-table tbody tr:hover {
-    background: #E8F5E8;
+    background: #e8f5e8;
 }
 
 .expense-table tbody tr:last-child td {
@@ -748,12 +875,12 @@ body {
 }
 
 .btn-edit {
-    background: #E8F5E8;
-    color: #67BE5F;
+    background: #e8f5e8;
+    color: #67be5f;
 }
 
 .btn-edit:hover {
-    background: #ADDEAC;
+    background: #addeac;
 }
 
 .btn-delete {
@@ -765,6 +892,81 @@ body {
     background: #fecaca;
 }
 
+/* 行動版卡片樣式 */
+.mobile-cards {
+    display: none;
+    padding: 16px;
+    gap: 16px;
+    flex-direction: column;
+}
+
+.expense-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #addeac;
+}
+
+.expense-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.expense-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #3e3d3d;
+    margin-bottom: 4px;
+}
+
+.expense-card-amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #67be5f;
+}
+
+.expense-card-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+}
+
+.expense-card-detail {
+    font-size: 14px;
+}
+
+.expense-card-detail-label {
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.expense-card-detail-value {
+    color: #3e3d3d;
+}
+
+.expense-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.expense-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.expense-card-actions .btn-table {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
 /* 空狀態 */
 .empty-state {
     flex: 1;
@@ -773,7 +975,7 @@ body {
     align-items: center;
     justify-content: flex-start;
     text-align: center;
-    color: #6B7280;
+    color: #6b7280;
     padding: 120px 32px 64px;
     background: white;
     margin: 24px 32px;
@@ -782,7 +984,7 @@ body {
 }
 
 .empty-state i {
-    color: #C2C2C2;
+    color: #c2c2c2;
     margin-bottom: 24px;
 }
 
@@ -790,7 +992,7 @@ body {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 12px;
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .empty-state p {
@@ -826,7 +1028,8 @@ body {
     max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
     animation: slideIn 0.3s ease;
 }
 
@@ -840,19 +1043,19 @@ body {
 .modal-header h3 {
     font-size: 20px;
     font-weight: 600;
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .close {
     font-size: 28px;
     font-weight: bold;
-    color: #6B7280;
+    color: #6b7280;
     cursor: pointer;
     transition: color 0.2s ease;
 }
 
 .close:hover {
-    color: #3E3D3D;
+    color: #3e3d3d;
 }
 
 .modal-body {
@@ -886,7 +1089,7 @@ body {
     display: block;
     margin-bottom: 6px;
     font-weight: 500;
-    color: #3E3D3D;
+    color: #3e3d3d;
     font-size: 14px;
 }
 
@@ -895,7 +1098,7 @@ body {
 .form-group textarea {
     width: 100%;
     padding: 12px;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
     transition: border-color 0.2s ease;
@@ -905,7 +1108,7 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #ADDEAC;
+    border-color: #addeac;
     box-shadow: 0 0 0 3px rgba(173, 222, 172, 0.1);
 }
 
@@ -916,28 +1119,28 @@ body {
 
 /* 上傳區域 */
 .upload-area {
-    border: 2px dashed #E0E0E0;
+    border: 2px dashed #e0e0e0;
     border-radius: 12px;
     padding: 48px 24px;
     text-align: center;
-    background: #F7F7F7;
+    background: #f7f7f7;
     transition: all 0.2s ease;
     cursor: pointer;
 }
 
 .upload-area:hover,
 .upload-area.dragover {
-    border-color: #ADDEAC;
-    background: #E8F5E8;
+    border-color: #addeac;
+    background: #e8f5e8;
 }
 
 .upload-area i {
-    color: #C2C2C2;
+    color: #c2c2c2;
     margin-bottom: 16px;
 }
 
 .upload-area p {
-    color: #6B7280;
+    color: #6b7280;
     margin-bottom: 20px;
     font-size: 16px;
 }
@@ -948,8 +1151,8 @@ body {
 
 .btn-upload {
     padding: 12px 24px;
-    background: #ADDEAC;
-    color: #3E3D3D;
+    background: #addeac;
+    color: #3e3d3d;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -959,7 +1162,7 @@ body {
 }
 
 .btn-upload:hover {
-    background: #80CB7D;
+    background: #80cb7d;
 }
 
 /* 預覽區域 */
@@ -971,7 +1174,7 @@ body {
 
 .preview-area h4 {
     margin-bottom: 16px;
-    color: #3E3D3D;
+    color: #3e3d3d;
     font-size: 16px;
     font-weight: 600;
 }
@@ -1082,8 +1285,13 @@ body {
 
 /* 動畫 */
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideIn {
@@ -1091,6 +1299,7 @@ body {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1098,74 +1307,339 @@ body {
 }
 
 /* 響應式設計 */
-@media (max-width: 768px) {
-    .app-container {
-        flex-direction: column;
-    }
-    
+
+/* 平板（橫向）和小筆電 */
+@media (max-width: 1024px) {
     .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid #e2e8f0;
+        width: 280px;
     }
-    
-    .main-content {
-        height: calc(100vh - 200px);
-    }
-    
+
     .content-header {
+        padding: 20px 24px;
+    }
+
+    .table-container,
+    .calendar-container {
+        margin: 20px 24px;
+    }
+
+    .expense-table th,
+    .expense-table td {
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+}
+
+/* 平板（直向） */
+@media (max-width: 768px) {
+    .mobile-header {
+        display: flex !important;
+    }
+
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -320px !important;
+        width: 320px !important;
+        height: 100vh !important;
+        z-index: 1000 !important;
+        transition: left 0.3s ease !important;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .sidebar.active {
+        left: 0 !important;
+    }
+
+    .sidebar-close {
+        display: block !important;
+    }
+
+    .main-content {
+        width: 100%;
+        padding-top: 60px;
+    }
+
+    .content-header {
+        padding: 16px 20px;
         flex-direction: column;
         gap: 16px;
         align-items: flex-start;
     }
-    
+
+    .desktop-table {
+        overflow-x: auto;
+    }
+
+    .expense-table {
+        min-width: 900px;
+    }
+
+    .table-container {
+        max-height: calc(100vh - 160px);
+        overflow-y: auto;
+    }
+
+    .calendar-container {
+        margin: 16px 20px;
+        padding: 16px;
+        max-height: calc(100vh - 120px);
+        min-height: 400px;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+        max-height: calc(100vh - 40px);
+    }
+
     .form-row {
         flex-direction: column;
         gap: 0;
     }
-    
+
     .form-row .form-group {
         margin-bottom: 20px;
     }
-    
-    .modal-content {
-        width: 95%;
-        margin: 20px auto;
+}
+
+/* 大型手機 */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 100%;
+        left: -100%;
     }
-    
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .content-header {
+        padding: 12px 16px;
+    }
+
+    .content-header h1 {
+        font-size: 20px;
+    }
+
+    .project-stats,
+    .calendar-stats {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .stat-item {
+        font-size: 13px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .action-buttons button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* 切換到卡片模式 */
+    .desktop-table {
+        display: none !important;
+    }
+
+    .mobile-cards {
+        display: flex !important;
+    }
+
     .table-container {
-        margin: 16px;
-        overflow-x: auto;
+        margin: 12px 16px;
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
     }
-    
-    .expense-table {
-        min-width: 800px;
-    }
-    
+
     .calendar-container {
-        margin: 16px;
-        padding: 16px;
-        max-height: calc(100vh - 200px); /* 行動裝置最大高度 */
-        min-height: 400px; /* 行動裝置最小高度 */
-        overflow: hidden; /* 防止超出 */
+        margin: 12px 16px;
+        padding: 12px;
+        max-height: calc(100vh - 100px);
+        min-height: 350px;
     }
-    
+
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
     .mode-switch {
         flex-direction: row;
     }
-    
+
     .mode-btn {
-        flex-direction: row;
-        padding: 8px 12px;
+        flex-direction: column;
+        padding: 8px 6px;
+        font-size: 10px;
     }
-    
+
     .mode-btn i {
         font-size: 14px;
+        margin-bottom: 4px;
     }
-    
+
     .mode-btn span {
+        font-size: 10px;
+    }
+
+    .project-item {
+        padding: 12px;
+    }
+
+    .project-name {
+        font-size: 14px;
+    }
+
+    .project-description {
         font-size: 12px;
+    }
+
+    .empty-state {
+        padding: 60px 16px 40px;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+    }
+
+    /* FullCalendar 行動版調整 */
+    .fc-toolbar {
+        padding: 8px;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .fc-toolbar-title {
+        font-size: 16px;
+    }
+
+    .fc-button {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .fc-daygrid-day {
+        min-height: 80px;
+    }
+
+    .fc-daygrid-day-number {
+        padding: 4px;
+        font-size: 12px;
+    }
+
+    .fc-event {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+}
+
+/* 小型手機 */
+@media (max-width: 320px) {
+    .mobile-title {
+        font-size: 16px;
+    }
+
+    .content-header h1 {
+        font-size: 18px;
+    }
+
+    .project-stats,
+    .calendar-stats {
+        font-size: 12px;
+    }
+
+    .expense-card {
+        padding: 12px;
+    }
+
+    .expense-card-details {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .expense-card-title {
+        font-size: 14px;
+    }
+
+    .expense-card-amount {
+        font-size: 16px;
+    }
+
+    .fc-toolbar-title {
+        font-size: 14px;
+    }
+
+    .fc-button {
+        padding: 4px 6px;
+        font-size: 10px;
+    }
+
+    .fc-daygrid-day {
+        min-height: 60px;
+    }
+}
+
+/* 觸控裝置專用樣式 */
+@media (hover: none) and (pointer: coarse) {
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-table,
+    .mobile-menu-toggle,
+    .mobile-add-btn,
+    .sidebar-close {
+        min-height: 44px;
+        min-width: 44px;
+        /* 確保觸控反饋 */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        touch-action: manipulation;
+    }
+
+    .project-item {
+        padding: 16px;
+        /* 確保觸控反饋 */
+        -webkit-tap-highlight-color: rgba(173, 222, 172, 0.2);
+        touch-action: manipulation;
+    }
+
+    .expense-card {
+        padding: 16px;
+        /* 確保觸控反饋 */
+        -webkit-tap-highlight-color: rgba(173, 222, 172, 0.2);
+        touch-action: manipulation;
+    }
+
+    .mode-btn {
+        min-height: 44px;
+        /* 確保觸控反饋 */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        touch-action: manipulation;
+    }
+
+    .fc-button {
+        min-height: 40px;
+        min-width: 40px;
+        /* 確保觸控反饋 */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        touch-action: manipulation;
     }
 }
 
@@ -1173,17 +1647,17 @@ body {
 .last-update-info {
     margin-top: 16px;
     padding: 12px;
-    background: #F8F9FA;
+    background: #f8f9fa;
     border-radius: 6px;
     font-size: 12px;
-    color: #6B7280;
+    color: #6b7280;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
 .last-update-info i {
-    color: #ADDEAC;
+    color: #addeac;
 }
 
 .last-update-info span {

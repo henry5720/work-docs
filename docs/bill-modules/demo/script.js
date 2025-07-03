@@ -5,7 +5,7 @@ let projects = [];
 let currentProject = null;
 let expenses = [];
 let selectedFiles = [];
-let currentMode = 'project';
+let currentMode = "project";
 let selectedDate = null;
 
 // 匯率資料
@@ -14,15 +14,16 @@ const exchangeRates = {
     USD: 31.5,
     JPY: 0.21,
     EUR: 34.8,
-    CNY: 4.35
+    CNY: 4.35,
 };
 
 // 將 calendarEvents 定義為全域變數
 window.calendarEvents = [];
 
 // 初始化應用程式
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function () {
     initializeApp();
+    initializeResponsiveFeatures();
 });
 
 function initializeApp() {
@@ -37,303 +38,392 @@ function initializeApp() {
     }, 500);
 }
 
+// 初始化響應式功能
+function initializeResponsiveFeatures() {
+    // 監聽螢幕大小變化
+    window.addEventListener("resize", handleResize);
+
+    // 初始化時檢查螢幕大小
+    handleResize();
+
+    // 監聽點擊事件來關閉側邊欄（點擊主要內容區域）
+    document.addEventListener("click", function (event) {
+        const sidebar = document.getElementById("sidebar");
+        const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
+        const isClickInsideSidebar = sidebar.contains(event.target);
+        const isClickOnToggle =
+            mobileMenuToggle && mobileMenuToggle.contains(event.target);
+
+        if (!isClickInsideSidebar && !isClickOnToggle && window.innerWidth <= 768) {
+            closeMobileSidebar();
+        }
+    });
+}
+
+// 處理螢幕大小變化
+function handleResize() {
+    const isMobile = window.innerWidth <= 480;
+    const desktopTable = document.querySelector(".desktop-table");
+    const mobileCards = document.querySelector(".mobile-cards");
+
+    if (isMobile) {
+        // 切換到行動版卡片模式
+        if (desktopTable) {
+            desktopTable.style.display = "none";
+            desktopTable.style.setProperty("display", "none", "important");
+        }
+        if (mobileCards) {
+            mobileCards.style.display = "flex";
+            mobileCards.style.setProperty("display", "flex", "important");
+        }
+        renderMobileCards();
+    } else {
+        // 切換到桌面版表格模式
+        if (desktopTable) {
+            desktopTable.style.display = "block";
+            desktopTable.style.removeProperty("display");
+        }
+        if (mobileCards) {
+            mobileCards.style.display = "none";
+            mobileCards.style.removeProperty("display");
+        }
+    }
+
+    // 如果螢幕變大，關閉行動版側邊欄
+    if (window.innerWidth > 768) {
+        closeMobileSidebar();
+    }
+}
+
+// 切換行動版側邊欄
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.querySelector(".sidebar-overlay");
+
+    if (sidebar.classList.contains("active")) {
+        closeMobileSidebar();
+    } else {
+        openMobileSidebar();
+    }
+}
+
+// 開啟行動版側邊欄
+function openMobileSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.querySelector(".sidebar-overlay");
+
+    sidebar.classList.add("active");
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+
+// 關閉行動版側邊欄
+function closeMobileSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.querySelector(".sidebar-overlay");
+
+    sidebar.classList.remove("active");
+    overlay.classList.remove("active");
+    document.body.style.overflow = "";
+}
+
 // 載入模擬數據 - 更新為最新欄位結構
 function loadMockData() {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    
+
     const getDateInCurrentMonth = (day) => {
-        return new Date(currentYear, currentMonth, day).toISOString().split('T')[0];
+        return new Date(currentYear, currentMonth, day).toISOString().split("T")[0];
     };
-    
+
     projects = [
         {
             id: 1,
-            name: '2024年第四季差旅費',
-            description: '第四季出差相關費用報帳',
+            name: "2024年第四季差旅費",
+            description: "第四季出差相關費用報帳",
             budget: 50000,
-            status: 'pending',
+            status: "pending",
             createdAt: getDateInCurrentMonth(1),
             lastUpdated: getDateInCurrentMonth(15),
             expenses: [
                 {
                     id: 1,
                     applicationDate: getDateInCurrentMonth(1),
-                    applicantName: '王小明',
-                    department: '業務部',
-                    position: '業務經理',
+                    applicantName: "王小明",
+                    department: "業務部",
+                    position: "業務經理",
                     expenseDate: getDateInCurrentMonth(4),
-                    invoiceNumber: 'TW12345678',
-                    expenseSubject: '交通費',
-                    expenseContent: '台北-台中高鐵',
-                    expensePurpose: '客戶拜訪',
+                    invoiceNumber: "TW12345678",
+                    expenseSubject: "交通費",
+                    expenseContent: "台北-台中高鐵",
+                    expensePurpose: "客戶拜訪",
                     amount: 1490,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 1490,
-                    notes: '台北-台中商務出差',
-                    status: 'completed'
+                    notes: "台北-台中商務出差",
+                    status: "completed",
                 },
                 {
                     id: 2,
                     applicationDate: getDateInCurrentMonth(1),
-                    applicantName: '王小明',
-                    department: '業務部',
-                    position: '業務經理',
+                    applicantName: "王小明",
+                    department: "業務部",
+                    position: "業務經理",
                     expenseDate: getDateInCurrentMonth(4),
-                    invoiceNumber: 'HT20241204',
-                    expenseSubject: '住宿費',
-                    expenseContent: '商務旅館住宿',
-                    expensePurpose: '商務出差',
+                    invoiceNumber: "HT20241204",
+                    expenseSubject: "住宿費",
+                    expenseContent: "商務旅館住宿",
+                    expensePurpose: "商務出差",
                     amount: 4500,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 4500,
-                    notes: '日月千禧酒店住宿一晚',
-                    status: 'completed'
+                    notes: "日月千禧酒店住宿一晚",
+                    status: "completed",
                 },
                 {
                     id: 3,
                     applicationDate: getDateInCurrentMonth(1),
-                    applicantName: '王小明',
-                    department: '業務部',
-                    position: '業務經理',
+                    applicantName: "王小明",
+                    department: "業務部",
+                    position: "業務經理",
                     expenseDate: getDateInCurrentMonth(5),
-                    invoiceNumber: 'RT20241205',
-                    expenseSubject: '餐費',
-                    expenseContent: '客戶商務午餐',
-                    expensePurpose: '客戶拜訪',
+                    invoiceNumber: "RT20241205",
+                    expenseSubject: "餐費",
+                    expenseContent: "客戶商務午餐",
+                    expensePurpose: "客戶拜訪",
                     amount: 2200,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 2200,
-                    notes: '與客戶商務午餐',
-                    status: 'pending'
+                    notes: "與客戶商務午餐",
+                    status: "pending",
                 },
                 {
                     id: 7,
                     applicationDate: getDateInCurrentMonth(1),
-                    applicantName: '王小明',
-                    department: '業務部',
-                    position: '業務經理',
+                    applicantName: "王小明",
+                    department: "業務部",
+                    position: "業務經理",
                     expenseDate: getDateInCurrentMonth(10),
-                    invoiceNumber: 'TC20241210',
-                    expenseSubject: '交通費',
-                    expenseContent: '機場接送計程車',
-                    expensePurpose: '國外出差',
+                    invoiceNumber: "TC20241210",
+                    expenseSubject: "交通費",
+                    expenseContent: "機場接送計程車",
+                    expensePurpose: "國外出差",
                     amount: 1200,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 1200,
-                    notes: '往返桃園機場',
-                    status: 'completed'
+                    notes: "往返桃園機場",
+                    status: "completed",
                 },
                 {
                     id: 8,
                     applicationDate: getDateInCurrentMonth(12),
-                    applicantName: '張小美',
-                    department: '人資部',
-                    position: '人資專員',
+                    applicantName: "張小美",
+                    department: "人資部",
+                    position: "人資專員",
                     expenseDate: getDateInCurrentMonth(12),
-                    invoiceNumber: 'US20241212',
-                    expenseSubject: '住宿費',
-                    expenseContent: '海外出差住宿',
-                    expensePurpose: '人才招募',
+                    invoiceNumber: "US20241212",
+                    expenseSubject: "住宿費",
+                    expenseContent: "海外出差住宿",
+                    expensePurpose: "人才招募",
                     amount: 150,
-                    currency: 'USD',
+                    currency: "USD",
                     exchangeRate: 31.5,
                     twdAmount: 4725,
-                    notes: '美國矽谷出差住宿',
-                    status: 'pending'
-                }
-            ]
+                    notes: "美國矽谷出差住宿",
+                    status: "pending",
+                },
+            ],
         },
         {
             id: 2,
-            name: '辦公用品採購',
-            description: '辦公室文具用品採購報帳',
+            name: "辦公用品採購",
+            description: "辦公室文具用品採購報帳",
             budget: 15000,
-            status: 'pending',
+            status: "pending",
             createdAt: getDateInCurrentMonth(2),
             lastUpdated: getDateInCurrentMonth(18),
             expenses: [
                 {
                     id: 4,
                     applicationDate: getDateInCurrentMonth(2),
-                    applicantName: '李小華',
-                    department: '行政部',
-                    position: '行政專員',
+                    applicantName: "李小華",
+                    department: "行政部",
+                    position: "行政專員",
                     expenseDate: getDateInCurrentMonth(8),
-                    invoiceNumber: 'OF20241208',
-                    expenseSubject: '辦公用品',
-                    expenseContent: '辦公文具採購',
-                    expensePurpose: '日常辦公需求',
+                    invoiceNumber: "OF20241208",
+                    expenseSubject: "辦公用品",
+                    expenseContent: "辦公文具採購",
+                    expensePurpose: "日常辦公需求",
                     amount: 3200,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 3200,
-                    notes: '筆記本、原子筆、文件夾等',
-                    status: 'completed'
+                    notes: "筆記本、原子筆、文件夾等",
+                    status: "completed",
                 },
                 {
                     id: 9,
                     applicationDate: getDateInCurrentMonth(5),
-                    applicantName: '李小華',
-                    department: '行政部',
-                    position: '行政專員',
+                    applicantName: "李小華",
+                    department: "行政部",
+                    position: "行政專員",
                     expenseDate: getDateInCurrentMonth(15),
-                    invoiceNumber: 'OF20241215',
-                    expenseSubject: '辦公用品',
-                    expenseContent: '印表機耗材',
-                    expensePurpose: '設備維護',
+                    invoiceNumber: "OF20241215",
+                    expenseSubject: "辦公用品",
+                    expenseContent: "印表機耗材",
+                    expensePurpose: "設備維護",
                     amount: 1580,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 1580,
-                    notes: '影印紙、墨水匣',
-                    status: 'pending'
+                    notes: "影印紙、墨水匣",
+                    status: "pending",
                 },
                 {
                     id: 10,
                     applicationDate: getDateInCurrentMonth(8),
-                    applicantName: '陳小東',
-                    department: '研發部',
-                    position: '研發工程師',
+                    applicantName: "陳小東",
+                    department: "研發部",
+                    position: "研發工程師",
                     expenseDate: getDateInCurrentMonth(18),
-                    invoiceNumber: 'JP20241218',
-                    expenseSubject: '文具用品',
-                    expenseContent: '技術書籍採購',
-                    expensePurpose: '技術研發',
+                    invoiceNumber: "JP20241218",
+                    expenseSubject: "文具用品",
+                    expenseContent: "技術書籍採購",
+                    expensePurpose: "技術研發",
                     amount: 8500,
-                    currency: 'JPY',
+                    currency: "JPY",
                     exchangeRate: 0.21,
                     twdAmount: 1785,
-                    notes: '日本技術書籍',
-                    status: 'completed'
-                }
-            ]
+                    notes: "日本技術書籍",
+                    status: "completed",
+                },
+            ],
         },
         {
             id: 3,
-            name: '會議與培訓費用',
-            description: '會議、培訓相關費用報帳',
+            name: "會議與培訓費用",
+            description: "會議、培訓相關費用報帳",
             budget: 25000,
-            status: 'completed',
+            status: "completed",
             createdAt: getDateInCurrentMonth(3),
             lastUpdated: getDateInCurrentMonth(20),
             expenses: [
                 {
                     id: 5,
                     applicationDate: getDateInCurrentMonth(3),
-                    applicantName: '張小美',
-                    department: '人資部',
-                    position: '人資專員',
+                    applicantName: "張小美",
+                    department: "人資部",
+                    position: "人資專員",
                     expenseDate: getDateInCurrentMonth(6),
-                    invoiceNumber: 'CF20241206',
-                    expenseSubject: '餐費',
-                    expenseContent: '會議茶點',
-                    expensePurpose: '月度會議',
+                    invoiceNumber: "CF20241206",
+                    expenseSubject: "餐費",
+                    expenseContent: "會議茶點",
+                    expensePurpose: "月度會議",
                     amount: 450,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 450,
-                    notes: '部門月會茶點',
-                    status: 'completed'
+                    notes: "部門月會茶點",
+                    status: "completed",
                 },
                 {
                     id: 6,
                     applicationDate: getDateInCurrentMonth(3),
-                    applicantName: '張小美',
-                    department: '人資部',
-                    position: '人資專員',
+                    applicantName: "張小美",
+                    department: "人資部",
+                    position: "人資專員",
                     expenseDate: getDateInCurrentMonth(14),
-                    invoiceNumber: 'EU20241214',
-                    expenseSubject: '差旅費',
-                    expenseContent: '歐洲研習營',
-                    expensePurpose: '員工培訓',
+                    invoiceNumber: "EU20241214",
+                    expenseSubject: "差旅費",
+                    expenseContent: "歐洲研習營",
+                    expensePurpose: "員工培訓",
                     amount: 320,
-                    currency: 'EUR',
+                    currency: "EUR",
                     exchangeRate: 34.8,
                     twdAmount: 11136,
-                    notes: '歐洲人資研習營費用',
-                    status: 'completed'
+                    notes: "歐洲人資研習營費用",
+                    status: "completed",
                 },
                 {
                     id: 11,
                     applicationDate: getDateInCurrentMonth(10),
-                    applicantName: '陳小東',
-                    department: '研發部',
-                    position: '研發工程師',
+                    applicantName: "陳小東",
+                    department: "研發部",
+                    position: "研發工程師",
                     expenseDate: getDateInCurrentMonth(16),
-                    invoiceNumber: 'CN20241216',
-                    expenseSubject: '通訊費',
-                    expenseContent: '國際會議通訊',
-                    expensePurpose: '技術交流',
+                    invoiceNumber: "CN20241216",
+                    expenseSubject: "通訊費",
+                    expenseContent: "國際會議通訊",
+                    expensePurpose: "技術交流",
                     amount: 280,
-                    currency: 'CNY',
+                    currency: "CNY",
                     exchangeRate: 4.35,
                     twdAmount: 1218,
-                    notes: '與中國團隊視訊會議費用',
-                    status: 'completed'
+                    notes: "與中國團隊視訊會議費用",
+                    status: "completed",
                 },
                 {
                     id: 12,
                     applicationDate: getDateInCurrentMonth(12),
-                    applicantName: '李小華',
-                    department: '行政部',
-                    position: '行政專員',
+                    applicantName: "李小華",
+                    department: "行政部",
+                    position: "行政專員",
                     expenseDate: getDateInCurrentMonth(20),
-                    invoiceNumber: 'TR20241220',
-                    expenseSubject: '其他',
-                    expenseContent: '培訓場地租借',
-                    expensePurpose: '員工訓練',
+                    invoiceNumber: "TR20241220",
+                    expenseSubject: "其他",
+                    expenseContent: "培訓場地租借",
+                    expensePurpose: "員工訓練",
                     amount: 5500,
-                    currency: 'TWD',
+                    currency: "TWD",
                     exchangeRate: 1,
                     twdAmount: 5500,
-                    notes: '員工教育訓練場地費',
-                    status: 'completed'
-                }
-            ]
-        }
+                    notes: "員工教育訓練場地費",
+                    status: "completed",
+                },
+            ],
+        },
     ];
 }
 
 // 匯率換算函數
 function calculateTWDAmount() {
-    const amount = parseFloat(document.getElementById('amount').value) || 0;
-    const currency = document.getElementById('currency').value;
+    const amount = parseFloat(document.getElementById("amount").value) || 0;
+    const currency = document.getElementById("currency").value;
     const exchangeRate = exchangeRates[currency] || 1;
-    
-    document.getElementById('exchangeRate').value = exchangeRate;
+
+    document.getElementById("exchangeRate").value = exchangeRate;
     const twdAmount = amount * exchangeRate;
-    document.getElementById('twdAmount').value = twdAmount.toFixed(2);
+    document.getElementById("twdAmount").value = twdAmount.toFixed(2);
 }
 
 // 編輯表單匯率換算
 function calculateEditTWDAmount() {
-    const amount = parseFloat(document.getElementById('editAmount').value) || 0;
-    const currency = document.getElementById('editCurrency').value;
+    const amount = parseFloat(document.getElementById("editAmount").value) || 0;
+    const currency = document.getElementById("editCurrency").value;
     const exchangeRate = exchangeRates[currency] || 1;
-    
-    document.getElementById('editExchangeRate').value = exchangeRate;
+
+    document.getElementById("editExchangeRate").value = exchangeRate;
     const twdAmount = amount * exchangeRate;
-    document.getElementById('editTwdAmount').value = twdAmount.toFixed(2);
+    document.getElementById("editTwdAmount").value = twdAmount.toFixed(2);
 }
 
 // 模式切換功能
 function switchMode(mode) {
     if (currentMode === mode) return;
-    
+
     currentMode = mode;
-    
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.remove('active');
+
+    document.querySelectorAll(".mode-btn").forEach((btn) => {
+        btn.classList.remove("active");
     });
-    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
-    
-    if (mode === 'project') {
+    document.querySelector(`[data-mode="${mode}"]`).classList.add("active");
+
+    if (mode === "project") {
         showProjectMode();
     } else {
         showCalendarMode();
@@ -341,26 +431,26 @@ function switchMode(mode) {
 }
 
 function showProjectMode() {
-    document.getElementById('projectSidebarContent').style.display = 'block';
-    document.getElementById('calendarSidebarContent').style.display = 'none';
-    document.getElementById('projectModeContent').style.display = 'flex';
-    document.getElementById('calendarModeContent').style.display = 'none';
-    document.getElementById('addProjectBtn').style.display = 'flex';
-    
+    document.getElementById("projectSidebarContent").style.display = "block";
+    document.getElementById("calendarSidebarContent").style.display = "none";
+    document.getElementById("projectModeContent").style.display = "flex";
+    document.getElementById("calendarModeContent").style.display = "none";
+    document.getElementById("addProjectBtn").style.display = "flex";
+
     renderProjectList();
     updateMainContent();
 }
 
 function showCalendarMode() {
-    document.getElementById('projectSidebarContent').style.display = 'none';
-    document.getElementById('calendarSidebarContent').style.display = 'block';
-    document.getElementById('projectModeContent').style.display = 'none';
-    document.getElementById('calendarModeContent').style.display = 'flex';
-    document.getElementById('addProjectBtn').style.display = 'none';
-    
+    document.getElementById("projectSidebarContent").style.display = "none";
+    document.getElementById("calendarSidebarContent").style.display = "block";
+    document.getElementById("projectModeContent").style.display = "none";
+    document.getElementById("calendarModeContent").style.display = "flex";
+    document.getElementById("addProjectBtn").style.display = "none";
+
     updateCalendarStats();
     updateCalendarEvents();
-    
+
     setTimeout(() => {
         if (window.renderCalendar) {
             window.renderCalendar();
@@ -373,34 +463,41 @@ function updateCalendarStats() {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     let monthlyCount = 0;
     let monthlyAmount = 0;
-    
-    projects.forEach(project => {
-        project.expenses.forEach(expense => {
+
+    projects.forEach((project) => {
+        project.expenses.forEach((expense) => {
             const expenseDate = new Date(expense.expenseDate);
-            if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
+            if (
+                expenseDate.getMonth() === currentMonth &&
+                expenseDate.getFullYear() === currentYear
+            ) {
                 monthlyCount++;
                 monthlyAmount += expense.twdAmount || expense.amount;
             }
         });
     });
-    
-    document.getElementById('monthlyCount').textContent = monthlyCount;
-    document.getElementById('monthlyAmount').textContent = `$${monthlyAmount.toLocaleString()}`;
+
+    document.getElementById("monthlyCount").textContent = monthlyCount;
+    document.getElementById(
+        "monthlyAmount"
+    ).textContent = `$${monthlyAmount.toLocaleString()}`;
 }
 
 // 更新日曆事件
 function updateCalendarEvents() {
     window.calendarEvents = [];
-    
-    projects.forEach(project => {
-        project.expenses.forEach(expense => {
+
+    projects.forEach((project) => {
+        project.expenses.forEach((expense) => {
             const expenseDate = new Date(expense.expenseDate);
             const event = {
                 id: expense.id,
-                title: `${expense.expenseContent} - $${(expense.twdAmount || expense.amount).toLocaleString()}`,
+                title: `${expense.expenseContent} - $${(
+                    expense.twdAmount || expense.amount
+                ).toLocaleString()}`,
                 start: expenseDate,
                 end: expenseDate,
                 allDay: true,
@@ -410,13 +507,16 @@ function updateCalendarEvents() {
                 invoice: expense.invoiceNumber,
                 projectId: project.id,
                 expense: expense,
-                project: project
+                project: project,
             };
             window.calendarEvents.push(event);
         });
     });
-    
-    if (window.refreshCalendarEvents && typeof window.refreshCalendarEvents === 'function') {
+
+    if (
+        window.refreshCalendarEvents &&
+        typeof window.refreshCalendarEvents === "function"
+    ) {
         window.refreshCalendarEvents();
     }
 }
@@ -424,24 +524,24 @@ function updateCalendarEvents() {
 // 獲取類別顏色
 function getCategoryColor(category) {
     const colors = {
-        '餐費': '#FF6B6B',
-        '交通費': '#4ECDC4',
-        '住宿費': '#45B7D1',
-        '辦公用品': '#FFA07A',
-        '差旅費': '#9B59B6',
-        '通訊費': '#F39C12',
-        '文具用品': '#2ECC71',
-        '其他': '#98D8C8'
+        餐費: "#FF6B6B",
+        交通費: "#4ECDC4",
+        住宿費: "#45B7D1",
+        辦公用品: "#FFA07A",
+        差旅費: "#9B59B6",
+        通訊費: "#F39C12",
+        文具用品: "#2ECC71",
+        其他: "#98D8C8",
     };
-    return colors[category] || '#67BE5F';
+    return colors[category] || "#67BE5F";
 }
 
 // 渲染專案列表
 function renderProjectList() {
-    const projectListContainer = document.getElementById('projectList');
-    projectListContainer.innerHTML = '';
-    
-    projects.forEach(project => {
+    const projectListContainer = document.getElementById("projectList");
+    projectListContainer.innerHTML = "";
+
+    projects.forEach((project) => {
         const projectElement = createProjectElement(project);
         projectListContainer.appendChild(projectElement);
     });
@@ -449,13 +549,16 @@ function renderProjectList() {
 
 // 創建專案元素
 function createProjectElement(project) {
-    const projectDiv = document.createElement('div');
-    projectDiv.className = 'project-item';
+    const projectDiv = document.createElement("div");
+    projectDiv.className = "project-item";
     projectDiv.dataset.projectId = project.id;
-    
-    const totalAmount = project.expenses.reduce((sum, expense) => sum + (expense.twdAmount || expense.amount), 0);
+
+    const totalAmount = project.expenses.reduce(
+        (sum, expense) => sum + (expense.twdAmount || expense.amount),
+        0
+    );
     const statusText = getStatusText(project.status);
-    
+
     projectDiv.innerHTML = `
         <div class="project-name">${project.name}</div>
         <div class="project-description">${project.description}</div>
@@ -467,19 +570,21 @@ function createProjectElement(project) {
             總額: $${totalAmount.toLocaleString()}
         </div>
         <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">
-            最後更新: ${new Date(project.lastUpdated).toLocaleDateString('zh-TW')}
+            最後更新: ${new Date(project.lastUpdated).toLocaleDateString(
+        "zh-TW"
+    )}
         </div>
     `;
-    
-    projectDiv.addEventListener('click', () => selectProject(project));
-    
+
+    projectDiv.addEventListener("click", () => selectProject(project));
+
     return projectDiv;
 }
 
 function getStatusText(status) {
     const statusMap = {
-        'pending': '待處理',
-        'completed': '已完成'
+        pending: "待處理",
+        completed: "已完成",
     };
     return statusMap[status] || status;
 }
@@ -487,12 +592,14 @@ function getStatusText(status) {
 // 選擇專案
 function selectProject(project) {
     currentProject = project;
-    
-    document.querySelectorAll('.project-item').forEach(item => {
-        item.classList.remove('active');
+
+    document.querySelectorAll(".project-item").forEach((item) => {
+        item.classList.remove("active");
     });
-    document.querySelector(`[data-project-id="${project.id}"]`).classList.add('active');
-    
+    document
+        .querySelector(`[data-project-id="${project.id}"]`)
+        .classList.add("active");
+
     updateMainContent();
     hideEmptyState();
     showProjectContent();
@@ -501,27 +608,38 @@ function selectProject(project) {
 // 更新主要內容區域
 function updateMainContent() {
     if (!currentProject) return;
-    
-    document.getElementById('currentProjectName').textContent = currentProject.name;
-    
+
+    document.getElementById("currentProjectName").textContent =
+        currentProject.name;
+
     const totalCount = currentProject.expenses.length;
-    const totalAmount = currentProject.expenses.reduce((sum, expense) => sum + (expense.twdAmount || expense.amount), 0);
-    const lastUpdate = currentProject.lastUpdated 
-        ? new Date(currentProject.lastUpdated).toLocaleDateString('zh-TW')
-        : '-';
-    
-    document.getElementById('totalCount').textContent = totalCount;
-    document.getElementById('totalAmount').textContent = `$${totalAmount.toLocaleString()}`;
-    document.getElementById('lastUpdate').textContent = lastUpdate;
-    
+    const totalAmount = currentProject.expenses.reduce(
+        (sum, expense) => sum + (expense.twdAmount || expense.amount),
+        0
+    );
+    const lastUpdate = currentProject.lastUpdated
+        ? new Date(currentProject.lastUpdated).toLocaleDateString("zh-TW")
+        : "-";
+
+    document.getElementById("totalCount").textContent = totalCount;
+    document.getElementById(
+        "totalAmount"
+    ).textContent = `$${totalAmount.toLocaleString()}`;
+    document.getElementById("lastUpdate").textContent = lastUpdate;
+
     renderExpenseTable();
+
+    // 如果在行動版模式，也更新卡片
+    if (window.innerWidth <= 480) {
+        renderMobileCards();
+    }
 }
 
 // 渲染費用表格
 function renderExpenseTable() {
-    const tbody = document.getElementById('expenseTableBody');
-    tbody.innerHTML = '';
-    
+    const tbody = document.getElementById("expenseTableBody");
+    tbody.innerHTML = "";
+
     if (!currentProject || currentProject.expenses.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -533,91 +651,199 @@ function renderExpenseTable() {
         `;
         return;
     }
-    
-    const sortedExpenses = [...currentProject.expenses].sort((a, b) => new Date(b.expenseDate) - new Date(a.expenseDate));
-    
-    sortedExpenses.forEach(expense => {
+
+    const sortedExpenses = [...currentProject.expenses].sort(
+        (a, b) => new Date(b.expenseDate) - new Date(a.expenseDate)
+    );
+
+    sortedExpenses.forEach((expense) => {
         const row = createExpenseRow(expense);
         tbody.appendChild(row);
     });
 }
 
+// 渲染行動版卡片
+function renderMobileCards() {
+    const mobileCards = document.getElementById("mobileCards");
+    if (!mobileCards) return;
+
+    mobileCards.innerHTML = "";
+
+    if (!currentProject || currentProject.expenses.length === 0) {
+        mobileCards.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+                <i class="fas fa-inbox fa-2x" style="display: block; margin-bottom: 16px; color: #cbd5e1;"></i>
+                <p>暫無報帳記錄，點擊右上角「+」開始新增</p>
+            </div>
+        `;
+        return;
+    }
+
+    const sortedExpenses = [...currentProject.expenses].sort(
+        (a, b) => new Date(b.expenseDate) - new Date(a.expenseDate)
+    );
+
+    sortedExpenses.forEach((expense) => {
+        const card = createExpenseCard(expense);
+        mobileCards.appendChild(card);
+    });
+}
+
+// 創建費用卡片
+function createExpenseCard(expense) {
+    const card = document.createElement("div");
+    card.className = "expense-card";
+
+    const statusText = expense.status === "completed" ? "已完成" : "待處理";
+    const statusClass = expense.status === "completed" ? "approved" : "pending";
+
+    card.innerHTML = `
+        <div class="expense-card-header">
+            <div>
+                <div class="expense-card-title">${expense.expenseContent || "-"
+        }</div>
+                <div style="font-size: 12px; color: #6B7280;">
+                    ${new Date(expense.expenseDate).toLocaleDateString("zh-TW")}
+                </div>
+            </div>
+            <div class="expense-card-amount">$${(
+            expense.twdAmount || expense.amount
+        ).toLocaleString()}</div>
+        </div>
+        
+        <div class="expense-card-details">
+            <div class="expense-card-detail">
+                <div class="expense-card-detail-label">申請人</div>
+                <div class="expense-card-detail-value">${expense.applicantName || "-"
+        }</div>
+            </div>
+            <div class="expense-card-detail">
+                <div class="expense-card-detail-label">部門</div>
+                <div class="expense-card-detail-value">${expense.department || "-"
+        }</div>
+            </div>
+            <div class="expense-card-detail">
+                <div class="expense-card-detail-label">科目</div>
+                <div class="expense-card-detail-value">${expense.expenseSubject || "-"
+        }</div>
+            </div>
+            <div class="expense-card-detail">
+                <div class="expense-card-detail-label">用途</div>
+                <div class="expense-card-detail-value">${expense.expensePurpose || "-"
+        }</div>
+            </div>
+            <div class="expense-card-detail">
+                <div class="expense-card-detail-label">發票號碼</div>
+                <div class="expense-card-detail-value">${expense.invoiceNumber || "-"
+        }</div>
+            </div>
+            <div class="expense-card-detail">
+                <div class="expense-card-detail-label">備註</div>
+                <div class="expense-card-detail-value">${expense.notes || "-"
+        }</div>
+            </div>
+        </div>
+        
+        <div class="expense-card-footer">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+            <div class="expense-card-actions">
+                <button class="btn-table btn-edit" onclick="editExpense(${expense.id
+        })">
+                    <i class="fas fa-edit"></i> 編輯
+                </button>
+                <button class="btn-table btn-delete" onclick="deleteExpense(${expense.id
+        })">
+                    <i class="fas fa-trash"></i> 刪除
+                </button>
+            </div>
+        </div>
+    `;
+
+    return card;
+}
+
 // 創建費用列
 function createExpenseRow(expense) {
-    const row = document.createElement('tr');
-    
+    const row = document.createElement("tr");
+
     // 獲取審核狀態顯示文字
-    const statusText = expense.status === 'completed' ? '已完成' : '待處理';
-    const statusClass = expense.status === 'completed' ? 'approved' : 'pending';
-    
+    const statusText = expense.status === "completed" ? "已完成" : "待處理";
+    const statusClass = expense.status === "completed" ? "approved" : "pending";
+
     row.innerHTML = `
-        <td>${new Date(expense.applicationDate || expense.expenseDate).toLocaleDateString('zh-TW')}</td>
-        <td>${expense.applicantName || '-'}</td>
-        <td>${expense.department || '-'}</td>
-        <td>${expense.position || '-'}</td>
-        <td>${new Date(expense.expenseDate).toLocaleDateString('zh-TW')}</td>
-        <td>${expense.invoiceNumber || '-'}</td>
-        <td>${expense.expenseSubject || '-'}</td>
-        <td>${expense.expenseContent || '-'}</td>
-        <td>${expense.expensePurpose || '-'}</td>
+        <td>${new Date(
+        expense.applicationDate || expense.expenseDate
+    ).toLocaleDateString("zh-TW")}</td>
+        <td>${expense.applicantName || "-"}</td>
+        <td>${expense.department || "-"}</td>
+        <td>${expense.position || "-"}</td>
+        <td>${new Date(expense.expenseDate).toLocaleDateString("zh-TW")}</td>
+        <td>${expense.invoiceNumber || "-"}</td>
+        <td>${expense.expenseSubject || "-"}</td>
+        <td>${expense.expenseContent || "-"}</td>
+        <td>${expense.expensePurpose || "-"}</td>
         <td>$${(expense.twdAmount || expense.amount).toLocaleString()}</td>
-        <td>${expense.notes || '-'}</td>
+        <td>${expense.notes || "-"}</td>
         <td>
             <span class="status-badge ${statusClass}">${statusText}</span>
         </td>
         <td>
             <div class="action-buttons-table">
-                <button class="btn-table btn-edit" onclick="editExpense(${expense.id})">
+                <button class="btn-table btn-edit" onclick="editExpense(${expense.id
+        })">
                     <i class="fas fa-edit"></i> 編輯
                 </button>
-                <button class="btn-table btn-delete" onclick="deleteExpense(${expense.id})">
+                <button class="btn-table btn-delete" onclick="deleteExpense(${expense.id
+        })">
                     <i class="fas fa-trash"></i> 刪除
                 </button>
             </div>
         </td>
     `;
-    
+
     return row;
 }
 
 function showEmptyState() {
-    document.getElementById('emptyState').style.display = 'flex';
-    document.getElementById('tableContainer').style.display = 'none';
-    document.getElementById('actionButtons').style.display = 'none';
-    document.getElementById('projectStats').style.display = 'none';
+    document.getElementById("emptyState").style.display = "flex";
+    document.getElementById("tableContainer").style.display = "none";
+    document.getElementById("actionButtons").style.display = "none";
+    document.getElementById("projectStats").style.display = "none";
 }
 
 function hideEmptyState() {
-    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById("emptyState").style.display = "none";
 }
 
 function showProjectContent() {
-    document.getElementById('tableContainer').style.display = 'block';
-    document.getElementById('actionButtons').style.display = 'flex';
-    document.getElementById('projectStats').style.display = 'flex';
+    document.getElementById("tableContainer").style.display = "block";
+    document.getElementById("actionButtons").style.display = "flex";
+    document.getElementById("projectStats").style.display = "flex";
 }
 
 // 篩選專案
 function filterProjects() {
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    const filteredProjects = projects.filter(project => {
-        const matchesSearch = project.name.toLowerCase().includes(searchText) ||
-                            project.description.toLowerCase().includes(searchText);
-        const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-        
+    const searchText = document.getElementById("searchInput").value.toLowerCase();
+    const statusFilter = document.getElementById("statusFilter").value;
+
+    const filteredProjects = projects.filter((project) => {
+        const matchesSearch =
+            project.name.toLowerCase().includes(searchText) ||
+            project.description.toLowerCase().includes(searchText);
+        const matchesStatus =
+            statusFilter === "all" || project.status === statusFilter;
+
         return matchesSearch && matchesStatus;
     });
-    
+
     renderFilteredProjects(filteredProjects);
 }
 
 function renderFilteredProjects(filteredProjects) {
-    const projectListContainer = document.getElementById('projectList');
-    projectListContainer.innerHTML = '';
-    
-    filteredProjects.forEach(project => {
+    const projectListContainer = document.getElementById("projectList");
+    projectListContainer.innerHTML = "";
+
+    filteredProjects.forEach((project) => {
         const projectElement = createProjectElement(project);
         projectListContainer.appendChild(projectElement);
     });
@@ -625,55 +851,58 @@ function renderFilteredProjects(filteredProjects) {
 
 // 專案建立
 function showCreateProjectModal() {
-    document.getElementById('createProjectModal').classList.add('show');
-    document.getElementById('projectName').focus();
+    document.getElementById("createProjectModal").classList.add("show");
+    document.getElementById("projectName").focus();
 }
 
 function hideCreateProjectModal() {
-    document.getElementById('createProjectModal').classList.remove('show');
-    document.getElementById('createProjectForm').reset();
+    document.getElementById("createProjectModal").classList.remove("show");
+    document.getElementById("createProjectForm").reset();
 }
 
 function createProject() {
-    const name = document.getElementById('projectName').value.trim();
-    const description = document.getElementById('projectDescription').value.trim();
-    const budget = parseFloat(document.getElementById('projectBudget').value) || 0;
-    
+    const name = document.getElementById("projectName").value.trim();
+    const description = document
+        .getElementById("projectDescription")
+        .value.trim();
+    const budget =
+        parseFloat(document.getElementById("projectBudget").value) || 0;
+
     if (!name) {
-        showToast('請輸入專案名稱', 'error');
+        showToast("請輸入專案名稱", "error");
         return;
     }
-    
+
     const newProject = {
         id: Date.now(),
         name: name,
         description: description,
         budget: budget,
-        status: 'pending',
-        createdAt: new Date().toISOString().split('T')[0],
-        lastUpdated: new Date().toISOString().split('T')[0],
-        expenses: []
+        status: "pending",
+        createdAt: new Date().toISOString().split("T")[0],
+        lastUpdated: new Date().toISOString().split("T")[0],
+        expenses: [],
     };
-    
+
     projects.unshift(newProject);
     renderProjectList();
     hideCreateProjectModal();
-    showToast('專案建立成功！', 'success');
-    
+    showToast("專案建立成功！", "success");
+
     updateProjectSelectOptions();
-    
-    if (currentMode === 'project') {
+
+    if (currentMode === "project") {
         selectProject(newProject);
     }
 }
 
 // 更新專案選擇下拉選單
 function updateProjectSelectOptions() {
-    const projectSelect = document.getElementById('expenseProject');
+    const projectSelect = document.getElementById("expenseProject");
     if (projectSelect) {
         projectSelect.innerHTML = '<option value="">請選擇專案</option>';
-        projects.forEach(project => {
-            const option = document.createElement('option');
+        projects.forEach((project) => {
+            const option = document.createElement("option");
             option.value = project.id;
             option.textContent = project.name;
             projectSelect.appendChild(option);
@@ -683,49 +912,53 @@ function updateProjectSelectOptions() {
 
 // 上傳模態框
 function showUploadModal() {
-    if (currentMode === 'calendar') {
-        document.getElementById('projectSelectGroup').style.display = 'block';
+    if (currentMode === "calendar") {
+        document.getElementById("projectSelectGroup").style.display = "block";
         updateProjectSelectOptions();
-        
+
         if (selectedDate) {
-            document.getElementById('expenseDate').value = new Date(selectedDate).toISOString().split('T')[0];
+            document.getElementById("expenseDate").value = new Date(selectedDate)
+                .toISOString()
+                .split("T")[0];
         }
     } else {
-        document.getElementById('projectSelectGroup').style.display = 'none';
+        document.getElementById("projectSelectGroup").style.display = "none";
         if (!currentProject) {
-            showToast('請先選擇專案', 'error');
+            showToast("請先選擇專案", "error");
             return;
         }
     }
-    
-    document.getElementById('uploadModal').classList.add('show');
+
+    document.getElementById("uploadModal").classList.add("show");
     resetUploadModal();
 }
 
 function hideUploadModal() {
-    document.getElementById('uploadModal').classList.remove('show');
+    document.getElementById("uploadModal").classList.remove("show");
     resetUploadModal();
 }
 
 function resetUploadModal() {
     selectedFiles = [];
-    document.getElementById('fileInput').value = '';
-    document.getElementById('previewArea').style.display = 'none';
-    document.getElementById('ocrResults').style.display = 'none';
-    document.getElementById('uploadBtn').style.display = 'inline-flex';
-    document.getElementById('saveExpenseBtn').style.display = 'none';
-    document.getElementById('expenseForm').reset();
-    
+    document.getElementById("fileInput").value = "";
+    document.getElementById("previewArea").style.display = "none";
+    document.getElementById("ocrResults").style.display = "none";
+    document.getElementById("uploadBtn").style.display = "inline-flex";
+    document.getElementById("saveExpenseBtn").style.display = "none";
+    document.getElementById("expenseForm").reset();
+
     // 設置預設值
-    document.getElementById('applicantName').value = '王小明';
-    document.getElementById('department').value = '業務部';
-    document.getElementById('position').value = '業務經理';
-    document.getElementById('currency').value = 'TWD';
-    document.getElementById('status').value = 'pending';
+    document.getElementById("applicantName").value = "王小明";
+    document.getElementById("department").value = "業務部";
+    document.getElementById("position").value = "業務經理";
+    document.getElementById("currency").value = "TWD";
+    document.getElementById("status").value = "pending";
     calculateTWDAmount();
-    
-    if (currentMode === 'calendar' && selectedDate) {
-        document.getElementById('expenseDate').value = new Date(selectedDate).toISOString().split('T')[0];
+
+    if (currentMode === "calendar" && selectedDate) {
+        document.getElementById("expenseDate").value = new Date(selectedDate)
+            .toISOString()
+            .split("T")[0];
     }
 }
 
@@ -738,28 +971,28 @@ function handleFileSelect(event) {
 
 function dragOverHandler(event) {
     event.preventDefault();
-    document.getElementById('uploadArea').classList.add('dragover');
+    document.getElementById("uploadArea").classList.add("dragover");
 }
 
 function dropHandler(event) {
     event.preventDefault();
-    document.getElementById('uploadArea').classList.remove('dragover');
-    
+    document.getElementById("uploadArea").classList.remove("dragover");
+
     const files = Array.from(event.dataTransfer.files);
     selectedFiles = files;
-    document.getElementById('fileInput').files = event.dataTransfer.files;
+    document.getElementById("fileInput").files = event.dataTransfer.files;
     showFilePreview(files);
 }
 
 function showFilePreview(files) {
-    const previewArea = document.getElementById('previewArea');
-    const fileList = document.getElementById('fileList');
-    
-    fileList.innerHTML = '';
-    
+    const previewArea = document.getElementById("previewArea");
+    const fileList = document.getElementById("fileList");
+
+    fileList.innerHTML = "";
+
     files.forEach((file, index) => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
         fileItem.innerHTML = `
             <i class="fas fa-file-image"></i>
             <span>${file.name}</span>
@@ -767,16 +1000,16 @@ function showFilePreview(files) {
         `;
         fileList.appendChild(fileItem);
     });
-    
-    previewArea.style.display = 'block';
+
+    previewArea.style.display = "block";
 }
 
 function removeFile(index) {
     selectedFiles.splice(index, 1);
-    
+
     if (selectedFiles.length === 0) {
-        document.getElementById('previewArea').style.display = 'none';
-        document.getElementById('fileInput').value = '';
+        document.getElementById("previewArea").style.display = "none";
+        document.getElementById("fileInput").value = "";
     } else {
         showFilePreview(selectedFiles);
     }
@@ -785,12 +1018,12 @@ function removeFile(index) {
 // OCR 功能
 function uploadFiles() {
     if (selectedFiles.length === 0) {
-        showToast('請先選擇檔案', 'error');
+        showToast("請先選擇檔案", "error");
         return;
     }
-    
+
     showLoading();
-    
+
     setTimeout(() => {
         hideLoading();
         simulateOCR();
@@ -801,102 +1034,114 @@ function uploadFiles() {
 function simulateOCR() {
     const today = new Date();
     const defaultDate = selectedDate ? new Date(selectedDate) : today;
-    
-    const subjects = ['餐費', '交通費', '住宿費', '辦公用品', '其他'];
-    const contents = ['商務午餐', '計程車費', '住宿費', '辦公用品', '其他費用'];
-    const purposes = ['客戶拜訪', '商務出差', '會議需求', '日常辦公', '其他'];
-    const applicants = ['王小明', '李小華', '張小美', '陳小東'];
-    const departments = ['業務部', '行政部', '人資部', '研發部'];
-    const positions = ['業務經理', '行政專員', '人資專員', '研發工程師'];
-    
+
+    const subjects = ["餐費", "交通費", "住宿費", "辦公用品", "其他"];
+    const contents = ["商務午餐", "計程車費", "住宿費", "辦公用品", "其他費用"];
+    const purposes = ["客戶拜訪", "商務出差", "會議需求", "日常辦公", "其他"];
+    const applicants = ["王小明", "李小華", "張小美", "陳小東"];
+    const departments = ["業務部", "行政部", "人資部", "研發部"];
+    const positions = ["業務經理", "行政專員", "人資專員", "研發工程師"];
+
     const mockOCRData = {
         applicantName: applicants[Math.floor(Math.random() * applicants.length)],
         department: departments[Math.floor(Math.random() * departments.length)],
         position: positions[Math.floor(Math.random() * positions.length)],
-        expenseDate: defaultDate.toISOString().split('T')[0],
+        expenseDate: defaultDate.toISOString().split("T")[0],
         expenseSubject: subjects[Math.floor(Math.random() * subjects.length)],
         expenseContent: contents[Math.floor(Math.random() * contents.length)],
         expensePurpose: purposes[Math.floor(Math.random() * purposes.length)],
-        invoiceNumber: 'TW' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0'),
+        invoiceNumber:
+            "TW" +
+            Math.floor(Math.random() * 100000000)
+                .toString()
+                .padStart(8, "0"),
         amount: Math.floor(Math.random() * 2000) + 100,
-        currency: 'TWD'
+        currency: "TWD",
     };
-    
+
     // 填入表單
-    document.getElementById('applicantName').value = mockOCRData.applicantName;
-    document.getElementById('department').value = mockOCRData.department;
-    document.getElementById('position').value = mockOCRData.position;
-    document.getElementById('expenseDate').value = mockOCRData.expenseDate;
-    document.getElementById('expenseSubject').value = mockOCRData.expenseSubject;
-    document.getElementById('expenseContent').value = mockOCRData.expenseContent;
-    document.getElementById('expensePurpose').value = mockOCRData.expensePurpose;
-    document.getElementById('invoiceNumber').value = mockOCRData.invoiceNumber;
-    document.getElementById('amount').value = mockOCRData.amount;
-    document.getElementById('currency').value = mockOCRData.currency;
-    
+    document.getElementById("applicantName").value = mockOCRData.applicantName;
+    document.getElementById("department").value = mockOCRData.department;
+    document.getElementById("position").value = mockOCRData.position;
+    document.getElementById("expenseDate").value = mockOCRData.expenseDate;
+    document.getElementById("expenseSubject").value = mockOCRData.expenseSubject;
+    document.getElementById("expenseContent").value = mockOCRData.expenseContent;
+    document.getElementById("expensePurpose").value = mockOCRData.expensePurpose;
+    document.getElementById("invoiceNumber").value = mockOCRData.invoiceNumber;
+    document.getElementById("amount").value = mockOCRData.amount;
+    document.getElementById("currency").value = mockOCRData.currency;
+
     calculateTWDAmount();
 }
 
 function showOCRResults() {
-    document.getElementById('ocrResults').style.display = 'block';
-    document.getElementById('uploadBtn').style.display = 'none';
-    document.getElementById('saveExpenseBtn').style.display = 'inline-flex';
+    document.getElementById("ocrResults").style.display = "block";
+    document.getElementById("uploadBtn").style.display = "none";
+    document.getElementById("saveExpenseBtn").style.display = "inline-flex";
 }
 
 // 儲存費用記錄
 function saveExpense() {
     const formData = {
-        applicantName: document.getElementById('applicantName').value,
-        department: document.getElementById('department').value,
-        position: document.getElementById('position').value,
-        expenseDate: document.getElementById('expenseDate').value,
-        expenseSubject: document.getElementById('expenseSubject').value,
-        expenseContent: document.getElementById('expenseContent').value,
-        expensePurpose: document.getElementById('expensePurpose').value,
-        invoiceNumber: document.getElementById('invoiceNumber').value,
-        amount: parseFloat(document.getElementById('amount').value),
-        currency: document.getElementById('currency').value,
-        exchangeRate: parseFloat(document.getElementById('exchangeRate').value),
-        twdAmount: parseFloat(document.getElementById('twdAmount').value),
-        status: document.getElementById('status').value,
-        notes: document.getElementById('notes').value
+        applicantName: document.getElementById("applicantName").value,
+        department: document.getElementById("department").value,
+        position: document.getElementById("position").value,
+        expenseDate: document.getElementById("expenseDate").value,
+        expenseSubject: document.getElementById("expenseSubject").value,
+        expenseContent: document.getElementById("expenseContent").value,
+        expensePurpose: document.getElementById("expensePurpose").value,
+        invoiceNumber: document.getElementById("invoiceNumber").value,
+        amount: parseFloat(document.getElementById("amount").value),
+        currency: document.getElementById("currency").value,
+        exchangeRate: parseFloat(document.getElementById("exchangeRate").value),
+        twdAmount: parseFloat(document.getElementById("twdAmount").value),
+        status: document.getElementById("status").value,
+        notes: document.getElementById("notes").value,
     };
-    
+
     // 驗證必填欄位
-    if (!formData.applicantName || !formData.department || !formData.position || 
-        !formData.expenseDate || !formData.expenseSubject || !formData.expenseContent || 
-        !formData.expensePurpose || !formData.invoiceNumber || !formData.amount) {
-        showToast('請填寫所有必填欄位', 'error');
+    if (
+        !formData.applicantName ||
+        !formData.department ||
+        !formData.position ||
+        !formData.expenseDate ||
+        !formData.expenseSubject ||
+        !formData.expenseContent ||
+        !formData.expensePurpose ||
+        !formData.invoiceNumber ||
+        !formData.amount
+    ) {
+        showToast("請填寫所有必填欄位", "error");
         return;
     }
-    
+
     const newExpense = {
         id: Date.now(),
-        applicationDate: new Date().toISOString().split('T')[0],
-        ...formData
+        applicationDate: new Date().toISOString().split("T")[0],
+        ...formData,
     };
-    
+
     let targetProject;
-    if (currentMode === 'calendar') {
-        const projectId = parseInt(document.getElementById('expenseProject').value);
+    if (currentMode === "calendar") {
+        const projectId = parseInt(document.getElementById("expenseProject").value);
         if (!projectId) {
-            showToast('請選擇專案', 'error');
+            showToast("請選擇專案", "error");
             return;
         }
-        targetProject = projects.find(p => p.id === projectId);
+        targetProject = projects.find((p) => p.id === projectId);
     } else {
         targetProject = currentProject;
     }
-    
+
     if (!targetProject) {
-        showToast('找不到目標專案', 'error');
+        showToast("找不到目標專案", "error");
         return;
     }
-    
+
     targetProject.expenses.push(newExpense);
-    targetProject.lastUpdated = new Date().toISOString().split('T')[0];
-    
-    if (currentMode === 'project') {
+    targetProject.lastUpdated = new Date().toISOString().split("T")[0];
+
+    if (currentMode === "project") {
         updateMainContent();
     } else {
         updateCalendarStats();
@@ -907,70 +1152,75 @@ function saveExpense() {
             }
         }, 100);
     }
-    
+
     hideUploadModal();
-    showToast('費用記錄已儲存！', 'success');
+    showToast("費用記錄已儲存！", "success");
 }
 
 // 編輯費用記錄
 function editExpense(expenseId) {
-    const expense = currentProject.expenses.find(exp => exp.id === expenseId);
+    const expense = currentProject.expenses.find((exp) => exp.id === expenseId);
     if (!expense) return;
-    
+
     // 填入編輯表單
-    document.getElementById('editExpenseId').value = expense.id;
-    document.getElementById('editApplicantName').value = expense.applicantName;
-    document.getElementById('editDepartment').value = expense.department;
-    document.getElementById('editPosition').value = expense.position || '';
-    document.getElementById('editExpenseDate').value = expense.expenseDate;
-    document.getElementById('editExpenseSubject').value = expense.expenseSubject;
-    document.getElementById('editExpenseContent').value = expense.expenseContent;
-    document.getElementById('editExpensePurpose').value = expense.expensePurpose;
-    document.getElementById('editInvoiceNumber').value = expense.invoiceNumber;
-    document.getElementById('editAmount').value = expense.amount;
-    document.getElementById('editCurrency').value = expense.currency || 'TWD';
-    document.getElementById('editExchangeRate').value = expense.exchangeRate || 1;
-    document.getElementById('editTwdAmount').value = expense.twdAmount || expense.amount;
-    document.getElementById('editStatus').value = expense.status || 'pending';
-    document.getElementById('editNotes').value = expense.notes || '';
-    
-    document.getElementById('editModal').classList.add('show');
+    document.getElementById("editExpenseId").value = expense.id;
+    document.getElementById("editApplicantName").value = expense.applicantName;
+    document.getElementById("editDepartment").value = expense.department;
+    document.getElementById("editPosition").value = expense.position || "";
+    document.getElementById("editExpenseDate").value = expense.expenseDate;
+    document.getElementById("editExpenseSubject").value = expense.expenseSubject;
+    document.getElementById("editExpenseContent").value = expense.expenseContent;
+    document.getElementById("editExpensePurpose").value = expense.expensePurpose;
+    document.getElementById("editInvoiceNumber").value = expense.invoiceNumber;
+    document.getElementById("editAmount").value = expense.amount;
+    document.getElementById("editCurrency").value = expense.currency || "TWD";
+    document.getElementById("editExchangeRate").value = expense.exchangeRate || 1;
+    document.getElementById("editTwdAmount").value =
+        expense.twdAmount || expense.amount;
+    document.getElementById("editStatus").value = expense.status || "pending";
+    document.getElementById("editNotes").value = expense.notes || "";
+
+    document.getElementById("editModal").classList.add("show");
 }
 
 function hideEditModal() {
-    document.getElementById('editModal').classList.remove('show');
-    document.getElementById('editExpenseForm').reset();
+    document.getElementById("editModal").classList.remove("show");
+    document.getElementById("editExpenseForm").reset();
 }
 
 function updateExpense() {
-    const expenseId = parseInt(document.getElementById('editExpenseId').value);
-    const expense = currentProject.expenses.find(exp => exp.id === expenseId);
-    
+    const expenseId = parseInt(document.getElementById("editExpenseId").value);
+    const expense = currentProject.expenses.find((exp) => exp.id === expenseId);
+
     if (!expense) return;
-    
+
     // 更新費用資料
-    expense.applicantName = document.getElementById('editApplicantName').value;
-    expense.department = document.getElementById('editDepartment').value;
-    expense.position = document.getElementById('editPosition').value;
-    expense.expenseDate = document.getElementById('editExpenseDate').value;
-    expense.expenseSubject = document.getElementById('editExpenseSubject').value;
-    expense.expenseContent = document.getElementById('editExpenseContent').value;
-    expense.expensePurpose = document.getElementById('editExpensePurpose').value;
-    expense.invoiceNumber = document.getElementById('editInvoiceNumber').value;
-    expense.amount = parseFloat(document.getElementById('editAmount').value);
-    expense.currency = document.getElementById('editCurrency').value;
-    expense.exchangeRate = parseFloat(document.getElementById('editExchangeRate').value);
-    expense.twdAmount = parseFloat(document.getElementById('editTwdAmount').value);
-    expense.status = document.getElementById('editStatus').value;
-    expense.notes = document.getElementById('editNotes').value;
-    
-    currentProject.lastUpdated = new Date().toISOString().split('T')[0];
-    
+    expense.applicantName = document.getElementById("editApplicantName").value;
+    expense.department = document.getElementById("editDepartment").value;
+    expense.position = document.getElementById("editPosition").value;
+    expense.expenseDate = document.getElementById("editExpenseDate").value;
+    expense.expenseSubject = document.getElementById("editExpenseSubject").value;
+    expense.expenseContent = document.getElementById("editExpenseContent").value;
+    expense.expensePurpose = document.getElementById("editExpensePurpose").value;
+    expense.invoiceNumber = document.getElementById("editInvoiceNumber").value;
+    expense.amount = parseFloat(document.getElementById("editAmount").value);
+    expense.currency = document.getElementById("editCurrency").value;
+    expense.exchangeRate = parseFloat(
+        document.getElementById("editExchangeRate").value
+    );
+    expense.twdAmount = parseFloat(
+        document.getElementById("editTwdAmount").value
+    );
+    expense.status = document.getElementById("editStatus").value;
+    expense.notes = document.getElementById("editNotes").value;
+
+    currentProject.lastUpdated = new Date().toISOString().split("T")[0];
+
     updateMainContent();
     updateCalendarEvents();
     hideEditModal();
-    showToast('費用記錄已更新！', 'success');
-    
+    showToast("費用記錄已更新！", "success");
+
     setTimeout(() => {
         if (window.renderCalendar) {
             window.renderCalendar();
@@ -980,16 +1230,18 @@ function updateExpense() {
 
 // 刪除費用記錄
 function deleteExpense(expenseId) {
-    if (!confirm('確定要刪除這筆費用記錄嗎？')) return;
-    
-    const index = currentProject.expenses.findIndex(exp => exp.id === expenseId);
+    if (!confirm("確定要刪除這筆費用記錄嗎？")) return;
+
+    const index = currentProject.expenses.findIndex(
+        (exp) => exp.id === expenseId
+    );
     if (index > -1) {
         currentProject.expenses.splice(index, 1);
-        currentProject.lastUpdated = new Date().toISOString().split('T')[0];
+        currentProject.lastUpdated = new Date().toISOString().split("T")[0];
         updateMainContent();
         updateCalendarEvents();
-        showToast('費用記錄已刪除！', 'success');
-        
+        showToast("費用記錄已刪除！", "success");
+
         setTimeout(() => {
             if (window.renderCalendar) {
                 window.renderCalendar();
@@ -1001,50 +1253,71 @@ function deleteExpense(expenseId) {
 // 匯出報表
 function exportReport() {
     if (!currentProject) {
-        showToast('請先選擇專案', 'error');
+        showToast("請先選擇專案", "error");
         return;
     }
-    
+
     if (currentProject.expenses.length === 0) {
-        showToast('沒有可匯出的資料', 'warning');
+        showToast("沒有可匯出的資料", "warning");
         return;
     }
-    
+
     showLoading();
-    
+
     setTimeout(() => {
         hideLoading();
         generateExcelReport();
-        showToast('報表匯出成功！', 'success');
+        showToast("報表匯出成功！", "success");
     }, 1500);
 }
 
 function generateExcelReport() {
-    const headers = ['申請日期', '申請人', '部門', '職稱', '支出日期', '發票號碼', '科目', '內容', '用途', '金額(台幣)', '備註', '審核狀態'];
+    const headers = [
+        "申請日期",
+        "申請人",
+        "部門",
+        "職稱",
+        "支出日期",
+        "發票號碼",
+        "科目",
+        "內容",
+        "用途",
+        "金額(台幣)",
+        "備註",
+        "審核狀態",
+    ];
     const csvContent = [
-        headers.join(','),
-        ...currentProject.expenses.map(expense => [
-            expense.applicationDate || expense.expenseDate,
-            expense.applicantName || '',
-            expense.department || '',
-            expense.position || '',
-            expense.expenseDate,
-            expense.invoiceNumber || '',
-            expense.expenseSubject || '',
-            expense.expenseContent || '',
-            expense.expensePurpose || '',
-            expense.twdAmount || expense.amount,
-            expense.notes || '',
-            expense.status === 'completed' ? '已完成' : '待處理'
-        ].join(','))
-    ].join('\n');
-    
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+        headers.join(","),
+        ...currentProject.expenses.map((expense) =>
+            [
+                expense.applicationDate || expense.expenseDate,
+                expense.applicantName || "",
+                expense.department || "",
+                expense.position || "",
+                expense.expenseDate,
+                expense.invoiceNumber || "",
+                expense.expenseSubject || "",
+                expense.expenseContent || "",
+                expense.expensePurpose || "",
+                expense.twdAmount || expense.amount,
+                expense.notes || "",
+                expense.status === "completed" ? "已完成" : "待處理",
+            ].join(",")
+        ),
+    ].join("\n");
+
+    const blob = new Blob(["\ufeff" + csvContent], {
+        type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${currentProject.name}_報帳明細_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute(
+        "download",
+        `${currentProject.name}_報帳明細_${new Date().toISOString().split("T")[0]
+        }.csv`
+    );
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1055,60 +1328,83 @@ function exportMonthlyReport() {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     const monthlyExpenses = [];
-    projects.forEach(project => {
-        project.expenses.forEach(expense => {
+    projects.forEach((project) => {
+        project.expenses.forEach((expense) => {
             const expenseDate = new Date(expense.expenseDate);
-            if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
+            if (
+                expenseDate.getMonth() === currentMonth &&
+                expenseDate.getFullYear() === currentYear
+            ) {
                 monthlyExpenses.push({
                     ...expense,
-                    projectName: project.name
+                    projectName: project.name,
                 });
             }
         });
     });
-    
+
     if (monthlyExpenses.length === 0) {
-        showToast('本月沒有可匯出的資料', 'warning');
+        showToast("本月沒有可匯出的資料", "warning");
         return;
     }
-    
+
     showLoading();
-    
+
     setTimeout(() => {
         hideLoading();
         generateMonthlyExcelReport(monthlyExpenses);
-        showToast('月度報表匯出成功！', 'success');
+        showToast("月度報表匯出成功！", "success");
     }, 1500);
 }
 
 function generateMonthlyExcelReport(expenses) {
-    const headers = ['申請日期', '申請人', '部門', '職稱', '支出日期', '發票號碼', '科目', '內容', '用途', '金額(台幣)', '備註', '審核狀態'];
+    const headers = [
+        "申請日期",
+        "申請人",
+        "部門",
+        "職稱",
+        "支出日期",
+        "發票號碼",
+        "科目",
+        "內容",
+        "用途",
+        "金額(台幣)",
+        "備註",
+        "審核狀態",
+    ];
     const csvContent = [
-        headers.join(','),
-        ...expenses.map(expense => [
-            expense.applicationDate || expense.expenseDate,
-            expense.applicantName || '',
-            expense.department || '',
-            expense.position || '',
-            expense.expenseDate,
-            expense.invoiceNumber || '',
-            expense.expenseSubject || '',
-            expense.expenseContent || '',
-            expense.expensePurpose || '',
-            expense.twdAmount || expense.amount,
-            expense.notes || '',
-            expense.status === 'completed' ? '已完成' : '待處理'
-        ].join(','))
-    ].join('\n');
-    
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+        headers.join(","),
+        ...expenses.map((expense) =>
+            [
+                expense.applicationDate || expense.expenseDate,
+                expense.applicantName || "",
+                expense.department || "",
+                expense.position || "",
+                expense.expenseDate,
+                expense.invoiceNumber || "",
+                expense.expenseSubject || "",
+                expense.expenseContent || "",
+                expense.expensePurpose || "",
+                expense.twdAmount || expense.amount,
+                expense.notes || "",
+                expense.status === "completed" ? "已完成" : "待處理",
+            ].join(",")
+        ),
+    ].join("\n");
+
+    const blob = new Blob(["\ufeff" + csvContent], {
+        type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `月度報帳明細_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute(
+        "download",
+        `月度報帳明細_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1116,29 +1412,33 @@ function generateMonthlyExcelReport(expenses) {
 
 // 日曆事件篩選
 function filterCalendarEvents() {
-    const startDate = document.getElementById('startDateFilter').value;
-    const endDate = document.getElementById('endDateFilter').value;
-    const category = document.getElementById('calendarCategoryFilter').value;
-    
+    const startDate = document.getElementById("startDateFilter").value;
+    const endDate = document.getElementById("endDateFilter").value;
+    const category = document.getElementById("calendarCategoryFilter").value;
+
     updateCalendarEvents();
-    
-    if (startDate || endDate || category !== 'all') {
-        const filteredEvents = window.calendarEvents.filter(event => {
-            const eventDate = event.start instanceof Date ? 
-                event.start.toISOString().split('T')[0] : 
-                new Date(event.start).toISOString().split('T')[0];
-            
+
+    if (startDate || endDate || category !== "all") {
+        const filteredEvents = window.calendarEvents.filter((event) => {
+            const eventDate =
+                event.start instanceof Date
+                    ? event.start.toISOString().split("T")[0]
+                    : new Date(event.start).toISOString().split("T")[0];
+
             if (startDate && eventDate < startDate) return false;
             if (endDate && eventDate > endDate) return false;
-            if (category !== 'all' && event.category !== category) return false;
-            
+            if (category !== "all" && event.category !== category) return false;
+
             return true;
         });
-        
+
         window.calendarEvents = filteredEvents;
     }
-    
-    if (window.refreshCalendarEvents && typeof window.refreshCalendarEvents === 'function') {
+
+    if (
+        window.refreshCalendarEvents &&
+        typeof window.refreshCalendarEvents === "function"
+    ) {
         window.refreshCalendarEvents();
     }
 }
@@ -1148,114 +1448,167 @@ function showEventDetails(event) {
     if (event.date) {
         updateSelectedDateDetails(new Date(event.date));
     }
-    
-    const merchant = event.merchant || '未知項目';
+
+    const merchant = event.merchant || "未知項目";
     const amount = event.amount || 0;
-    const category = event.category || '未分類';
-    showToast(`${merchant}: $${amount} (${category})`, 'info');
+    const category = event.category || "未分類";
+    showToast(`${merchant}: $${amount} (${category})`, "info");
 }
 
 function updateSelectedDateDetails(date) {
     selectedDate = date;
-    const dateStr = new Date(date).toISOString().split('T')[0];
-    
+    const dateStr = new Date(date).toISOString().split("T")[0];
+
     const dayExpenses = [];
-    projects.forEach(project => {
-        project.expenses.forEach(expense => {
+    projects.forEach((project) => {
+        project.expenses.forEach((expense) => {
             if (expense.expenseDate === dateStr) {
                 dayExpenses.push({
                     ...expense,
-                    projectName: project.name
+                    projectName: project.name,
                 });
             }
         });
     });
-    
-    const detailsContainer = document.getElementById('selectedDateDetails');
-    const dateText = document.getElementById('selectedDateText');
-    const expensesList = document.getElementById('dateExpensesList');
-    
+
+    const detailsContainer = document.getElementById("selectedDateDetails");
+    const dateText = document.getElementById("selectedDateText");
+    const expensesList = document.getElementById("dateExpensesList");
+
     if (dayExpenses.length > 0) {
-        detailsContainer.style.display = 'block';
-        dateText.textContent = new Date(date).toLocaleDateString('zh-TW');
-        
-        expensesList.innerHTML = '';
-        dayExpenses.forEach(expense => {
-            const item = document.createElement('div');
-            item.className = 'date-expense-item';
+        detailsContainer.style.display = "block";
+        dateText.textContent = new Date(date).toLocaleDateString("zh-TW");
+
+        expensesList.innerHTML = "";
+        dayExpenses.forEach((expense) => {
+            const item = document.createElement("div");
+            item.className = "date-expense-item";
             item.innerHTML = `
                 <div class="expense-item-header">
-                    <span class="expense-item-title">${expense.expenseContent}</span>
-                    <span class="expense-item-amount">$${(expense.twdAmount || expense.amount).toLocaleString()}</span>
+                    <span class="expense-item-title">${expense.expenseContent
+                }</span>
+                    <span class="expense-item-amount">$${(
+                    expense.twdAmount || expense.amount
+                ).toLocaleString()}</span>
                 </div>
                 <div class="expense-item-details">
-                    ${expense.expenseSubject} • ${expense.projectName} • ${expense.invoiceNumber}
+                    ${expense.expenseSubject} • ${expense.projectName} • ${expense.invoiceNumber
+                }
                 </div>
             `;
             expensesList.appendChild(item);
         });
     } else {
-        detailsContainer.style.display = 'none';
+        detailsContainer.style.display = "none";
     }
 }
 
 // 工具函數
 function showLoading() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById("loadingOverlay").style.display = "flex";
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById("loadingOverlay").style.display = "none";
 }
 
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-    
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+    const toastMessage = document.getElementById("toastMessage");
+
     toast.className = `toast ${type}`;
     toastMessage.textContent = message;
-    
-    const icon = toast.querySelector('i');
-    icon.className = type === 'error' ? 'fas fa-exclamation-circle' :
-                    type === 'warning' ? 'fas fa-exclamation-triangle' :
-                    type === 'info' ? 'fas fa-info-circle' :
-                    'fas fa-check-circle';
-    
-    toast.classList.add('show');
-    
+
+    const icon = toast.querySelector("i");
+    icon.className =
+        type === "error"
+            ? "fas fa-exclamation-circle"
+            : type === "warning"
+                ? "fas fa-exclamation-triangle"
+                : type === "info"
+                    ? "fas fa-info-circle"
+                    : "fas fa-check-circle";
+
+    toast.classList.add("show");
+
     setTimeout(() => {
-        toast.classList.remove('show');
+        toast.classList.remove("show");
     }, 3000);
 }
 
 // 事件監聽器
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('modal')) {
-        if (event.target.id === 'createProjectModal') {
+document.addEventListener("click", function (event) {
+    if (event.target.classList.contains("modal")) {
+        if (event.target.id === "createProjectModal") {
             hideCreateProjectModal();
-        } else if (event.target.id === 'uploadModal') {
+        } else if (event.target.id === "uploadModal") {
             hideUploadModal();
-        } else if (event.target.id === 'editModal') {
+        } else if (event.target.id === "editModal") {
             hideEditModal();
         }
     }
 });
 
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
         hideCreateProjectModal();
         hideUploadModal();
         hideEditModal();
+
+        // 如果在行動版，按 ESC 關閉側邊欄
+        if (window.innerWidth <= 768) {
+            closeMobileSidebar();
+        }
     }
 });
 
-document.addEventListener('dragover', function(event) {
+document.addEventListener("dragover", function (event) {
     event.preventDefault();
 });
 
-document.addEventListener('drop', function(event) {
+document.addEventListener("drop", function (event) {
     event.preventDefault();
 });
+
+// 觸控事件處理
+let touchStartTime = 0;
+document.addEventListener(
+    "touchstart",
+    function (event) {
+        touchStartTime = Date.now();
+        // 提升觸控響應性
+        const button = event.target.closest("button");
+        if (button) {
+            button.style.opacity = "0.7";
+        }
+    },
+    { passive: true }
+);
+
+// 觸控結束處理
+document.addEventListener(
+    "touchend",
+    function (event) {
+        const touchEndTime = Date.now();
+        const button = event.target.closest("button");
+
+        if (button) {
+            button.style.opacity = "";
+
+            // 如果是快速點擊（小於 300ms），觸發點擊事件
+            if (touchEndTime - touchStartTime < 300) {
+                // 防止雙擊縮放
+                event.preventDefault();
+
+                // 手動觸發點擊事件
+                setTimeout(() => {
+                    button.click();
+                }, 0);
+            }
+        }
+    },
+    { passive: false }
+);
 
 // 將函數暴露到全域
 window.showEventDetails = showEventDetails;
@@ -1263,3 +1616,7 @@ window.updateSelectedDateDetails = updateSelectedDateDetails;
 window.getCategoryColor = getCategoryColor;
 window.calculateTWDAmount = calculateTWDAmount;
 window.calculateEditTWDAmount = calculateEditTWDAmount;
+window.toggleMobileSidebar = toggleMobileSidebar;
+window.openMobileSidebar = openMobileSidebar;
+window.closeMobileSidebar = closeMobileSidebar;
+window.renderMobileCards = renderMobileCards;
