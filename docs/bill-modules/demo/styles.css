@@ -593,20 +593,32 @@ body {
 }
 
 /* 類別顏色樣式 */
-.fc-event.category-餐飲 {
+.fc-event.category-餐費 {
     background-color: #FF6B6B;
 }
 
-.fc-event.category-交通 {
+.fc-event.category-交通費 {
     background-color: #4ECDC4;
 }
 
-.fc-event.category-住宿 {
+.fc-event.category-住宿費 {
     background-color: #45B7D1;
 }
 
 .fc-event.category-辦公用品 {
     background-color: #FFA07A;
+}
+
+.fc-event.category-差旅費 {
+    background-color: #9B59B6;
+}
+
+.fc-event.category-通訊費 {
+    background-color: #F39C12;
+}
+
+.fc-event.category-文具用品 {
+    background-color: #2ECC71;
 }
 
 .fc-event.category-其他 {
@@ -1155,4 +1167,25 @@ body {
     .mode-btn span {
         font-size: 12px;
     }
+}
+
+/* 最後更新時間顯示 */
+.last-update-info {
+    margin-top: 16px;
+    padding: 12px;
+    background: #F8F9FA;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.last-update-info i {
+    color: #ADDEAC;
+}
+
+.last-update-info span {
+    font-weight: 500;
 }

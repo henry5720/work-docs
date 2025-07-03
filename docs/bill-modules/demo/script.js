@@ -5,10 +5,19 @@ let projects = [];
 let currentProject = null;
 let expenses = [];
 let selectedFiles = [];
-let currentMode = 'project'; // 'project' 或 'calendar'
+let currentMode = 'project';
 let selectedDate = null;
 
-// 將 calendarEvents 定義為全域變數，供 React 組件使用
+// 匯率資料
+const exchangeRates = {
+    TWD: 1,
+    USD: 31.5,
+    JPY: 0.21,
+    EUR: 34.8,
+    CNY: 4.35
+};
+
+// 將 calendarEvents 定義為全域變數
 window.calendarEvents = [];
 
 // 初始化應用程式
@@ -16,13 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
-// 初始化應用程式
 function initializeApp() {
     loadMockData();
     renderProjectList();
     showEmptyState();
     updateCalendarEvents();
-    // 延遲渲染日曆以確保 React 組件已載入
     setTimeout(() => {
         if (window.renderCalendar) {
             window.renderCalendar();
@@ -30,81 +37,115 @@ function initializeApp() {
     }, 500);
 }
 
-// 載入模擬數據 - 使用當前月份的日期
+// 載入模擬數據 - 更新為最新欄位結構
 function loadMockData() {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
     
-    // 生成當前月份的日期
     const getDateInCurrentMonth = (day) => {
         return new Date(currentYear, currentMonth, day).toISOString().split('T')[0];
     };
     
-    // 模擬專案數據
     projects = [
         {
             id: 1,
             name: '2024年第四季差旅費',
             description: '第四季出差相關費用報帳',
             budget: 50000,
-            status: 'processing',
+            status: 'pending',
             createdAt: getDateInCurrentMonth(1),
+            lastUpdated: getDateInCurrentMonth(15),
             expenses: [
                 {
                     id: 1,
-                    date: getDateInCurrentMonth(5),
-                    category: '交通',
+                    applicationDate: getDateInCurrentMonth(1),
+                    applicantName: '王小明',
+                    department: '業務部',
+                    position: '業務經理',
+                    expenseDate: getDateInCurrentMonth(4),
                     invoiceNumber: 'TW12345678',
-                    merchantName: '台灣高鐵',
+                    expenseSubject: '交通費',
+                    expenseContent: '台北-台中高鐵',
+                    expensePurpose: '客戶拜訪',
                     amount: 1490,
                     currency: 'TWD',
-                    status: 'approved',
-                    notes: '台北-台中商務出差'
+                    exchangeRate: 1,
+                    twdAmount: 1490,
+                    notes: '台北-台中商務出差',
+                    status: 'completed'
                 },
                 {
                     id: 2,
-                    date: getDateInCurrentMonth(5),
-                    category: '住宿',
-                    invoiceNumber: 'HT20241205',
-                    merchantName: '日月千禧酒店',
+                    applicationDate: getDateInCurrentMonth(1),
+                    applicantName: '王小明',
+                    department: '業務部',
+                    position: '業務經理',
+                    expenseDate: getDateInCurrentMonth(4),
+                    invoiceNumber: 'HT20241204',
+                    expenseSubject: '住宿費',
+                    expenseContent: '商務旅館住宿',
+                    expensePurpose: '商務出差',
                     amount: 4500,
                     currency: 'TWD',
-                    status: 'pending',
-                    notes: '出差住宿一晚'
+                    exchangeRate: 1,
+                    twdAmount: 4500,
+                    notes: '日月千禧酒店住宿一晚',
+                    status: 'completed'
                 },
                 {
                     id: 3,
-                    date: getDateInCurrentMonth(6),
-                    category: '餐飲',
-                    invoiceNumber: 'RT87654321',
-                    merchantName: '王品牛排',
-                    amount: 1800,
+                    applicationDate: getDateInCurrentMonth(1),
+                    applicantName: '王小明',
+                    department: '業務部',
+                    position: '業務經理',
+                    expenseDate: getDateInCurrentMonth(5),
+                    invoiceNumber: 'RT20241205',
+                    expenseSubject: '餐費',
+                    expenseContent: '客戶商務午餐',
+                    expensePurpose: '客戶拜訪',
+                    amount: 2200,
                     currency: 'TWD',
-                    status: 'approved',
-                    notes: '客戶拜訪用餐'
+                    exchangeRate: 1,
+                    twdAmount: 2200,
+                    notes: '與客戶商務午餐',
+                    status: 'pending'
                 },
                 {
                     id: 7,
-                    date: getDateInCurrentMonth(10),
-                    category: '交通',
-                    invoiceNumber: 'TW88888888',
-                    merchantName: '桃園機場捷運',
-                    amount: 160,
+                    applicationDate: getDateInCurrentMonth(1),
+                    applicantName: '王小明',
+                    department: '業務部',
+                    position: '業務經理',
+                    expenseDate: getDateInCurrentMonth(10),
+                    invoiceNumber: 'TC20241210',
+                    expenseSubject: '交通費',
+                    expenseContent: '機場接送計程車',
+                    expensePurpose: '國外出差',
+                    amount: 1200,
                     currency: 'TWD',
-                    status: 'approved',
-                    notes: '機場接送'
+                    exchangeRate: 1,
+                    twdAmount: 1200,
+                    notes: '往返桃園機場',
+                    status: 'completed'
                 },
                 {
                     id: 8,
-                    date: getDateInCurrentMonth(15),
-                    category: '餐飲',
-                    invoiceNumber: 'RT99999999',
-                    merchantName: '鼎泰豐',
-                    amount: 2200,
-                    currency: 'TWD',
-                    status: 'pending',
-                    notes: '商務午餐'
+                    applicationDate: getDateInCurrentMonth(12),
+                    applicantName: '張小美',
+                    department: '人資部',
+                    position: '人資專員',
+                    expenseDate: getDateInCurrentMonth(12),
+                    invoiceNumber: 'US20241212',
+                    expenseSubject: '住宿費',
+                    expenseContent: '海外出差住宿',
+                    expensePurpose: '人才招募',
+                    amount: 150,
+                    currency: 'USD',
+                    exchangeRate: 31.5,
+                    twdAmount: 4725,
+                    notes: '美國矽谷出差住宿',
+                    status: 'pending'
                 }
             ]
         },
@@ -115,64 +156,170 @@ function loadMockData() {
             budget: 15000,
             status: 'pending',
             createdAt: getDateInCurrentMonth(2),
+            lastUpdated: getDateInCurrentMonth(18),
             expenses: [
                 {
                     id: 4,
-                    date: getDateInCurrentMonth(8),
-                    category: '辦公用品',
+                    applicationDate: getDateInCurrentMonth(2),
+                    applicantName: '李小華',
+                    department: '行政部',
+                    position: '行政專員',
+                    expenseDate: getDateInCurrentMonth(8),
                     invoiceNumber: 'OF20241208',
-                    merchantName: '誠品文具',
+                    expenseSubject: '辦公用品',
+                    expenseContent: '辦公文具採購',
+                    expensePurpose: '日常辦公需求',
                     amount: 3200,
                     currency: 'TWD',
-                    status: 'pending',
-                    notes: '筆記本、原子筆等文具'
+                    exchangeRate: 1,
+                    twdAmount: 3200,
+                    notes: '筆記本、原子筆、文件夾等',
+                    status: 'completed'
                 },
                 {
                     id: 9,
-                    date: getDateInCurrentMonth(12),
-                    category: '辦公用品',
-                    invoiceNumber: 'OF20241212',
-                    merchantName: '統一超商',
-                    amount: 450,
+                    applicationDate: getDateInCurrentMonth(5),
+                    applicantName: '李小華',
+                    department: '行政部',
+                    position: '行政專員',
+                    expenseDate: getDateInCurrentMonth(15),
+                    invoiceNumber: 'OF20241215',
+                    expenseSubject: '辦公用品',
+                    expenseContent: '印表機耗材',
+                    expensePurpose: '設備維護',
+                    amount: 1580,
                     currency: 'TWD',
-                    status: 'approved',
-                    notes: '影印紙、文件夾'
+                    exchangeRate: 1,
+                    twdAmount: 1580,
+                    notes: '影印紙、墨水匣',
+                    status: 'pending'
+                },
+                {
+                    id: 10,
+                    applicationDate: getDateInCurrentMonth(8),
+                    applicantName: '陳小東',
+                    department: '研發部',
+                    position: '研發工程師',
+                    expenseDate: getDateInCurrentMonth(18),
+                    invoiceNumber: 'JP20241218',
+                    expenseSubject: '文具用品',
+                    expenseContent: '技術書籍採購',
+                    expensePurpose: '技術研發',
+                    amount: 8500,
+                    currency: 'JPY',
+                    exchangeRate: 0.21,
+                    twdAmount: 1785,
+                    notes: '日本技術書籍',
+                    status: 'completed'
                 }
             ]
         },
         {
             id: 3,
-            name: '會議費用',
-            description: '月度會議相關費用',
-            budget: 8000,
+            name: '會議與培訓費用',
+            description: '會議、培訓相關費用報帳',
+            budget: 25000,
             status: 'completed',
             createdAt: getDateInCurrentMonth(3),
+            lastUpdated: getDateInCurrentMonth(20),
             expenses: [
                 {
                     id: 5,
-                    date: getDateInCurrentMonth(4),
-                    category: '餐飲',
-                    invoiceNumber: 'CF20241204',
-                    merchantName: '85度C',
+                    applicationDate: getDateInCurrentMonth(3),
+                    applicantName: '張小美',
+                    department: '人資部',
+                    position: '人資專員',
+                    expenseDate: getDateInCurrentMonth(6),
+                    invoiceNumber: 'CF20241206',
+                    expenseSubject: '餐費',
+                    expenseContent: '會議茶點',
+                    expensePurpose: '月度會議',
                     amount: 450,
                     currency: 'TWD',
-                    status: 'approved',
-                    notes: '會議茶點'
+                    exchangeRate: 1,
+                    twdAmount: 450,
+                    notes: '部門月會茶點',
+                    status: 'completed'
                 },
                 {
                     id: 6,
-                    date: getDateInCurrentMonth(18),
-                    category: '餐飲',
-                    invoiceNumber: 'CF20241218',
-                    merchantName: 'Starbucks',
-                    amount: 680,
+                    applicationDate: getDateInCurrentMonth(3),
+                    applicantName: '張小美',
+                    department: '人資部',
+                    position: '人資專員',
+                    expenseDate: getDateInCurrentMonth(14),
+                    invoiceNumber: 'EU20241214',
+                    expenseSubject: '差旅費',
+                    expenseContent: '歐洲研習營',
+                    expensePurpose: '員工培訓',
+                    amount: 320,
+                    currency: 'EUR',
+                    exchangeRate: 34.8,
+                    twdAmount: 11136,
+                    notes: '歐洲人資研習營費用',
+                    status: 'completed'
+                },
+                {
+                    id: 11,
+                    applicationDate: getDateInCurrentMonth(10),
+                    applicantName: '陳小東',
+                    department: '研發部',
+                    position: '研發工程師',
+                    expenseDate: getDateInCurrentMonth(16),
+                    invoiceNumber: 'CN20241216',
+                    expenseSubject: '通訊費',
+                    expenseContent: '國際會議通訊',
+                    expensePurpose: '技術交流',
+                    amount: 280,
+                    currency: 'CNY',
+                    exchangeRate: 4.35,
+                    twdAmount: 1218,
+                    notes: '與中國團隊視訊會議費用',
+                    status: 'completed'
+                },
+                {
+                    id: 12,
+                    applicationDate: getDateInCurrentMonth(12),
+                    applicantName: '李小華',
+                    department: '行政部',
+                    position: '行政專員',
+                    expenseDate: getDateInCurrentMonth(20),
+                    invoiceNumber: 'TR20241220',
+                    expenseSubject: '其他',
+                    expenseContent: '培訓場地租借',
+                    expensePurpose: '員工訓練',
+                    amount: 5500,
                     currency: 'TWD',
-                    status: 'approved',
-                    notes: '下午會議茶點'
+                    exchangeRate: 1,
+                    twdAmount: 5500,
+                    notes: '員工教育訓練場地費',
+                    status: 'completed'
                 }
             ]
         }
     ];
+}
+
+// 匯率換算函數
+function calculateTWDAmount() {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const currency = document.getElementById('currency').value;
+    const exchangeRate = exchangeRates[currency] || 1;
+    
+    document.getElementById('exchangeRate').value = exchangeRate;
+    const twdAmount = amount * exchangeRate;
+    document.getElementById('twdAmount').value = twdAmount.toFixed(2);
+}
+
+// 編輯表單匯率換算
+function calculateEditTWDAmount() {
+    const amount = parseFloat(document.getElementById('editAmount').value) || 0;
+    const currency = document.getElementById('editCurrency').value;
+    const exchangeRate = exchangeRates[currency] || 1;
+    
+    document.getElementById('editExchangeRate').value = exchangeRate;
+    const twdAmount = amount * exchangeRate;
+    document.getElementById('editTwdAmount').value = twdAmount.toFixed(2);
 }
 
 // 模式切換功能
@@ -181,13 +328,11 @@ function switchMode(mode) {
     
     currentMode = mode;
     
-    // 更新按鈕狀態
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
     
-    // 切換內容顯示
     if (mode === 'project') {
         showProjectMode();
     } else {
@@ -195,7 +340,6 @@ function switchMode(mode) {
     }
 }
 
-// 顯示專案模式
 function showProjectMode() {
     document.getElementById('projectSidebarContent').style.display = 'block';
     document.getElementById('calendarSidebarContent').style.display = 'none';
@@ -203,12 +347,10 @@ function showProjectMode() {
     document.getElementById('calendarModeContent').style.display = 'none';
     document.getElementById('addProjectBtn').style.display = 'flex';
     
-    // 重新渲染專案列表
     renderProjectList();
     updateMainContent();
 }
 
-// 顯示日曆模式
 function showCalendarMode() {
     document.getElementById('projectSidebarContent').style.display = 'none';
     document.getElementById('calendarSidebarContent').style.display = 'block';
@@ -216,11 +358,9 @@ function showCalendarMode() {
     document.getElementById('calendarModeContent').style.display = 'flex';
     document.getElementById('addProjectBtn').style.display = 'none';
     
-    // 更新日曆統計和事件
     updateCalendarStats();
     updateCalendarEvents();
     
-    // 重新渲染日曆
     setTimeout(() => {
         if (window.renderCalendar) {
             window.renderCalendar();
@@ -228,7 +368,7 @@ function showCalendarMode() {
     }, 100);
 }
 
-// 更新日曆統計資訊
+// 更新日曆統計
 function updateCalendarStats() {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -239,10 +379,10 @@ function updateCalendarStats() {
     
     projects.forEach(project => {
         project.expenses.forEach(expense => {
-            const expenseDate = new Date(expense.date);
+            const expenseDate = new Date(expense.expenseDate);
             if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
                 monthlyCount++;
-                monthlyAmount += expense.amount;
+                monthlyAmount += expense.twdAmount || expense.amount;
             }
         });
     });
@@ -253,21 +393,20 @@ function updateCalendarStats() {
 
 // 更新日曆事件
 function updateCalendarEvents() {
-    // 清空現有事件
     window.calendarEvents = [];
     
     projects.forEach(project => {
         project.expenses.forEach(expense => {
-            const expenseDate = new Date(expense.date);
+            const expenseDate = new Date(expense.expenseDate);
             const event = {
                 id: expense.id,
-                title: `${expense.merchantName} - $${expense.amount}`,
+                title: `${expense.expenseContent} - $${(expense.twdAmount || expense.amount).toLocaleString()}`,
                 start: expenseDate,
                 end: expenseDate,
                 allDay: true,
-                category: expense.category,
-                amount: expense.amount,
-                merchant: expense.merchantName,
+                category: expense.expenseSubject,
+                amount: expense.twdAmount || expense.amount,
+                merchant: expense.expenseContent,
                 invoice: expense.invoiceNumber,
                 projectId: project.id,
                 expense: expense,
@@ -277,9 +416,6 @@ function updateCalendarEvents() {
         });
     });
     
-    console.log('Calendar events updated:', window.calendarEvents.length, 'events');
-    
-    // 如果 FullCalendar 已初始化，直接更新事件
     if (window.refreshCalendarEvents && typeof window.refreshCalendarEvents === 'function') {
         window.refreshCalendarEvents();
     }
@@ -288,173 +424,16 @@ function updateCalendarEvents() {
 // 獲取類別顏色
 function getCategoryColor(category) {
     const colors = {
-        '餐飲': '#FF6B6B',
-        '交通': '#4ECDC4',
-        '住宿': '#45B7D1',
+        '餐費': '#FF6B6B',
+        '交通費': '#4ECDC4',
+        '住宿費': '#45B7D1',
         '辦公用品': '#FFA07A',
+        '差旅費': '#9B59B6',
+        '通訊費': '#F39C12',
+        '文具用品': '#2ECC71',
         '其他': '#98D8C8'
     };
     return colors[category] || '#67BE5F';
-}
-
-// 顯示事件詳情（從日曆點擊事件觸發）
-function showEventDetails(event) {
-    console.log('Event details:', event);
-    
-    // 更新側邊欄選中日期詳情
-    if (event.date) {
-        updateSelectedDateDetails(new Date(event.date));
-    }
-    
-    // 顯示 toast 通知
-    const merchant = event.merchant || '未知商家';
-    const amount = event.amount || 0;
-    const category = event.category || '未分類';
-    showToast(`${merchant}: $${amount} (${category})`, 'info');
-}
-
-// 更新選中日期詳情
-function updateSelectedDateDetails(date) {
-    selectedDate = date;
-    const dateStr = new Date(date).toISOString().split('T')[0];
-    
-    // 找到該日期的所有報帳記錄
-    const dayExpenses = [];
-    projects.forEach(project => {
-        project.expenses.forEach(expense => {
-            if (expense.date === dateStr) {
-                dayExpenses.push({
-                    ...expense,
-                    projectName: project.name
-                });
-            }
-        });
-    });
-    
-    const detailsContainer = document.getElementById('selectedDateDetails');
-    const dateText = document.getElementById('selectedDateText');
-    const expensesList = document.getElementById('dateExpensesList');
-    
-    if (dayExpenses.length > 0) {
-        detailsContainer.style.display = 'block';
-        dateText.textContent = new Date(date).toLocaleDateString('zh-TW');
-        
-        expensesList.innerHTML = '';
-        dayExpenses.forEach(expense => {
-            const item = document.createElement('div');
-            item.className = 'date-expense-item';
-            item.innerHTML = `
-                <div class="expense-item-header">
-                    <span class="expense-item-title">${expense.merchantName}</span>
-                    <span class="expense-item-amount">$${expense.amount.toLocaleString()}</span>
-                </div>
-                <div class="expense-item-details">
-                    ${expense.category} • ${expense.projectName} • ${expense.invoiceNumber}
-                </div>
-            `;
-            expensesList.appendChild(item);
-        });
-    } else {
-        detailsContainer.style.display = 'none';
-    }
-}
-
-// 日曆事件篩選
-function filterCalendarEvents() {
-    const startDate = document.getElementById('startDateFilter').value;
-    const endDate = document.getElementById('endDateFilter').value;
-    const category = document.getElementById('calendarCategoryFilter').value;
-    
-    // 基本篩選邏輯
-    updateCalendarEvents();
-    
-    // 如果有篩選條件，進一步篩選
-    if (startDate || endDate || category !== 'all') {
-        const filteredEvents = window.calendarEvents.filter(event => {
-            const eventDate = event.start instanceof Date ? 
-                event.start.toISOString().split('T')[0] : 
-                new Date(event.start).toISOString().split('T')[0];
-            
-            // 日期範圍篩選
-            if (startDate && eventDate < startDate) return false;
-            if (endDate && eventDate > endDate) return false;
-            
-            // 類別篩選
-            if (category !== 'all' && event.category !== category) return false;
-            
-            return true;
-        });
-        
-        // 更新篩選後的事件
-        window.calendarEvents = filteredEvents;
-    }
-    
-    // 通知 FullCalendar 更新事件
-    if (window.refreshCalendarEvents && typeof window.refreshCalendarEvents === 'function') {
-        window.refreshCalendarEvents();
-    }
-}
-
-// 匯出月度報表
-function exportMonthlyReport() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    const monthlyExpenses = [];
-    projects.forEach(project => {
-        project.expenses.forEach(expense => {
-            const expenseDate = new Date(expense.date);
-            if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
-                monthlyExpenses.push({
-                    ...expense,
-                    projectName: project.name
-                });
-            }
-        });
-    });
-    
-    if (monthlyExpenses.length === 0) {
-        showToast('本月沒有可匯出的資料', 'warning');
-        return;
-    }
-    
-    showLoading();
-    
-    setTimeout(() => {
-        hideLoading();
-        generateMonthlyExcelReport(monthlyExpenses);
-        showToast('月度報表匯出成功！', 'success');
-    }, 1500);
-}
-
-// 生成月度 Excel 報表
-function generateMonthlyExcelReport(expenses) {
-    const headers = ['日期', '專案', '類別', '發票號碼', '商家名稱', '金額', '幣別', '狀態', '備註'];
-    const csvContent = [
-        headers.join(','),
-        ...expenses.map(expense => [
-            expense.date,
-            expense.projectName,
-            expense.category,
-            expense.invoiceNumber,
-            expense.merchantName,
-            expense.amount,
-            expense.currency,
-            getExpenseStatusText(expense.status),
-            expense.notes || ''
-        ].join(','))
-    ].join('\n');
-    
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `月度報帳明細_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
 
 // 渲染專案列表
@@ -474,7 +453,7 @@ function createProjectElement(project) {
     projectDiv.className = 'project-item';
     projectDiv.dataset.projectId = project.id;
     
-    const totalAmount = project.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalAmount = project.expenses.reduce((sum, expense) => sum + (expense.twdAmount || expense.amount), 0);
     const statusText = getStatusText(project.status);
     
     projectDiv.innerHTML = `
@@ -487,6 +466,9 @@ function createProjectElement(project) {
         <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
             總額: $${totalAmount.toLocaleString()}
         </div>
+        <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">
+            最後更新: ${new Date(project.lastUpdated).toLocaleDateString('zh-TW')}
+        </div>
     `;
     
     projectDiv.addEventListener('click', () => selectProject(project));
@@ -494,11 +476,9 @@ function createProjectElement(project) {
     return projectDiv;
 }
 
-// 獲取狀態文字
 function getStatusText(status) {
     const statusMap = {
         'pending': '待處理',
-        'processing': '處理中',
         'completed': '已完成'
     };
     return statusMap[status] || status;
@@ -508,13 +488,11 @@ function getStatusText(status) {
 function selectProject(project) {
     currentProject = project;
     
-    // 更新 UI 選中狀態
     document.querySelectorAll('.project-item').forEach(item => {
         item.classList.remove('active');
     });
     document.querySelector(`[data-project-id="${project.id}"]`).classList.add('active');
     
-    // 更新主要內容區域
     updateMainContent();
     hideEmptyState();
     showProjectContent();
@@ -524,21 +502,18 @@ function selectProject(project) {
 function updateMainContent() {
     if (!currentProject) return;
     
-    // 更新專案資訊
     document.getElementById('currentProjectName').textContent = currentProject.name;
     
-    // 更新統計資訊
     const totalCount = currentProject.expenses.length;
-    const totalAmount = currentProject.expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const lastUpdate = currentProject.expenses.length > 0 
-        ? new Date(Math.max(...currentProject.expenses.map(e => new Date(e.date)))).toLocaleDateString('zh-TW')
+    const totalAmount = currentProject.expenses.reduce((sum, expense) => sum + (expense.twdAmount || expense.amount), 0);
+    const lastUpdate = currentProject.lastUpdated 
+        ? new Date(currentProject.lastUpdated).toLocaleDateString('zh-TW')
         : '-';
     
     document.getElementById('totalCount').textContent = totalCount;
     document.getElementById('totalAmount').textContent = `$${totalAmount.toLocaleString()}`;
     document.getElementById('lastUpdate').textContent = lastUpdate;
     
-    // 渲染費用表格
     renderExpenseTable();
 }
 
@@ -550,7 +525,7 @@ function renderExpenseTable() {
     if (!currentProject || currentProject.expenses.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align: center; padding: 40px; color: #64748b;">
+                <td colspan="13" style="text-align: center; padding: 40px; color: #64748b;">
                     <i class="fas fa-inbox fa-2x" style="display: block; margin-bottom: 16px; color: #cbd5e1;"></i>
                     暫無報帳記錄，點擊上方「上傳發票」開始新增
                 </td>
@@ -559,8 +534,7 @@ function renderExpenseTable() {
         return;
     }
     
-    // 按日期排序（最新的在前面）
-    const sortedExpenses = [...currentProject.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedExpenses = [...currentProject.expenses].sort((a, b) => new Date(b.expenseDate) - new Date(a.expenseDate));
     
     sortedExpenses.forEach(expense => {
         const row = createExpenseRow(expense);
@@ -571,17 +545,26 @@ function renderExpenseTable() {
 // 創建費用列
 function createExpenseRow(expense) {
     const row = document.createElement('tr');
-    const statusText = getExpenseStatusText(expense.status);
-    const statusClass = expense.status;
+    
+    // 獲取審核狀態顯示文字
+    const statusText = expense.status === 'completed' ? '已完成' : '待處理';
+    const statusClass = expense.status === 'completed' ? 'approved' : 'pending';
     
     row.innerHTML = `
-        <td>${new Date(expense.date).toLocaleDateString('zh-TW')}</td>
-        <td>${expense.category}</td>
-        <td>${expense.invoiceNumber}</td>
-        <td>${expense.merchantName}</td>
-        <td>$${expense.amount.toLocaleString()}</td>
-        <td>${expense.currency}</td>
-        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+        <td>${new Date(expense.applicationDate || expense.expenseDate).toLocaleDateString('zh-TW')}</td>
+        <td>${expense.applicantName || '-'}</td>
+        <td>${expense.department || '-'}</td>
+        <td>${expense.position || '-'}</td>
+        <td>${new Date(expense.expenseDate).toLocaleDateString('zh-TW')}</td>
+        <td>${expense.invoiceNumber || '-'}</td>
+        <td>${expense.expenseSubject || '-'}</td>
+        <td>${expense.expenseContent || '-'}</td>
+        <td>${expense.expensePurpose || '-'}</td>
+        <td>$${(expense.twdAmount || expense.amount).toLocaleString()}</td>
+        <td>${expense.notes || '-'}</td>
+        <td>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+        </td>
         <td>
             <div class="action-buttons-table">
                 <button class="btn-table btn-edit" onclick="editExpense(${expense.id})">
@@ -597,17 +580,6 @@ function createExpenseRow(expense) {
     return row;
 }
 
-// 獲取費用狀態文字
-function getExpenseStatusText(status) {
-    const statusMap = {
-        'pending': '待審核',
-        'approved': '已核准',
-        'rejected': '已拒絕'
-    };
-    return statusMap[status] || status;
-}
-
-// 顯示空狀態
 function showEmptyState() {
     document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('tableContainer').style.display = 'none';
@@ -615,12 +587,10 @@ function showEmptyState() {
     document.getElementById('projectStats').style.display = 'none';
 }
 
-// 隱藏空狀態
 function hideEmptyState() {
     document.getElementById('emptyState').style.display = 'none';
 }
 
-// 顯示專案內容
 function showProjectContent() {
     document.getElementById('tableContainer').style.display = 'block';
     document.getElementById('actionButtons').style.display = 'flex';
@@ -643,7 +613,6 @@ function filterProjects() {
     renderFilteredProjects(filteredProjects);
 }
 
-// 渲染篩選後的專案
 function renderFilteredProjects(filteredProjects) {
     const projectListContainer = document.getElementById('projectList');
     projectListContainer.innerHTML = '';
@@ -654,19 +623,17 @@ function renderFilteredProjects(filteredProjects) {
     });
 }
 
-// 顯示建立專案模態框
+// 專案建立
 function showCreateProjectModal() {
     document.getElementById('createProjectModal').classList.add('show');
     document.getElementById('projectName').focus();
 }
 
-// 隱藏建立專案模態框
 function hideCreateProjectModal() {
     document.getElementById('createProjectModal').classList.remove('show');
     document.getElementById('createProjectForm').reset();
 }
 
-// 建立新專案
 function createProject() {
     const name = document.getElementById('projectName').value.trim();
     const description = document.getElementById('projectDescription').value.trim();
@@ -684,6 +651,7 @@ function createProject() {
         budget: budget,
         status: 'pending',
         createdAt: new Date().toISOString().split('T')[0],
+        lastUpdated: new Date().toISOString().split('T')[0],
         expenses: []
     };
     
@@ -692,10 +660,8 @@ function createProject() {
     hideCreateProjectModal();
     showToast('專案建立成功！', 'success');
     
-    // 更新專案選擇下拉選單
     updateProjectSelectOptions();
     
-    // 自動選中新建的專案
     if (currentMode === 'project') {
         selectProject(newProject);
     }
@@ -715,14 +681,12 @@ function updateProjectSelectOptions() {
     }
 }
 
-// 顯示上傳模態框
+// 上傳模態框
 function showUploadModal() {
-    // 在日曆模式下，顯示專案選擇
     if (currentMode === 'calendar') {
         document.getElementById('projectSelectGroup').style.display = 'block';
         updateProjectSelectOptions();
         
-        // 如果有選中日期，自動填入日期
         if (selectedDate) {
             document.getElementById('expenseDate').value = new Date(selectedDate).toISOString().split('T')[0];
         }
@@ -738,13 +702,11 @@ function showUploadModal() {
     resetUploadModal();
 }
 
-// 隱藏上傳模態框
 function hideUploadModal() {
     document.getElementById('uploadModal').classList.remove('show');
     resetUploadModal();
 }
 
-// 重置上傳模態框
 function resetUploadModal() {
     selectedFiles = [];
     document.getElementById('fileInput').value = '';
@@ -754,20 +716,26 @@ function resetUploadModal() {
     document.getElementById('saveExpenseBtn').style.display = 'none';
     document.getElementById('expenseForm').reset();
     
-    // 日曆模式下重新設置選中日期
+    // 設置預設值
+    document.getElementById('applicantName').value = '王小明';
+    document.getElementById('department').value = '業務部';
+    document.getElementById('position').value = '業務經理';
+    document.getElementById('currency').value = 'TWD';
+    document.getElementById('status').value = 'pending';
+    calculateTWDAmount();
+    
     if (currentMode === 'calendar' && selectedDate) {
         document.getElementById('expenseDate').value = new Date(selectedDate).toISOString().split('T')[0];
     }
 }
 
-// 處理檔案選擇
+// 檔案處理
 function handleFileSelect(event) {
     const files = Array.from(event.target.files);
     selectedFiles = files;
     showFilePreview(files);
 }
 
-// 拖拽處理
 function dragOverHandler(event) {
     event.preventDefault();
     document.getElementById('uploadArea').classList.add('dragover');
@@ -783,7 +751,6 @@ function dropHandler(event) {
     showFilePreview(files);
 }
 
-// 顯示檔案預覽
 function showFilePreview(files) {
     const previewArea = document.getElementById('previewArea');
     const fileList = document.getElementById('fileList');
@@ -804,7 +771,6 @@ function showFilePreview(files) {
     previewArea.style.display = 'block';
 }
 
-// 移除檔案
 function removeFile(index) {
     selectedFiles.splice(index, 1);
     
@@ -816,7 +782,7 @@ function removeFile(index) {
     }
 }
 
-// 上傳檔案並 OCR 識別
+// OCR 功能
 function uploadFiles() {
     if (selectedFiles.length === 0) {
         showToast('請先選擇檔案', 'error');
@@ -825,7 +791,6 @@ function uploadFiles() {
     
     showLoading();
     
-    // 模擬 OCR 識別過程
     setTimeout(() => {
         hideLoading();
         simulateOCR();
@@ -833,34 +798,45 @@ function uploadFiles() {
     }, 2000);
 }
 
-// 模擬 OCR 識別
 function simulateOCR() {
     const today = new Date();
     const defaultDate = selectedDate ? new Date(selectedDate) : today;
     
-    // 模擬 OCR 識別結果
-    const categories = ['餐飲', '交通', '住宿', '辦公用品', '其他'];
-    const merchants = ['星巴克', '麥當勞', '7-ELEVEN', '全聯福利中心', '家樂福', '統一超商', '台灣大車隊'];
+    const subjects = ['餐費', '交通費', '住宿費', '辦公用品', '其他'];
+    const contents = ['商務午餐', '計程車費', '住宿費', '辦公用品', '其他費用'];
+    const purposes = ['客戶拜訪', '商務出差', '會議需求', '日常辦公', '其他'];
+    const applicants = ['王小明', '李小華', '張小美', '陳小東'];
+    const departments = ['業務部', '行政部', '人資部', '研發部'];
+    const positions = ['業務經理', '行政專員', '人資專員', '研發工程師'];
     
     const mockOCRData = {
-        date: defaultDate.toISOString().split('T')[0],
-        category: categories[Math.floor(Math.random() * categories.length)],
+        applicantName: applicants[Math.floor(Math.random() * applicants.length)],
+        department: departments[Math.floor(Math.random() * departments.length)],
+        position: positions[Math.floor(Math.random() * positions.length)],
+        expenseDate: defaultDate.toISOString().split('T')[0],
+        expenseSubject: subjects[Math.floor(Math.random() * subjects.length)],
+        expenseContent: contents[Math.floor(Math.random() * contents.length)],
+        expensePurpose: purposes[Math.floor(Math.random() * purposes.length)],
         invoiceNumber: 'TW' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0'),
-        merchantName: merchants[Math.floor(Math.random() * merchants.length)],
         amount: Math.floor(Math.random() * 2000) + 100,
         currency: 'TWD'
     };
     
     // 填入表單
-    document.getElementById('expenseDate').value = mockOCRData.date;
-    document.getElementById('expenseCategory').value = mockOCRData.category;
+    document.getElementById('applicantName').value = mockOCRData.applicantName;
+    document.getElementById('department').value = mockOCRData.department;
+    document.getElementById('position').value = mockOCRData.position;
+    document.getElementById('expenseDate').value = mockOCRData.expenseDate;
+    document.getElementById('expenseSubject').value = mockOCRData.expenseSubject;
+    document.getElementById('expenseContent').value = mockOCRData.expenseContent;
+    document.getElementById('expensePurpose').value = mockOCRData.expensePurpose;
     document.getElementById('invoiceNumber').value = mockOCRData.invoiceNumber;
-    document.getElementById('merchantName').value = mockOCRData.merchantName;
     document.getElementById('amount').value = mockOCRData.amount;
     document.getElementById('currency').value = mockOCRData.currency;
+    
+    calculateTWDAmount();
 }
 
-// 顯示 OCR 結果
 function showOCRResults() {
     document.getElementById('ocrResults').style.display = 'block';
     document.getElementById('uploadBtn').style.display = 'none';
@@ -870,30 +846,36 @@ function showOCRResults() {
 // 儲存費用記錄
 function saveExpense() {
     const formData = {
-        date: document.getElementById('expenseDate').value,
-        category: document.getElementById('expenseCategory').value,
+        applicantName: document.getElementById('applicantName').value,
+        department: document.getElementById('department').value,
+        position: document.getElementById('position').value,
+        expenseDate: document.getElementById('expenseDate').value,
+        expenseSubject: document.getElementById('expenseSubject').value,
+        expenseContent: document.getElementById('expenseContent').value,
+        expensePurpose: document.getElementById('expensePurpose').value,
         invoiceNumber: document.getElementById('invoiceNumber').value,
-        merchantName: document.getElementById('merchantName').value,
         amount: parseFloat(document.getElementById('amount').value),
         currency: document.getElementById('currency').value,
+        exchangeRate: parseFloat(document.getElementById('exchangeRate').value),
+        twdAmount: parseFloat(document.getElementById('twdAmount').value),
+        status: document.getElementById('status').value,
         notes: document.getElementById('notes').value
     };
     
     // 驗證必填欄位
-    if (!formData.date || !formData.category || !formData.invoiceNumber || 
-        !formData.merchantName || !formData.amount) {
+    if (!formData.applicantName || !formData.department || !formData.position || 
+        !formData.expenseDate || !formData.expenseSubject || !formData.expenseContent || 
+        !formData.expensePurpose || !formData.invoiceNumber || !formData.amount) {
         showToast('請填寫所有必填欄位', 'error');
         return;
     }
     
-    // 新增費用記錄
     const newExpense = {
         id: Date.now(),
-        ...formData,
-        status: 'pending'
+        applicationDate: new Date().toISOString().split('T')[0],
+        ...formData
     };
     
-    // 根據模式決定新增到哪個專案
     let targetProject;
     if (currentMode === 'calendar') {
         const projectId = parseInt(document.getElementById('expenseProject').value);
@@ -912,8 +894,8 @@ function saveExpense() {
     }
     
     targetProject.expenses.push(newExpense);
+    targetProject.lastUpdated = new Date().toISOString().split('T')[0];
     
-    // 更新 UI
     if (currentMode === 'project') {
         updateMainContent();
     } else {
@@ -937,25 +919,29 @@ function editExpense(expenseId) {
     
     // 填入編輯表單
     document.getElementById('editExpenseId').value = expense.id;
-    document.getElementById('editExpenseDate').value = expense.date;
-    document.getElementById('editExpenseCategory').value = expense.category;
+    document.getElementById('editApplicantName').value = expense.applicantName;
+    document.getElementById('editDepartment').value = expense.department;
+    document.getElementById('editPosition').value = expense.position || '';
+    document.getElementById('editExpenseDate').value = expense.expenseDate;
+    document.getElementById('editExpenseSubject').value = expense.expenseSubject;
+    document.getElementById('editExpenseContent').value = expense.expenseContent;
+    document.getElementById('editExpensePurpose').value = expense.expensePurpose;
     document.getElementById('editInvoiceNumber').value = expense.invoiceNumber;
-    document.getElementById('editMerchantName').value = expense.merchantName;
     document.getElementById('editAmount').value = expense.amount;
-    document.getElementById('editCurrency').value = expense.currency;
+    document.getElementById('editCurrency').value = expense.currency || 'TWD';
+    document.getElementById('editExchangeRate').value = expense.exchangeRate || 1;
+    document.getElementById('editTwdAmount').value = expense.twdAmount || expense.amount;
+    document.getElementById('editStatus').value = expense.status || 'pending';
     document.getElementById('editNotes').value = expense.notes || '';
     
-    // 顯示編輯模態框
     document.getElementById('editModal').classList.add('show');
 }
 
-// 隱藏編輯模態框
 function hideEditModal() {
     document.getElementById('editModal').classList.remove('show');
     document.getElementById('editExpenseForm').reset();
 }
 
-// 更新費用記錄
 function updateExpense() {
     const expenseId = parseInt(document.getElementById('editExpenseId').value);
     const expense = currentProject.expenses.find(exp => exp.id === expenseId);
@@ -963,21 +949,28 @@ function updateExpense() {
     if (!expense) return;
     
     // 更新費用資料
-    expense.date = document.getElementById('editExpenseDate').value;
-    expense.category = document.getElementById('editExpenseCategory').value;
+    expense.applicantName = document.getElementById('editApplicantName').value;
+    expense.department = document.getElementById('editDepartment').value;
+    expense.position = document.getElementById('editPosition').value;
+    expense.expenseDate = document.getElementById('editExpenseDate').value;
+    expense.expenseSubject = document.getElementById('editExpenseSubject').value;
+    expense.expenseContent = document.getElementById('editExpenseContent').value;
+    expense.expensePurpose = document.getElementById('editExpensePurpose').value;
     expense.invoiceNumber = document.getElementById('editInvoiceNumber').value;
-    expense.merchantName = document.getElementById('editMerchantName').value;
     expense.amount = parseFloat(document.getElementById('editAmount').value);
     expense.currency = document.getElementById('editCurrency').value;
+    expense.exchangeRate = parseFloat(document.getElementById('editExchangeRate').value);
+    expense.twdAmount = parseFloat(document.getElementById('editTwdAmount').value);
+    expense.status = document.getElementById('editStatus').value;
     expense.notes = document.getElementById('editNotes').value;
     
-    // 更新 UI
+    currentProject.lastUpdated = new Date().toISOString().split('T')[0];
+    
     updateMainContent();
     updateCalendarEvents();
     hideEditModal();
     showToast('費用記錄已更新！', 'success');
     
-    // 重新渲染日曆
     setTimeout(() => {
         if (window.renderCalendar) {
             window.renderCalendar();
@@ -992,11 +985,11 @@ function deleteExpense(expenseId) {
     const index = currentProject.expenses.findIndex(exp => exp.id === expenseId);
     if (index > -1) {
         currentProject.expenses.splice(index, 1);
+        currentProject.lastUpdated = new Date().toISOString().split('T')[0];
         updateMainContent();
         updateCalendarEvents();
         showToast('費用記錄已刪除！', 'success');
         
-        // 重新渲染日曆
         setTimeout(() => {
             if (window.renderCalendar) {
                 window.renderCalendar();
@@ -1019,7 +1012,6 @@ function exportReport() {
     
     showLoading();
     
-    // 模擬匯出過程
     setTimeout(() => {
         hideLoading();
         generateExcelReport();
@@ -1027,25 +1019,26 @@ function exportReport() {
     }, 1500);
 }
 
-// 生成 Excel 報表
 function generateExcelReport() {
-    // 準備 CSV 格式的資料
-    const headers = ['日期', '類別', '發票號碼', '商家名稱', '金額', '幣別', '狀態', '備註'];
+    const headers = ['申請日期', '申請人', '部門', '職稱', '支出日期', '發票號碼', '科目', '內容', '用途', '金額(台幣)', '備註', '審核狀態'];
     const csvContent = [
         headers.join(','),
         ...currentProject.expenses.map(expense => [
-            expense.date,
-            expense.category,
-            expense.invoiceNumber,
-            expense.merchantName,
-            expense.amount,
-            expense.currency,
-            getExpenseStatusText(expense.status),
-            expense.notes || ''
+            expense.applicationDate || expense.expenseDate,
+            expense.applicantName || '',
+            expense.department || '',
+            expense.position || '',
+            expense.expenseDate,
+            expense.invoiceNumber || '',
+            expense.expenseSubject || '',
+            expense.expenseContent || '',
+            expense.expensePurpose || '',
+            expense.twdAmount || expense.amount,
+            expense.notes || '',
+            expense.status === 'completed' ? '已完成' : '待處理'
         ].join(','))
     ].join('\n');
     
-    // 建立下載連結
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -1057,17 +1050,164 @@ function generateExcelReport() {
     document.body.removeChild(link);
 }
 
-// 顯示 Loading
+// 匯出月度報表
+function exportMonthlyReport() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const monthlyExpenses = [];
+    projects.forEach(project => {
+        project.expenses.forEach(expense => {
+            const expenseDate = new Date(expense.expenseDate);
+            if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
+                monthlyExpenses.push({
+                    ...expense,
+                    projectName: project.name
+                });
+            }
+        });
+    });
+    
+    if (monthlyExpenses.length === 0) {
+        showToast('本月沒有可匯出的資料', 'warning');
+        return;
+    }
+    
+    showLoading();
+    
+    setTimeout(() => {
+        hideLoading();
+        generateMonthlyExcelReport(monthlyExpenses);
+        showToast('月度報表匯出成功！', 'success');
+    }, 1500);
+}
+
+function generateMonthlyExcelReport(expenses) {
+    const headers = ['申請日期', '申請人', '部門', '職稱', '支出日期', '發票號碼', '科目', '內容', '用途', '金額(台幣)', '備註', '審核狀態'];
+    const csvContent = [
+        headers.join(','),
+        ...expenses.map(expense => [
+            expense.applicationDate || expense.expenseDate,
+            expense.applicantName || '',
+            expense.department || '',
+            expense.position || '',
+            expense.expenseDate,
+            expense.invoiceNumber || '',
+            expense.expenseSubject || '',
+            expense.expenseContent || '',
+            expense.expensePurpose || '',
+            expense.twdAmount || expense.amount,
+            expense.notes || '',
+            expense.status === 'completed' ? '已完成' : '待處理'
+        ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `月度報帳明細_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// 日曆事件篩選
+function filterCalendarEvents() {
+    const startDate = document.getElementById('startDateFilter').value;
+    const endDate = document.getElementById('endDateFilter').value;
+    const category = document.getElementById('calendarCategoryFilter').value;
+    
+    updateCalendarEvents();
+    
+    if (startDate || endDate || category !== 'all') {
+        const filteredEvents = window.calendarEvents.filter(event => {
+            const eventDate = event.start instanceof Date ? 
+                event.start.toISOString().split('T')[0] : 
+                new Date(event.start).toISOString().split('T')[0];
+            
+            if (startDate && eventDate < startDate) return false;
+            if (endDate && eventDate > endDate) return false;
+            if (category !== 'all' && event.category !== category) return false;
+            
+            return true;
+        });
+        
+        window.calendarEvents = filteredEvents;
+    }
+    
+    if (window.refreshCalendarEvents && typeof window.refreshCalendarEvents === 'function') {
+        window.refreshCalendarEvents();
+    }
+}
+
+// 日曆詳情
+function showEventDetails(event) {
+    if (event.date) {
+        updateSelectedDateDetails(new Date(event.date));
+    }
+    
+    const merchant = event.merchant || '未知項目';
+    const amount = event.amount || 0;
+    const category = event.category || '未分類';
+    showToast(`${merchant}: $${amount} (${category})`, 'info');
+}
+
+function updateSelectedDateDetails(date) {
+    selectedDate = date;
+    const dateStr = new Date(date).toISOString().split('T')[0];
+    
+    const dayExpenses = [];
+    projects.forEach(project => {
+        project.expenses.forEach(expense => {
+            if (expense.expenseDate === dateStr) {
+                dayExpenses.push({
+                    ...expense,
+                    projectName: project.name
+                });
+            }
+        });
+    });
+    
+    const detailsContainer = document.getElementById('selectedDateDetails');
+    const dateText = document.getElementById('selectedDateText');
+    const expensesList = document.getElementById('dateExpensesList');
+    
+    if (dayExpenses.length > 0) {
+        detailsContainer.style.display = 'block';
+        dateText.textContent = new Date(date).toLocaleDateString('zh-TW');
+        
+        expensesList.innerHTML = '';
+        dayExpenses.forEach(expense => {
+            const item = document.createElement('div');
+            item.className = 'date-expense-item';
+            item.innerHTML = `
+                <div class="expense-item-header">
+                    <span class="expense-item-title">${expense.expenseContent}</span>
+                    <span class="expense-item-amount">$${(expense.twdAmount || expense.amount).toLocaleString()}</span>
+                </div>
+                <div class="expense-item-details">
+                    ${expense.expenseSubject} • ${expense.projectName} • ${expense.invoiceNumber}
+                </div>
+            `;
+            expensesList.appendChild(item);
+        });
+    } else {
+        detailsContainer.style.display = 'none';
+    }
+}
+
+// 工具函數
 function showLoading() {
     document.getElementById('loadingOverlay').style.display = 'flex';
 }
 
-// 隱藏 Loading
 function hideLoading() {
     document.getElementById('loadingOverlay').style.display = 'none';
 }
 
-// 顯示 Toast 通知
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
@@ -1075,7 +1215,6 @@ function showToast(message, type = 'success') {
     toast.className = `toast ${type}`;
     toastMessage.textContent = message;
     
-    // 設定圖示
     const icon = toast.querySelector('i');
     icon.className = type === 'error' ? 'fas fa-exclamation-circle' :
                     type === 'warning' ? 'fas fa-exclamation-triangle' :
@@ -1089,7 +1228,7 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// 點擊模態框背景關閉
+// 事件監聽器
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('modal')) {
         if (event.target.id === 'createProjectModal') {
@@ -1102,7 +1241,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// ESC 鍵關閉模態框
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         hideCreateProjectModal();
@@ -1111,7 +1249,6 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// 阻止拖拽預設行為
 document.addEventListener('dragover', function(event) {
     event.preventDefault();
 });
@@ -1120,7 +1257,9 @@ document.addEventListener('drop', function(event) {
     event.preventDefault();
 });
 
-// 將全域函數暴露給 React 組件使用
+// 將函數暴露到全域
 window.showEventDetails = showEventDetails;
 window.updateSelectedDateDetails = updateSelectedDateDetails;
 window.getCategoryColor = getCategoryColor;
+window.calculateTWDAmount = calculateTWDAmount;
+window.calculateEditTWDAmount = calculateEditTWDAmount;
