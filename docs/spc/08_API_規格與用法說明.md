@@ -1,24 +1,21 @@
-# 08 API 規格與用法說明
+# 08 API 規格文件 (API Specification)
 
-本文件說明 SPC 系統批量匯入接口 (`/all-in-one`) 的業務功能、異步處理機制與系統對接規範。
+本文件定義 SPC 系統中關於「定量資料匯入與維護」相關接口的通訊協議、調用流程與實作範例。
 
-## 1. 業務價值 (Value Proposition)
+## 1. 功能簡介 (Functional Overview)
 
-`All-in-One` API 旨在提供一站式的數據對接與自動化配置，系統會依據資料自動完成以下操作：
-- **計畫自動建立**：根據層別組合與命名規則，自動建立新的管制計畫。
-- **辭庫自動建立**：自動維護層別資訊與管制項目字典。
-- **統計參數自動設定**：依據樣本數 ($n$) 自動決定圖表類型，並依傳入精度決定顯示位數。
-- **資料庫同步**：完成高精度量測數據的寫入與關聯。
+本套件 API 提供自動化數據對接與資料生命週期維護能力：
+- **批量匯入 (Bulk Import)**：透過 All-in-One 接口快速建立計畫、辭庫並寫入數據。
+- **異步追蹤 (Async Tracking)**：處理大規模數據時的進度監控。
+- **數據修正 (Data Correction)**：針對已建立的計畫配置或樣本值進行調整。
 
 ---
 
-## 2. 異步任務處理機制
+## 2. 批量匯入業務流 (Import Workflow)
 
-為確保大量數據處理（每批次可達 10,000 筆）時的系統穩定性，批量匯入採 **異步任務 (Background Task)** 模式。
+### 2.1 異步處理機制 (Mechanism)
 
-### 2.1 呼叫流程 (Polling Pattern)
-
-系統採用非同步處理機制，調用方需遵循以下流程：
+批量匯入採非同步處理，調用方需遵循以下流程：
 
 ```mermaid
 sequenceDiagram
@@ -27,13 +24,13 @@ sequenceDiagram
     participant Worker as 背景任務 (Worker)
     participant DB as 資料庫/Redis
 
-    Client->>API: POST /all-in-one (數據負載)
+    Client->>API: POST /private/ccm/quantitative/all-in-one (數據負載)
     API->>DB: 建立任務狀態 (pending)
     API-->>Client: 202 Accepted (task_id)
     API->>Worker: 觸發異步匯入任務
     
     loop 輪詢狀態 (Polling)
-        Client->>API: GET /all-in-one/{task_id}
+        Client->>API: GET /private/ccm/quantitative/all-in-one/{task_id}
         API->>DB: 查詢任務進度
         API-->>Client: 200 OK (status: processing, processed: X)
     end
@@ -41,69 +38,141 @@ sequenceDiagram
     Worker->>DB: 執行資料寫入與統計計算
     Worker->>DB: 更新任務狀態 (completed)
     
-    Client->>API: GET /all-in-one/{task_id}
+    Client->>API: GET /private/ccm/quantitative/all-in-one/{task_id}
     API->>DB: 查詢最終結果
-    API-->>Client: 200 OK (status: completed, created_ids: [...])
+    API-->>Client: 200 OK (status: completed)
 ```
 
-1. **提交請求 (Submit)**：客戶端發送數據，API 立即回傳 `task_id` (HTTP 202)。
-2. **進度輪詢 (Polling)**：客戶端持 `task_id` 定期查詢進度。
-3. **結果獲取**：當 `status` 為 `completed` 或 `failed` 時停止輪詢。
+### 2.2 接口調用規範
 
-### 2.2 呼叫建議與限制
-- **輪詢間隔**：建議每 **1 秒** 查詢一次。
-- **超時機制**：若任務在 60 秒內未完成（輪詢 60 次），建議標註為匯入超時。
-- **單次請求限制**：建議單次請求 **10,000 筆**（此為技術上限）。建議客戶端依業務量評估，若數據極大可分多批次異步提交。
-- **保存期限 (TTL)**：任務狀態在 Redis 中僅保留 **3,600 秒 (1 小時)**。超過此時間查詢將回傳 `404 Not Found`。
-- **事務一致性**：匯入以「計畫 (CCM Group)」為單位。若單一計畫內資料有誤，該計畫的所有異動（包含下屬項目與樣本）將會回滾 (Rollback)，不影響其他成功計畫。
+#### [POST] 提交匯入任務
+- **路徑**: `/private/ccm/quantitative/all-in-one`
+- **範例 JSON**:
+  ```json
+  {
+    "items": [
+      {
+        "characteristic_name": "鎳層厚度",
+        "category_information": [
+          { "key": "線別", "value": "A線", "naming": true, "order": 1 }
+        ],
+        "samples": ["9.85", "9.84"]
+      }
+    ]
+  }
+  ```
+- **回傳範例 (202 Accepted)**:
+  ```json
+  { "task_id": "uuid-string" }
+  ```
+- **詳細欄位規範**: 請參閱 **[09 節 1.1](./09_JSON_格式規範.md#11-單一項目-allinonepayload)**。
+
+#### [GET] 查詢任務狀態
+- **路徑**: `/private/ccm/quantitative/all-in-one/{task_id}`
+- **功能**: 獲取目前處理進度。
+- **回傳範例 (200 OK)**:
+  ```json
+  {
+    "task_id": "...",
+    "status": "completed",
+    "total": 1,
+    "processed": 1,
+    "errors": [],
+    "created_ccm_ids": ["ccm-uuid"],
+    "created_entity_ids": ["entity-uuid"]
+  }
+  ```
+- **詳細規範**: 請參閱 **[09 節 1.3](./09_JSON_格式規範.md#13-任務執行結果-taskstatusresult)**。
+- **建議頻率**: 每 1,000ms 輪詢一次。
 
 ---
 
-## 3. 數據維護與變更管理 (Data Maintenance)
+## 3. 系統自動化處理邏輯 (Processing Logic)
 
-當匯入錯誤或需要調整現有數據時，可使用以下維護接口。請注意，所有刪除操作均為 **硬刪除 (Hard Delete)**，一旦執行將無法從系統回收站找回。
+系統在處理批量匯入時，會依據傳入數據自動執行以下邏輯：
 
-### 3.1 樣本資料維護 (Sample Level)
-- **[PUT]** `/private/ccm/quantitative/{ccm_id}/entities/{entity_id}/samples/{sample_id}`
-    - **用途**：修正已匯入的量測值或操作員名稱。
-- **[DELETE]** `/private/ccm/quantitative/{ccm_id}/entities/{entity_id}/samples/{sample_id}`
-    - **用途**：移除錯誤的單一樣本點。
+### 3.1 樣本精度自動推斷 (Precision Inference)
+系統會分析 `samples` 傳入的字串格式：
+1. 去除右側無效零位。
+2. 計算各樣本小數位數。
+3. 取整組樣本的 **最大值** 作為計畫精度。
 
-### 3.2 計畫與配置維護 (CCM Level)
-- **[PUT]** `/private/ccm/quantitative/{ccm_id}`
-    - **用途**：更新計畫名稱、料號、批號或層級資訊。
-- **[DELETE]** `/private/ccm/quantitative/{ccm_id}`
-    - **用途**：刪除整個管制計畫及其下屬所有項目與歷史樣本。
+### 3.2 計畫自動命名與歸屬 (CCM Naming)
+1. **識別碼 (ID)**：計畫名稱由 `naming=True` 的層別依 `order` 連結而成 (如 `線別_班別`)。
+2. **唯一性限制**：系統採「存在即獲取 (Get or Create)」邏輯。
 
----
-
-## 4. 認證與安全規範
-
-所有 API 調用均需在 Header 中提供有效的 Bearer Token：
-```http
-Authorization: Bearer <YOUR_ACCESS_TOKEN>
-```
-*註：系統會將 Token 轉發至內部認證服務進行權限校驗。*
+### 3.3 統計圖表類型判定
+依據單批次樣本數 ($n$) 自動設定統計圖表：
+- **$n = 1$**: X̄-MR (均值-移動全距圖)
+- **$2 \le n \le 10$**: X̄-R (均值-全距圖)
+- **$n > 10$**: X̄-S (均值-標準差圖)
 
 ---
 
-## 5. 錯誤處理指引
+## 4. 任務狀態定義 (Task Status)
 
-| 狀態碼 | 錯誤原因說明 | 建議操作 |
+| 狀態 (Status) | 說明 | 後續操作建議 |
 | :--- | :--- | :--- |
-| `400` | 業務邏輯校驗失敗 (如: 樣本數不一致、order 重複) | 檢查回應中的 `detail` 訊息，修正資料後重新提交。 |
-| `401` | Token 無效或已過期 | 重新進行認證以獲取新的 Access Token。 |
-| `404` | 任務 ID 不存在或已過期 | 確認 `task_id` 正確性，或檢查是否超過 1 小時 TTL。 |
-| `429` | 觸發流量頻率限制 | 採用指數退避 (Exponential Backoff) 延遲重試。 |
-| `500` | 系統內部處理異常 | 記錄錯誤軌跡並聯繫 SPC 技術支援團隊。 |
+| `pending` | 任務於隊列中等待處理。 | 繼續輪詢。 |
+| `processing` | 任務處理中。 | 繼續輪詢。 |
+| `completed` | 處理成功，資料已入庫。 | 停止輪詢，完成作業。 |
+| `failed` | 處理失敗。 | 停止輪詢，檢視回傳之 `errors` 列表。 |
 
 ---
 
-## 6. 系統狀態定義 (Task Status)
+## 5. 數據維護與變更接口 (Maintenance APIs)
 
-| 狀態 | 說明 |
-| :--- | :--- |
-| `pending` | 任務已提交，於隊列中等待分配。 |
-| `processing` | 任務處理中。可參考 `processed` 欄位掌握進度。 |
-| `completed` | 全數處理成功，已寫入資料庫。 |
-| `failed` | 處理失敗。請檢視 `errors` 列表獲取具體失敗原因。 |
+### 5.1 管制計畫維護 (CCM Level)
+
+- **更新計畫 [PUT]**: `/private/ccm/quantitative/{ccm_id}`
+  - **範例 JSON**:
+    ```json
+    { "name": "新計畫名稱", "part_number": "PN-2026" }
+    ```
+  - **回傳範例 (200 OK)**:
+    ```json
+    {
+      "id": "ccm-uuid",
+      "name": "新計畫名稱",
+      "part_number": "PN-2026",
+      "created_at": "2026-04-02T10:00:00",
+      "entities": []
+    }
+    ```
+  - **欄位細節**: 請參閱 **[09 節 2.1](./09_JSON_格式規範.md#21-管制計畫更新-updateccmpayload)**。
+
+- **刪除計畫 [DELETE]**: `/private/ccm/quantitative/{ccm_id}`
+  - **回傳**: 204 No Content
+  - **警告**: **硬刪除**。將一併移除所有設定與歷史樣本。
+
+### 5.2 樣本資料維護 (Sample Level)
+
+- **更新樣本 [PUT]**: `/private/ccm/quantitative/{ccm_id}/entities/{entity_id}/samples/{sample_id}`
+  - **範例 JSON**:
+    ```json
+    { "samples": [9.851, 9.842], "operator_name": "張小明" }
+    ```
+  - **回傳範例 (200 OK)**:
+    ```json
+    {
+      "id": "sample-uuid",
+      "samples": [9.851, 9.842],
+      "mean_value": 9.8465,
+      "operator_name": "張小明"
+    }
+    ```
+  - **欄位細節**: 請參閱 **[09 節 2.2](./09_JSON_格式規範.md#22-樣本資料更新-updatesamplepayload)**。
+
+- **刪除樣本 [DELETE]**: `/private/ccm/quantitative/{ccm_id}/entities/{entity_id}/samples/{sample_id}`
+  - **回傳**: 204 No Content
+
+---
+
+## 6. 認證與錯誤處理
+
+| 狀態碼 | 說明 | 建議操作 |
+| :--- | :--- | :--- |
+| `400` | 業務校驗失敗 | 修正 Payload 後重試。 |
+| `401` | 認證失效 | 重新獲取 Bearer Token。 |
+| `404` | 資源不存在 | 確認 ID 與 TTL。 |
+| `500` | 系統內部異常 | 記錄錯誤軌跡。 |
