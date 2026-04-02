@@ -1,30 +1,87 @@
 # 09 JSON 格式規範
 
-## 1. 批量匯入 JSON Schema (Draft)
+本文件定義批量匯入接口 (`/all-in-one`) 之 JSON 資料結構、資料庫欄位長度限制與業務驗證規則。
+
+## 1. 提交 Payload (BulkAllInOnePayload)
+
+這是提交任務的根物件。
+
+| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
+| :--- | :--- | :--- | :--- | :--- |
+| `items` | Array | 是 | 批量匯入項目列表 | 最少 1 筆，最大 10,000 筆。 |
+
+### 1.1 AllInOnePayload (單一項目)
+
+| 欄位名稱 | 型別 | 必填 | 說明 | 技術限制與事實 |
+| :--- | :--- | :--- | :--- | :--- |
+| `characteristic_name` | String | 是 | 管制項目名稱 | 最大 **128** 字元。如：厚度、長度。 |
+| `part_number` | String | 否 | 產品料號 | 最大 **128** 字元。若為 null，則從層別資訊提取。 |
+| `batch_number` | String | 否 | 產品批號 | 最大 **128** 字元。若為 null，則從層別資訊提取。 |
+| `samples` | Array | 是 | 樣本值列表 | **必須為字串陣列**。至少 1 個樣本。 |
+| `category_information` | Array | 是 | 層級/層別資訊 | 至少需包含一個 `naming=True` 的項目。 |
+
+### 1.2 CategoryInfo (層別資訊單項)
+
+| 欄位名稱 | 型別 | 必填 | 說明 | 技術限制與事實 |
+| :--- | :--- | :--- | :--- | :--- |
+| `key` | String | 是 | 層別名稱 | 最大 **128** 字元（如：線別、班別、機台）。 |
+| `value` | String | 是 | 層別數值 | 最大 **128** 字元。*註：組合成計畫名稱時亦受 128 字元限制。* |
+| `naming` | Boolean | 是 | 是否參與命名 | `True`: 用於產生計畫名稱；`False`: 僅作紀錄。 |
+| `order` | Integer | 是 | 排序權重 | **同項目內必須唯一**。決定命名拼接順序。 |
+
+---
+
+## 2. 系統自動化處理邏輯
+
+### 2.1 樣本精度自動推斷 (Precision Inference)
+系統會根據 `samples` 傳入的字串格式自動推斷精密度：
+1. 遍歷所有樣本字串，去除右側無效的 '0'。
+2. 計算各樣本小數點後位數。
+3. 取所有樣本中的 **最大值** 作為該項目的精度設定。
+*範例：傳入 `["1.250", "1.3"]` -> 系統判定精度為 3 位小數。*
+
+**重要**：請務必使用 String 傳輸，避免 Float 產生 `1.24999999` 等精度誤差。
+
+### 2.2 計畫自動命名與歸屬 (CCM Naming)
+1. **唯一鍵 (Unique Key)**：計畫名稱由 `naming=True` 的層別依 `order` 連結而成。這是系統識別計畫的唯一依據。
+2. **歸屬邏輯**：若已存在同名計畫，資料將直接追加；若不存在則自動建立。
+3. **隔離性**：相同料號若存在於不同線別，只要線別參與命名，系統即會視為不同計畫處理。
+
+### 2.3 統計圖表類型判定
+系統會根據單批資料的樣本數量 ($n$) 自動設定：
+- **$n = 1$**: X̄-MR (均值-移動全距圖)
+- **$2 \le n \le 10$**: X̄-R (均值-全距圖)
+- **$n > 10$**: X̄-S (均值-標準差圖)
+
+---
+
+## 3. 數據重複性與追蹤規範
+
+### 3.1 重複上傳行為 (Duplicate Handling)
+- **計畫/項目**：採「存在即獲取 (Get or Create)」邏輯，不會重複建立。
+- **樣本 (Samples)**：採 **「每次新增 (Hard Insert)」** 邏輯。
+- **結論**：若將完全相同的數據發送兩次，系統會產生兩筆重複的樣本記錄。客戶端需自行確保資料不重複發送。
+
+### 3.2 任務結果追蹤 (Flat Statistics)
+- 任務狀態回傳的 `created_ccm_ids` 與 `created_entity_ids` 為該批次成功建立/更新的 ID 列表。
+- **限制**：回傳列表採「扁平化統計」，不保證順序，亦無法與原始提交的 `items` 索引一一對應。若需精確追蹤，建議縮小每批次的規模。
+
+---
+
+## 4. JSON 範例
 
 ```json
 {
-  "type": "object",
-  "properties": {
-    "items": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "characteristic_name": { "type": "string", "maxLength": 128 },
-          "part_number": { "type": "string", "maxLength": 128 },
-          "batch_number": { "type": "string", "maxLength": 128 },
-          "ref_id": { "type": "string", "maxLength": 64 },
-          "samples": {
-            "type": "array",
-            "items": { "type": "string" }
-          }
-        }
-      }
+  "items": [
+    {
+      "characteristic_name": "鎳",
+      "category_information": [
+        { "key": "線別", "value": "A線", "naming": true, "order": 1 },
+        { "key": "班別", "value": "早班", "naming": true, "order": 2 },
+        { "key": "機台", "value": "M01", "naming": false, "order": 100 }
+      ],
+      "samples": ["9.851", "9.842", "9.860"]
     }
-  }
+  ]
 }
 ```
-
-## 2. 資料傳輸規範
-- **字串化數值**：所有 `samples` 內的數值必須以字串傳遞（如 `"1.250"`），以確保高精度計算時不發生浮點數截斷。
