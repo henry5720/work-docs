@@ -755,29 +755,30 @@ PUT /private/ccm/quantitative/{ccm_id}/entities/{entity_id}/samples/{sample_id}
 
 | 方式 | 說明 |
 | :--- | :--- |
-| **Method 1（逐步建立）** | 可直接 `PUT` 修改 `sampling-settings/{setting_id}` 的 `num_of_samples`，再匯入 |
+| **Method 1（逐步建立）** | 可直接匯入，系統不驗證 len(samples) 與 num_of_samples 是否一致 |
 | **Method 2（All-in-One）** | 系統只驗證同一次 API 呼叫內的樣本數一致，**不同次匯入**可接受不同樣本數 |
 
 ### 說明
 
+- **後端不驗證**：系統不會檢查傳入的 samples 數量是否與 `sampling_settings.num_of_samples` 一致
+- **建議保持一致**：因為 `num_of_samples` 決定管制圖類型（X̄-R、X̄-S、X̄-MR）與 σ 估計方式，保持一致可確保圖表統計正確
 - **Method 2 限制**：
   - 同一 characteristic_name **同一次 API 呼叫**內，樣本數要一致
   - **不同次匯入**（第1次、第2次分開呼叫）可以有不同的樣本數
-  - 系統**不會驗證**是否與現有 `sampling_settings` 一致
 
 ### API 呼叫流程
 
 **Method 1**：
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
-| 1 | `PUT /{entity_id}/sampling-settings/{setting_id}` | 修改 num_of_samples（如 n=3） |
-| 2 | `POST /{entity_id}/samples` 或 `/samples/bulk` | 匯入新樣本數的資料 |
+| 1 | `POST /{entity_id}/samples` 或 `/samples/bulk` | 直接匯入（可改變 samples 數量） |
+| 可選 | `PUT /{entity_id}/sampling-settings/{setting_id}` | 同步更新 num_of_samples 以保持一致 |
 
 **Method 2**：
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
-| 1 | `POST /all-in-one` 第一次 | 匯入 n=5 的資料 |
-| 2 | `POST /all-in-one` 第二次 | 匯入 n=3 的資料（允許） |
+| 1 | `POST /all-in-one`（同一 characteristic_name） | 同一 characteristic_name 下樣本數要一致 |
+| 2 | `POST /all-in-one`（不同 characteristic_name） | 可接受不同樣本數 |
 
 ---
 
