@@ -80,13 +80,13 @@
 
 ```mermaid
 graph TD
-  %% 樣式定義
-  classDef ui fill:#e1f5fe,stroke:#0288d1
-  classDef hook fill:#f3e5f5,stroke:#7b1fa2
-  classDef backend fill:#fff3e0,stroke:#f57c00
-  classDef mqtt fill:#e8f5e9,stroke:#388e3c
-  classDef user fill:#fff8e1,stroke:#fbc02d
-  classDef decision fill:#fce4ec,stroke:#c62828
+  %% 樣式定義（暗色主題相容）
+  classDef ui fill:#1565C0,stroke:#90CAF9,color:#ffffff
+  classDef hook fill:#6A1B9A,stroke:#CE93D8,color:#ffffff
+  classDef backend fill:#BF360C,stroke:#FFAB91,color:#ffffff
+  classDef mqtt fill:#1B5E20,stroke:#A5D6A7,color:#ffffff
+  classDef user fill:#E65100,stroke:#FFCC80,color:#ffffff
+  classDef decision fill:#880E4F,stroke:#F48FB1,color:#ffffff
 
   %% ── 主流程（PM 語彙）──
 
