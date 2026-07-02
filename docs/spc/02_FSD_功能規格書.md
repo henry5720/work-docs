@@ -42,29 +42,29 @@ graph TD
     Files --> FileSettings[Settings]
 ```
 
-### 1.5 前端頁面元件清單
+### 1.5 前端頁面路由與功能
 
-| 路由 | 頁面元件 | 功能說明 |
-| :--- | :--- | :--- |
-| `/spc` | Navigate | 重新導向至 `/spc/dictionary` |
-| `/spc/dictionary` | DictionaryPage | 辭庫總覽頁面 |
-| `/spc/dictionary/product` | ProductListPage | 產品列表管理 |
-| `/spc/dictionary/product/bulk-add` | ProductBulkAddPage | 產品批量新增 |
-| `/spc/dictionary/station` | StationListPage | 站台列表管理 |
-| `/spc/dictionary/group` | GroupListPage | 群組列表管理 |
-| `/spc/dictionary/unit` | UnitListPage | 單位列表管理 |
-| `/spc/dictionary/level` | LevelListPage | 等級基準管理 |
-| `/spc/dictionary/standard` | StandardListPage | 檢驗標準管理 |
-| `/spc/dictionary/file-group` | FileGroupListPage | 檔案群組管理 |
-| `/spc/files/measurement-value` | Measurement-value files | 量測值檔案列表 |
-| `/spc/files/measurement-value/samples` | SamplesPage | 樣本資料檢視/編輯 |
-| `/spc/files/measurement-value/import` | ImportPage | Excel/CSV 匯入 |
-| `/spc/files/measurement-value/settings` | SettingsPage | 檔案設定 |
-| `/spc/analysis` | AnalysisPage | SPC 分析工具 |
-| `/spc/export` | ExportPage | 匯出報表 |
-| `/spc/exceptions` | ExceptionsPage | 異常彙總 |
-| `/spc/usage` | UsagePage | 使用紀錄 |
-| `/spc/monitor` | MonitorPage | 即時監控看板 |
+| 路由 | 功能說明 |
+| :--- | :--- |
+| `/spc` | 重新導向至辭庫總覽 |
+| `/spc/dictionary` | 辭庫總覽頁面 |
+| `/spc/dictionary/product` | 產品列表管理 |
+| `/spc/dictionary/product/bulk-add` | 產品批量新增 |
+| `/spc/dictionary/station` | 站台列表管理 |
+| `/spc/dictionary/group` | 群組列表管理 |
+| `/spc/dictionary/unit` | 單位列表管理 |
+| `/spc/dictionary/level` | 等級基準管理 |
+| `/spc/dictionary/standard` | 檢驗標準管理 |
+| `/spc/dictionary/file-group` | 檔案群組管理 |
+| `/spc/files/measurement-value` | 量測值檔案列表 |
+| `/spc/files/measurement-value/samples` | 樣本資料檢視/編輯 |
+| `/spc/files/measurement-value/import` | Excel/CSV 匯入 |
+| `/spc/files/measurement-value/settings` | 檔案設定 |
+| `/spc/analysis` | SPC 分析工具 |
+| `/spc/export` | 匯出報表 |
+| `/spc/exceptions` | 異常彙總 |
+| `/spc/usage` | 使用紀錄 |
+| `/spc/monitor` | 即時監控看板 |
 
 ---
 
@@ -100,109 +100,61 @@ sequenceDiagram
 
 ---
 
-## 2.3 前端 API Hooks 結構
+## 2.3 前端資料存取與載入機制
 
-### 2.3.1 資料取得 Hooks
-| Hook |用途 |
-| :--- | :--- |
-| `useSPCFileData` | 檔案 + 樣本資料 |
-| `useFileList` | 檔案列表（過濾） |
-| `useFileListLazy` | 延遲載入檔案列表 |
-| `useFileListHybrid` | 混合模式載入 |
-| `useSPCFileGroupData` | 檔案群組資料 |
-| `useSPCProductData` | 產品資料 |
-| `useSPCStationData` | 站台資料 |
-| `useSPCUnitData` | 單位資料 |
-| `useSPCSamplesData` | 樣本資料 |
-| `useSPCSamplesInfiniteData` | 無限滾動樣本 |
-| `useSPCGroupListData` | 群組列表 |
-| `useSPCPlanData` | 計畫資料 |
-| `useSPCLevelData` | 等級資料 |
-| `useSPCNelsonRulesData` | Nelson Rules 資料 |
-| `useSPCDictionarySidebar` | 辭庫側邊欄 |
-| `useSPCFieldManagement` | 欄位管理 |
-| `useSPCFileGroupFieldManagement` | 檔案群組欄位管理 |
-| `useFetchPlanDetail` | 取得計畫詳情 |
-| `useStratificationData` | 層化資料 |
-| `useAnalysisData` | 分析資料 |
-| `useRecommendedLimits` | 推薦限制 |
-| `useSimpleFormatImportData` | 簡易格式匯入資料 |
+前端以 React 搭配資料取得層（data-fetching）向後端 REST API 讀寫資料，並以快取與分頁機制支撐大量樣本的效能。功能上分為三類：
 
-### 2.3.2 匯入 Hooks
-| Hook | 用途 |
-| :--- | :--- |
-| `useImportV2` | 新版匯入 |
-| `useExistingPlansForImport` | 現有計畫匯入 |
-| `useResolveImportDictionary` | 匯入辭庫解析 |
+- **資料讀取**：載入計畫（含管制項目與各項設定）、辭庫資料（產品、站台、單位、群組、等級、檢驗標準）、檔案與樣本清單，以及分析所需的層化資料、統計摘要與能力分析的建議界限。
+  - **列表載入策略**：檔案/樣本清單支援「過濾查詢」、「延遲載入」與「混合模式」；大量樣本採**無限滾動**分批取回，避免一次載入全部資料。
+- **匯入流程**：支援新版匯入流程、對應到既有計畫的匯入，以及匯入時的辭庫（層別/單位等）解析與比對。
+- **資料表運算**：提供樞紐分析、統計彙總，以及 Excel 匯入/匯出的前端處理。
 
-### 2.3.3 資料表 Hooks
-| Hook | 用途 |
-| :--- | :--- |
-| `useSPCPivotTable` | 樞紐分析表 |
-| `useSPCStatistics` | 統計資料 |
-| `useSPCExcelIO` | Excel 匯入/匯出 |
+> 上述皆為前端呼叫 §4.3 / [08 API 規格文件](./08_API_規格與用法說明.md) 所列端點後的資料組裝與呈現，客戶端對接時以 API 為準。
 
 ---
 
-## 2.4 Zustand Store 狀態管理
+## 2.4 前端狀態管理機制
 
-### 2.4.1 useFileStore 結構
-**路徑**: `stores/useFileStore.js`
+檔案編輯頁採用 Zustand 作為**前端本地狀態**（client-side state），在使用者按下儲存前於瀏覽器暫存草稿，減少往返請求。管理的內容與行為包含：
 
-| 狀態欄位 | 類型 | 說明 |
-| :--- | :--- | :--- |
-| `settings` | Object | 檔案設定 (id, name, part_number, batch_number, spec, station, category_information, controlItems, testRuleConfig) |
-| `selectedControlItemId` | String | 目前選取的管制項目 ID |
-| `isDirty` | Boolean | 未儲存變更標記 |
-| `nextTempId` | Number | 暫時 ID 產生器 |
-
-| 動作 | 說明 |
-| :--- | :--- |
-| `setFileBasicInfo(info)` | 設定基本檔案資訊 |
-| `addControlItem(name)` | 新增管制項目 |
-| `updateControlItem(id, updates)` | 更新管制項目 |
-| `deleteControlItem(id)` | 刪除管制項目 |
-| `reorderControlItems(from, to)` | 重新排序管制項目 |
-| `setCategories(dimensions)` | 設定維度類別 |
-| `setSelectedControlItemId(id)` | 選取管制項目 |
-| `reset()` | 完全重設 |
-| `resetSettings()` | 重設設定 |
-| `loadFileDataToStore(fileId)` | 從 API 載入資料 |
+- **檔案基本設定**：名稱、料號、批號、規格、站別、層別資訊等（對應建立/更新 CCM 的欄位）。
+- **管制項目編輯**：新增、更新、刪除、重新排序管制項目，並可設定層別維度與目前選取的項目。
+- **未儲存變更追蹤**：以「dirty」標記提示尚未儲存的變更；新建立但未落庫的項目使用臨時識別碼，儲存後再由後端配發正式 ID。
+- **載入與重設**：可從 API 載入既有檔案資料至本地狀態，或完全重設/重設設定。
 
 ---
 
 ## 2.5 常數定義
 
 ### 2.5.1 檔案類型
-```javascript
-FILE_TYPES = {
-  MEASUREMENT_VALUE: 'measurement-value',
-  COUNT_VALUE: 'count-value',
-  MERGED: 'merged'
-}
-```
+
+| 值 | 說明 |
+| :--- | :--- |
+| `measurement-value` | 計量值檔案（本文件對接對象） |
+| `count-value` | 計數值檔案 |
+| `merged` | 合併檔案 |
 
 ### 2.5.2 辭庫類型
-```javascript
-DICTIONARY_TYPES = {
-  PRODUCT: 'product',
-  STATION: 'station',
-  GROUP: 'group',
-  UNIT: 'unit',
-  LEVEL: 'level',
-  STANDARD: 'standard',
-  FILE_GROUP: 'fileGroup'
-}
-```
+
+| 值 | 說明 |
+| :--- | :--- |
+| `product` | 產品 |
+| `station` | 站台 |
+| `group` | 群組 |
+| `unit` | 單位 |
+| `level` | 等級 |
+| `standard` | 檢驗標準 |
+| `fileGroup` | 檔案群組 |
 
 ### 2.5.3 管制圖類型
-```javascript
-CONTROL_CHART_TYPES = {
-  X_BAR_MR: { value: 'x_bar_mr', label: 'X̄-MR', subgroupRange: { min: 1, max: 1 } },
-  X_BAR_R: { value: 'x_bar_r', label: 'X̄-R', subgroupRange: { min: 2, max: 10 } },
-  X_BAR_S: { value: 'x_bar_s', label: 'X̄-S', subgroupRange: { min: 11, max: Infinity } }
-}
-```
+
+| 值 | 標籤 | 子組大小 (n) |
+| :--- | :--- | :--- |
+| `x_bar_mr` | X̄-MR | n = 1 |
+| `x_bar_r` | X̄-R | 2 ≤ n ≤ 10 |
+| `x_bar_s` | X̄-S | n > 10 |
+
+> 與 [09 JSON 格式規範](./09_JSON_格式規範.md) 的 `chart_type` 列舉一致。
 
 ---
 
@@ -224,79 +176,36 @@ CONTROL_CHART_TYPES = {
 
 ---
 
-## 5. 分析頁面元件明細
+## 5. 分析頁面功能組成
 
-### 5.1 分析頁面元件
-| 元件 | 路徑 | 說明 |
-| :--- | :--- | :--- |
-| `AnalysisPage` | `pages/analysis/AnalysisPage.jsx` | 分析主頁面 |
-| `AnalysisSidebar` | `pages/analysis/components/AnalysisSidebar.jsx` | 分析側邊欄 |
-| `StatisticsSummary` | `pages/analysis/components/StatisticsSummary.jsx` | 統計摘要 |
-| `DatasetBlock` | `pages/analysis/components/DatasetBlock.jsx` | 資料集區塊 |
-| `ControlChartsSection` | `pages/analysis/components/ControlChartsSection.jsx` | 管制圖區塊 |
-| `DataTableSection` | `pages/analysis/components/DataTableSection.jsx` | 資料表區塊 |
-| `StratificationBarChart` | `pages/analysis/components/StratificationBarChart.jsx` | 層化長條圖 |
+### 5.1 分析頁面版面
 
-### 5.2 圖表建構器
-| 檔案 | 圖表類型 |
-| :--- | :--- |
-| `controlChart.js` | 管制圖 |
-| `histogram.js` | 直方圖 |
-| `boxPlot.js` | 箱線圖 |
-| `scatter.js` | 散佈圖 |
-| `stratification.js` | 層化圖 |
+分析頁面由以下功能區塊組成：
 
-### 5.3 共用組件
-| 組件 | 路徑 |
-| :--- | :--- |
-| `SPCLayout` | `components/layout/SPCLayout.jsx` |
-| `SPCPageLayout` | `components/layout/SPCPageLayout.jsx` |
-| `SPCPageLayoutWithMenu` | `components/layout/SPCPageLayoutWithMenu.jsx` |
-| `SPCFieldSettings` | `components/sidebar/SPCFieldSettings.jsx` |
-| `SPCDictionaryForm` | `components/sidebar/SPCDictionaryForm.jsx` |
-| `SPCDetailView` | `components/sidebar/SPCDetailView.jsx` |
-| `SPCLevelForm` | `components/sidebar/SPCLevelForm.jsx` |
-| `SPCFilesTab` | `components/tabs/SPCFilesTab.jsx` |
-| `SPCDictionaryTab` | `components/tabs/SPCDictionaryTab.jsx` |
-| `SPCMonitorTab` | `components/tabs/SPCMonitorTab.jsx` |
-| `SPCAnalysisTab` | `components/tabs/SPCAnalysisTab.jsx` |
-| `SPCExportTab` | `components/tabs/SPCExportTab.jsx` |
-| `SPCExceptionsTab` | `components/tabs/SPCExceptionsTab.jsx` |
-| `SPCUsageTab` | `components/tabs/SPCUsageTab.jsx` |
-| `DataTable` | `components/DataTable/DataTable.jsx` |
-| `DataTableContent` | `components/DataTable/components/DataTableContent.jsx` |
-| `DataTableSummary` | `components/DataTable/components/DataTableSummary.jsx` |
-| `DataTableActions` | `components/DataTable/components/DataTableActions.jsx` |
-| `ControlChart` | `components/ControlChart.jsx` |
-| `ChartLimitBlock` | `components/ChartLimitBlock.jsx` |
-| `SPCGroupSelect` | `components/SPCGroupSelect.jsx` |
-| `SPCItemSelect` | `components/SPCItemSelect.jsx` |
-| `SPCUnitSelect` | `components/SPCUnitSelect.jsx` |
-| `InfoCard` | `components/InfoCard.jsx` |
-| `SPCEmptyState` | `components/SPCEmptyState.jsx` |
-| `SPCTabNav` | `components/SPCTabNav.jsx` |
-| `DraggableItemList` | `components/DraggableItemList.jsx` |
-| `InlineConfirmShell` | `components/InlineConfirmShell.jsx` |
-| `DictionarySelect` | `components/DictionarySelect.jsx` |
-| `AddNewValueModal` | `components/AddNewValueModal.jsx` |
-| `AddNewUnitModal` | `components/AddNewUnitModal.jsx` |
+- **分析側邊欄**：選擇計畫、管制項目與層別維度，設定分析條件。
+- **統計摘要**：顯示樣本數、平均值、標準差與能力指標（Cp/Cpk/Pp/Ppk）等彙總。
+- **資料集區塊**：呈現目前分析所使用的樣本集與篩選條件。
+- **管制圖區塊**：繪製 X̄-MR / X̄-R / X̄-S 管制圖，並標記異常點。
+- **資料表區塊**：以表格檢視樣本明細，支援虛擬滾動。
+- **層化長條圖**：以長條圖比較不同層別（如機台、班別）的變異或指標差異。
+
+### 5.2 圖表類型
+
+分析與監控頁面提供的圖表類型：管制圖、直方圖、箱線圖、散佈圖、層化圖。管制圖採 Canvas 繪製以支撐大量點位的效能。
+
+### 5.3 共用 UI 能力
+
+跨頁面共用的介面能力包含：頁面版面與分頁導覽、辭庫/單位/項目/群組的下拉選擇器、管制界限設定區塊、欄位設定與表單、可拖曳排序清單、行內確認、新增值/單位彈窗、資料表（含彙總與操作列）、空狀態與資訊卡等。
 
 ---
 
 ## 6. 異常原因統計功能 (Pareto)
 
-### 6.1 取樣警报查詢
+### 6.1 取樣警報查詢
 
-後端 sample-alerts 端點僅支援分頁與 `alert_type` 過濾（**無** `groupBy`/`reason` 參數）；Pareto 原因統計需由前端取回警報後，依 `alert_type`／`rule_number`／`description` 自行彙整。
+警報查詢由後端 sample-alerts 端點提供，僅支援**分頁**（`offset`/`limit`/`order`）與依 `alert_type`（`nelson_rule` / `alarm_limit`，不帶則回全部）過濾；**不提供** `groupBy` / `reason` 之類的分組參數。
 
-```javascript
-// 依警報類型過濾查詢 (實際支援參數: offset / limit / order / alert_type)
-const { data: alerts } = useSPCSampleAlerts({
-  ccmId: selectedCcmId,
-  entityId: selectedEntityId,
-  alert_type: 'nelson_rule'  // 或 'alarm_limit'；不帶則回全部
-});
-```
+因此 Pareto 原因統計採用「前端彙整」機制：取回警報後，前端依 `alert_type`、`rule_number`（Nelson 法則編號）與 `description` 自行分組與計次，再繪製長條圖。
 
 ### 6.2 警报類型
 | alert_type | 說明 |
