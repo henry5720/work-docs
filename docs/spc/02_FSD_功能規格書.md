@@ -77,6 +77,9 @@ graph TD
   3. **預期結果**: 管制圖以「疊圖」形式呈現，兩條曲線分別代表不同機台的變異狀況。
 
 ### 2.2 異常閉環流程 (Alert Closure)
+
+> **⚠️ [部分 UI 預留]**：後端 sample-alerts 端點目前**僅提供查詢**（`GET .../sample-alerts` 與 `.../sample-alerts/count`），**無**關閉/確認（close/ack）端點，警報物件亦**無** `reason`／`status`／對策 等欄位。下圖中「選擇異常原因 → 填寫對策 → Status: Closed」為**前端本地狀態流程**，尚無後端 API 支撐。
+
 ```mermaid
 sequenceDiagram
     participant S as 數據源 (Sample)
@@ -88,10 +91,10 @@ sequenceDiagram
     E->>E: 觸發 Nelson Rules 檢測
     alt 發現異常
         E->>U: 標記異常點 (紅色)
-        E->>A: 發送 Webhook 告警
+        E->>A: 發送 Chatroom 通知 (chatroom_ids)
+        Note over A,U: 以下為前端本地流程 (UI 預留，無後端 API)
         A->>U: 點擊點位 -> 彈出 Modal -> 選擇異常原因 -> 填寫對策
-        U->>E: 儲存對策 (Status: Closed)
-        U->>U: 點位圖示更換 (帶有對策標記)
+        U->>U: 前端本地標記為 Closed 並更換點位圖示
     end
 ```
 
@@ -282,12 +285,16 @@ CONTROL_CHART_TYPES = {
 
 ## 6. 異常原因統計功能 (Pareto)
 
-### 6.1 取樣警报 Hook
+### 6.1 取樣警报查詢
+
+後端 sample-alerts 端點僅支援分頁與 `alert_type` 過濾（**無** `groupBy`/`reason` 參數）；Pareto 原因統計需由前端取回警報後，依 `alert_type`／`rule_number`／`description` 自行彙整。
+
 ```javascript
-// 異常原因統計查詢範例
+// 依警報類型過濾查詢 (實際支援參數: offset / limit / order / alert_type)
 const { data: alerts } = useSPCSampleAlerts({
+  ccmId: selectedCcmId,
   entityId: selectedEntityId,
-  groupBy: 'reason'  // 按原因分組
+  alert_type: 'nelson_rule'  // 或 'alarm_limit'；不帶則回全部
 });
 ```
 
@@ -297,13 +304,16 @@ const { data: alerts } = useSPCSampleAlerts({
 | `nelson_rule` | Nelson Rules 偵測異常 |
 | `alarm_limit` | 超過管制界限 |
 
-### 6.3 異常關閉流程
+### 6.3 異常關閉流程 [UI 預留]
+
+> **⚠️ [UI 預留]**：後端目前無警報關閉/確認端點，警報物件亦無原因/對策/狀態欄位。下列「選擇原因 → 填寫對策 → 儲存封閉狀態」為**前端本地流程**，尚無後端 API 支撐（詳見 §2.2 說明）。
+
 ```mermaid
 flowchart TD
     A[偵測異常] --> B{使用者確認?}
     B -->|Yes| C[選擇異常原因]
     C --> D[填寫改善對策]
-    D --> E[儲存封閉狀態]
+    D --> E[前端本地標記封閉狀態]
     E --> F[更新 UI 圖示]
     B -->|No| G[持續監控]
 ```

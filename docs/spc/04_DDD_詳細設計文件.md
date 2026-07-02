@@ -50,16 +50,23 @@
 | **Rule 8** | 混合模式 | N 點在 ±1σ 外兩側 | 檢查母體混合 |
 
 ### 2.2 設定格式
-| 規則欄位 | 格式 | 範例 |
-| :--- | :--- | :--- |
-| `nelson_rules_1` | `N` | `1` → 1點超出 3σ |
-| `nelson_rules_2` | `N,side` | `9,both` → 9點在同側 |
-| `nelson_rules_3` | `N,side` | `6,upper` → 6點上升 |
-| `nelson_rules_4` | `N` | `14` → 14點交替 |
-| `nelson_rules_5` | `M,N` | `2,3` → 3點中2點超出 2σ |
-| `nelson_rules_6` | `M,N` | `4,5` → 5點中4點超出 1σ |
-| `nelson_rules_7` | `N` | `15` → 15點在 1σ 內 |
-| `nelson_rules_8` | `N` | `8` → 8點在 1σ 外 |
+
+API 契約中每條規則為**結構化物件**（未設定則為 `null` 表示停用），透過 `POST/PUT /{ccm_id}/nelson-rules` 傳遞：
+
+| 規則欄位 | 物件格式 | 範例 (JSON) | 預設值 |
+| :--- | :--- | :--- | :--- |
+| `nelson_rules_1` | `{ n }` | `{"n": 1}` → 1點超出 3σ | N=1 |
+| `nelson_rules_2` | `{ n, side }` | `{"n": 9, "side": "both"}` → 9點在同側 | N=9, side=both |
+| `nelson_rules_3` | `{ n, side }` | `{"n": 6, "side": "upper"}` → 6點上升 | N=6, side=both |
+| `nelson_rules_4` | `{ n }` | `{"n": 14}` → 14點交替 | N=14 |
+| `nelson_rules_5` | `{ m, n }` | `{"m": 2, "n": 3}` → 3點中2點超出 2σ | M=2, N=3 |
+| `nelson_rules_6` | `{ m, n }` | `{"m": 4, "n": 5}` → 5點中4點超出 1σ | M=4, N=5 |
+| `nelson_rules_7` | `{ n }` | `{"n": 15}` → 15點在 1σ 內 | N=15 |
+| `nelson_rules_8` | `{ n }` | `{"n": 8}` → 8點在 1σ 外 | N=8 |
+
+其中 `side` 為 `both` / `upper` / `lower`（`NelsonRuleSide`）。
+
+> **內部儲存格式**：後端資料表以逗號分隔字串儲存（如 `"9,both"`、`"2,3"`），由 API 層負責與上述結構化物件互轉；整合對接時一律使用結構化物件。
 
 ### 2.3 偵測函數實作
 
@@ -199,19 +206,19 @@ $$C_p = \frac{USL - LSL}{6\sigma_{within}}$$
 - σ_within 根據圖表類型計算
 
 #### Ca (Capability Accuracy)
-$$C_a = frac{X̄ - M}{(USL - LSL) / 2}$$
+$$C_a = \frac{X̄ - M}{(USL - LSL) / 2}$$
 其中 $M = (USL + LSL) / 2$ (規格中心)
 
 - 正值表示製程偏向上限
 - 負值表示製程偏向下限
 
 #### CPU (Upper Process Capability Index)
-$$C_{PU} = frac{USL - X̄}{3\sigma_{within}}$$
+$$C_{PU} = \frac{USL - X̄}{3\sigma_{within}}$$
 
 - 用於單邊上限公差 (USL only)
 
 #### CPL (Lower Process Capability Index)
-$$C_{PL} = frac{X̄ - LSL}{3\sigma_{within}}$$
+$$C_{PL} = \frac{X̄ - LSL}{3\sigma_{within}}$$
 
 - 用於單邊下限公差 (LSL only)
 
@@ -279,41 +286,41 @@ def cpk(self) -> float | None:
 ## 4. 推薦限制計算 (Recommended Limits)
 
 ### 4.1 反向 Capability 計算
-給定目標 Cpk 值，推算所需的 USL/LSL：
+給定目標能力指數（`target_index` 可為 `cp` / `cpk` / `pp` / `ppk`）與目標值，推算所需的 USL/LSL（以製程平均值置中）：
 
-$$USL = X̄ + 3σ \times Cpk$$
-$$LSL = X̄ - 3σ \times Cpk$$
+$$USL = μ + 3σ \times target\_value$$
+$$LSL = μ - 3σ \times target\_value$$
+$$CL = μ$$
+
+- 目標為 `cp` / `cpk` 時，σ 採 **σ_within**；目標為 `pp` / `ppk` 時，σ 採 **σ_overall**。
+- 置中於製程平均值可使 Ca ≈ 0，因此 Cpk ≈ Cp（Ppk ≈ Pp）。
 
 ### 4.2 後端實現
 
 ```python
 def compute_recommended_limits(
-    target_cpk: float,
-    current_mean: float,
-    sigma: float,
-    is_upper_only: bool = False,
-    is_lower_only: bool = False
+    target_index: str,      # "cp" | "cpk" | "pp" | "ppk"
+    target_value: float,
+    overall_mean: float,
+    sigma_within: float,
+    sigma_overall: float,
 ) -> dict:
-    """根據目標 Cpk 計算推薦的 USL/LSL"""
-    if is_upper_only:
-        limits = {
-            "ucl": current_mean + 3 * sigma * target_cpk,
-            "lcl": None,
-            "cl": current_mean
-        }
-    elif is_lower_only:
-        limits = {
-            "ucl": None,
-            "lcl": current_mean - 3 * sigma * target_cpk,
-            "cl": current_mean
-        }
-    else:
-        limits = {
-            "ucl": current_mean + 3 * sigma * target_cpk,
-            "lcl": current_mean - 3 * sigma * target_cpk,
-            "cl": current_mean
-        }
-    return limits
+    """
+    反向能力分析：給定目標指數與目標值，計算推薦的 UCL/LCL/CL（以製程平均值置中）。
+    - cp/cpk 目標 → 使用 sigma_within
+    - pp/ppk 目標 → 使用 sigma_overall
+    """
+    if target_index in ("cp", "cpk"):
+        sigma = sigma_within
+    else:  # pp, ppk
+        sigma = sigma_overall
+
+    half_width = 3 * sigma * target_value
+    return {
+        "recommended_ucl": overall_mean + half_width,
+        "recommended_lcl": overall_mean - half_width,
+        "recommended_cl": overall_mean,
+    }
 ```
 
 ---
@@ -323,10 +330,6 @@ def compute_recommended_limits(
 ### 5.1 層化篩選 (Stratification SQL)
 - **邏輯**: 利用 MySQL 8.0 `JSON_TABLE` 或 `JSON_EXTRACT` 提取 `category_information`。
 - **範例**: `SELECT samples FROM quant_ccm_entity_samples WHERE JSON_UNQUOTE(category_information->'$.machine') = 'M01'`。
-
-### 5.2 趨勢檢測預警 (Trend Logic)
-- **檢測窗口**: 取最後 50 點。
-- **演算法**: 計算標準差的斜率。若 $\Delta \sigma / \Delta t > \text{threshold}$，則在 UI 的分析工具欄位觸發「變異擴大警告」。
 
 ---
 
@@ -424,14 +427,7 @@ const useFileStore = create((set, get) => ({
 
 ## 7. 辭庫關聯實作細節
 
-### 7.1 檔案群組與 CCM 關聯
-- 採用中間表 `CCM_Group_Association`。
-- 支援「一個計畫屬於多個群組」的虛擬分類邏輯。
-
-### 7.2 檢驗標準關聯
-- 資料庫欄位 `standard_meta` (JSON)，儲存文件 ID、頁碼與對應的規格描述。
-
-### 7.3 取樣資料 Event Listener
+### 7.1 取樣資料 Event Listener
 
 ```python
 @event.listens_for(QuantitativeCCMEntitySample, "before_insert")

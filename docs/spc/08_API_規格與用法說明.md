@@ -11,21 +11,21 @@
 
 ## 1.1 資源列表
 
-| # | Resource（資源）| 檔案 | 功能說明 |
-| :--- | :--- | :--- | :--- |
-| 1 | **Control Plans 管制計畫** | ccm.py | 建立、管理 SPC 檔案（名稱、料號、批號、站別、層別資訊） |
-| 2 | **Entities 管制項目** | entities.py | 管制項目（如厚度、長度）及其排序 |
-| 3 | **Chart Settings 管制圖設定** | chart_settings.py | 管制圖類型（X̄-R/X̄-S/X̄-MR）與界限（含能力指標） |
-| 4 | **Sampling Settings 抽樣設定** | sampling_settings.py | 樣本數、精度、抽樣頻率、方法 |
-| 5 | **Alert Settings 警示設定** | alert_settings.py | Ca/Cp/Cpk 臨界值與警示界限 |
-| 6 | **Samples 抽樣資料** | samples.py | 樣本 CRUD、批量建立、計數、層別值 |
-| 7 | **Capability 能力分析** | samples.py | 依篩選集計算 Cp/Cpk/Pp/Ppk 與建議界限 |
-| 8 | **Sample Alerts 樣本警報紀錄** | sample_alerts.py | 查詢已觸發警報（Nelson Rules、界限超標）與計數 |
-| 9 | **Nelson Rules Settings 尼爾森法則** | nelson_rules.py | 8 種法則啟閉與參數 |
-| 10 | **All-in-One 批量匯入** | all_in_one.py | 自動化一鍵匯入與規格比對預覽 |
-| 11 | **Export 匯出** | export.py | Excel 匯出（v1 / v2） |
-| 12 | **Import Presets 匯入預設** | import_presets.py | 匯入預設設定（命名鍵、綁定站別、預設界限等） |
-| 13 | **Permissions 權限** | permissions.py | SPC 角色權限查詢與管理 |
+| # | Resource（資源）| 功能說明 |
+| :--- | :--- | :--- |
+| 1 | **Control Plans 管制計畫** | 建立、管理 SPC 檔案（名稱、料號、批號、站別、層別資訊） |
+| 2 | **Entities 管制項目** | 管制項目（如厚度、長度）及其排序 |
+| 3 | **Chart Settings 管制圖設定** | 管制圖類型（X̄-R/X̄-S/X̄-MR）與界限（含能力指標） |
+| 4 | **Sampling Settings 抽樣設定** | 樣本數、精度、抽樣頻率、方法 |
+| 5 | **Alert Settings 警示設定** | Ca/Cp/Cpk 臨界值與警示界限 |
+| 6 | **Samples 抽樣資料** | 樣本 CRUD、批量建立、計數、層別值 |
+| 7 | **Capability 能力分析** | 依篩選集計算 Cp/Cpk/Pp/Ppk 與建議界限 |
+| 8 | **Sample Alerts 樣本警報紀錄** | 查詢已觸發警報（Nelson Rules、界限超標）與計數 |
+| 9 | **Nelson Rules Settings 尼爾森法則** | 8 種法則啟閉與參數 |
+| 10 | **All-in-One 批量匯入** | 自動化一鍵匯入與規格比對預覽 |
+| 11 | **Export 匯出** | Excel 匯出（v1 / v2） |
+| 12 | **Import Presets 匯入預設** | 匯入預設設定（命名鍵、綁定站別、預設界限等） |
+| 13 | **Permissions 權限** | SPC 角色權限查詢與管理 |
 
 ## 1.2 資源層級
 

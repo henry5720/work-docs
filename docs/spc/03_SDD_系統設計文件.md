@@ -144,10 +144,10 @@ erDiagram
 ## 3. 背景任務與任務狀態機
 
 ### 3.1 Redis 任務狀態定義
-所有長耗時分析任務（如層化分析、批量匯入）均透過 Redis 管理：
-- **Key**: `task:{type}:{id}`
+目前僅 **all-in-one 批量匯入** 採用非同步任務（回傳 `202 Accepted` + 輪詢）；層化分析與能力分析皆為同步端點，不經 Redis 任務管理。
+- **Key**: `all_in_one_task:{tenant_id}:{task_id}`
 - **Status**: `pending` -> `processing` -> `completed` | `failed`
-- **TTL**: 任務完成後保留 3600 秒供前端輪詢。
+- **TTL**: 每次寫入均以 `SETEX` 設定 3600 秒，供前端輪詢 `GET /all-in-one/{task_id}`。
 
 ### 3.2 任務流程圖
 ```mermaid
@@ -165,6 +165,8 @@ stateDiagram-v2
 ## 4. 安全性與租戶隔離
 
 ### 4.1 認證流程
+> **重點**：SPC 系統本身不簽發 token。使用者持 TeamSync 簽發的 Bearer Token（效期預設 15 分鐘）呼叫 SPC；SPC 透過 `GET {AUTH_HOST}/private/user/me` 向 AuthHost 驗證，並將使用者資訊快取於 Redis（key: `auth:token:{token}`，TTL 5 分鐘）。
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -190,10 +192,10 @@ sequenceDiagram
 | `X-ADMIN-TOKEN` | 管理 API | Admin |
 | `X-SUPER-ADMIN-TOKEN` | 超級管理 API | Super Admin |
 
-### 4.3 租戶隔離實作
-- **Middleware**: 在 FastAPI 層實作 `TenantMiddleware`。
-- **隔離邏輯**: 透過 SQLAlchemy `before_compile` 攔截器，自動為所有查詢語句掛載 `WHERE tenant_id = :tenant_id`。
-- **稽核日誌 (Audit Trail)**: 建立單獨的 `audit_logs` 表，記錄辭庫（如等級基準、檢驗標準）的每一次異動。
+### 4.3 租戶與部門隔離實作
+- **Middleware**: 應用層唯一註冊的 middleware 是 `CORSMiddleware`（無自訂 TenantMiddleware）。
+- **隔離邏輯**: 各資料表帶有 `tenant_id` / `department_id` 欄位（見 `models/quant_ccm.py`），認證時由 `TSUserInfo.obtain_tenant_id()` 解析租戶，查詢時於各 CRUD/router 顯式過濾（非自動 SQL 攔截）。
+- **SPC 權限模型**: 另有使用者層級的 SPC 角色與部門級資料隔離，透過 `/permissions`、`/permissions/me` 端點管理，欄位包含 `SPCPermissionRole`、`can_manage_permissions`、`can_read_all_departments`。
 
 ### 4.4 環境變數配置
 
@@ -214,17 +216,15 @@ sequenceDiagram
 
 ### 5.1 SQLAlchemy 連線参数
 ```python
-# 標準配置
-pool_size = 5          # 最小連線數
-max_overflow = 10        # 最大溢出自連線數
-pool_timeout = 30        # 連線逾時秒數
-pool_recycle = 3600     # 連線回收秒數
-echo = False            # SQL 日誌開關
+# 實際預設值（皆可由環境變數覆寫）
+pool_size = 20          # DB_POOL_SIZE，最小連線數
+max_overflow = 30       # DB_MAX_OVERFLOW，最大溢出連線數
+pool_recycle = 600      # DB_POOL_RECYCLE，連線回收秒數（在 RDS idle 關閉前回收）
 ```
 
 ### 5.2 連線池監控
-- **、健康檢查**: `/health` 端點會驗證 DB 和 Redis 連線
-- **自動建立資料庫**: 若不存在則自動建立 `spc_db`
+- **健康檢查**: `/health` 端點僅執行 `SELECT 1` 與 `redis.ping()` 驗證 DB／Redis 連線，成功回 `{"status": "ok"}`，失敗回 503。**不會**自動建立資料庫。
+- **資料庫初始化**: `create_database_if_not_exists()` 於模組載入時及 `/db` 管理路由執行，與 `/health` 無關。
 
 ---
 
@@ -267,15 +267,9 @@ flowchart TD
 - **警報條件**: 超過設定的 Ca/Cp/Cpk 閾值
 
 ### 7.3 notify_chatroom() 規格
+`notify_chatroom` 僅接受 `title` / `content`，透過 HTTP POST 到 `{AUTH_HOST}/root/notify/{chatroom_id}?dry_run=false`（帶 `X-ADMIN-TOKEN` header）發送通知。告警內容（規則編號、料號、批號等）由上游 `_send_nelson_violation_notification()` 組裝成 `title`/`content` 後再呼叫此函式。
+
 ```python
-def notify_chatroom(
-    chatroom_id: str,
-    ccm_name: str,
-    part_number: str,
-    batch_number: str,
-    characteristic_name: str,
-    rule_number: int,
-    rule_description: str,
-):
-    """傳送告警到指定的 Chatroom"""
+def notify_chatroom(chatroom_id: str, title: str, content: str):
+    """POST 到 {AUTH_HOST}/root/notify/{chatroom_id}，回傳是否成功 (status 200)"""
 ```

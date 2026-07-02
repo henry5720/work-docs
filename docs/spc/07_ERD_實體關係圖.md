@@ -14,8 +14,13 @@
 | **QUANT_NELSON_RULES_SETTINGS** | **Nelson Rules 設定表** | 針對特定計畫啟用的異常判定規則 (Rule 1-8)。 |
 | **QUANT_CCM_CHART_SETTINGS** | **管制圖配置表** | 定義項目使用的管制圖類型（X-bar R 等）與子組大小。 |
 | **QUANT_CCM_CHART_LIMITS** | **管制界限/規格表** | 儲存計算出的 UCL/LSL 管制界限與 USL/LSL 規格界限。 |
+| **QUANT_CCM_SAMPLING_SETTINGS** | **抽樣設定表** | 每個項目的抽樣數、精度、頻率與方法。 |
+| **QUANT_CCM_ALERT_SETTINGS** | **指標警報閾值表** | 每個項目的 Ca/Cp/Cpk 等指標警報觸發閾值。 |
 | **QUANT_CCM_ENTITY_SAMPLES** | **樣本量測數據表** | 實際收集到的數據點，與項目關聯。 |
 | **QUANT_CCM_SAMPLE_ALERTS** | **異常警報紀錄表** | 當數據違反規則或超出界限時，產生的警報紀錄。 |
+| **QUANT_CCM_IMPORT_PRESETS** | **匯入預設設定表** | 匯入 UI 使用的命名規則、綁定站別/聊天室、預設界限。 |
+| **STATIONS** | **工站主檔** | 租戶下的工站清單，供 Import Preset 綁定與匯入比對。 |
+| **SPC_USER_PERMISSIONS** | **SPC 使用者權限表** | 使用者於租戶下的 SPC 角色（配合部門級資料隔離）。 |
 
 ## 2. ERD 關聯圖 (Mermaid)
 
@@ -33,7 +38,14 @@ erDiagram
     
     QUANT_CCM_CHART_SETTINGS ||--o{ QUANT_CCM_CHART_LIMITS : "設定界限 (sets)"
     QUANT_CCM_ENTITY_SAMPLES ||--o{ QUANT_CCM_SAMPLE_ALERTS : "觸發警報 (triggers)"
+
+    TENANTS ||--o{ STATIONS : "擁有 (owns)"
+    TENANTS ||--o{ QUANT_CCM_IMPORT_PRESETS : "擁有 (owns)"
+    TENANTS ||--o{ SPC_USER_PERMISSIONS : "授予角色 (grants)"
+    STATIONS ||--o{ QUANT_CCM_IMPORT_PRESETS : "綁定 (binds)"
 ```
+
+> **備註**：計畫 (CCM)、項目 (Entity) 與匯入預設皆帶有 `department_id`，用於**部門級資料隔離**。該欄位為**應用層邏輯**判斷，並未在資料庫建立 Foreign Key（無 departments 表），故 ERD 不以關聯線表示。
 
 ## 3. 核心關聯邏輯說明
 
@@ -59,5 +71,13 @@ erDiagram
 | `quant_ccm_entities` | `quant_ccm_id` | `quant_ccms.id` | 識別此檢測項目屬於哪個計畫。 |
 | `quant_nelson_rules_settings` | `quant_ccm_id` | `quant_ccms.id` | 讀取該計畫啟用的 Nelson Rules。 |
 | `quant_ccm_chart_settings` | `quant_ccm_entity_id` | `quant_ccm_entities.id` | 讀取該項目的管制圖配置（如 n=5）。 |
+| `quant_ccm_chart_limits` | `quant_ccm_chart_setting_id` | `quant_ccm_chart_settings.id` | 界限歸屬於哪個管制圖設定。 |
+| `quant_ccm_sampling_settings` | `quant_ccm_entity_id` | `quant_ccm_entities.id` | 抽樣設定歸屬於哪個項目。 |
+| `quant_ccm_alert_settings` | `quant_ccm_entity_id` | `quant_ccm_entities.id` | 指標警報閾值歸屬於哪個項目。 |
 | `quant_ccm_entity_samples` | `quant_ccm_entity_id` | `quant_ccm_entities.id` | 樣本數據歸屬於哪個項目。 |
+| `quant_ccm_sample_alerts` | `quant_ccm_entity_id` | `quant_ccm_entities.id` | 警報歸屬於哪個項目。 |
 | `quant_ccm_sample_alerts` | `quant_ccm_entity_sample_id` | `quant_ccm_entity_samples.id` | 標示警報是由哪一筆數據觸發的。 |
+| `stations` | `tenant_id` | `tenants.id` | 工站屬於哪家公司。 |
+| `quant_ccm_import_presets` | `tenant_id` | `tenants.id` | 匯入預設屬於哪家公司。 |
+| `quant_ccm_import_presets` | `station_id` | `stations.id` | 匯入預設綁定的工站（ON DELETE SET NULL）。 |
+| `spc_user_permissions` | `tenant_id` | `tenants.id` | 權限紀錄屬於哪家公司。 |
