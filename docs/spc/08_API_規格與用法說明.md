@@ -362,7 +362,7 @@ Quantitative CCM（管制計畫）
 | 4 | PUT | `/{ccm_id}/nelson-rules/{setting_id}` | 更新（部分更新；設為 `null` 停用該法則） |
 | 5 | DELETE | `/{ccm_id}/nelson-rules/{setting_id}` | 刪除 |
 
-> **格式（重要）**：每條法則為**結構化物件**（非字串）。未提供或設為 `null` 表示停用該法則。
+> **格式（重要）**：每條法則為**結構化物件**（非字串），**不支援舊版 `N(x):S(y)` 字串格式**。未提供或設為 `null` 表示停用該法則。
 
 **Request**（`CreateQuantNelsonRulesSettingPayload`，各法則皆選填）：
 ```json
@@ -425,8 +425,9 @@ Quantitative CCM（管制計畫）
 > - `characteristic_name`、`station`、`category_information`、`samples` **為必填**（`station` 為新增必填欄）。
 > - `part_number`、`batch_number` 為選填。
 > - `ucl`/`cl`/`lcl` 為選填規格界限，可於匯入時直接帶入。
-> - `samples` 為**字串陣列**（保留位數，如 `"1.250"`）。
-> - `BulkAllInOnePayload.preset_id` 選填；提供時套用該匯入預設（命名鍵等），否則走 `naming=true` 邏輯。
+> - `samples` 為**字串陣列**（保留位數，如 `"1.250"`），至少 1 筆。
+> - `station` 長度 1–128 字元、前後空白會被去除；**恆為必填**。若使用綁定站別的 `preset_id`，該 preset 的站別會**覆寫**此處送出的 `station`。
+> - `BulkAllInOnePayload.preset_id` 選填；提供時套用該匯入預設（命名鍵、綁定站別等），否則走 `naming=true` 邏輯。
 
 **自動圖型判定**：不需指定 chart_type，系統依每筆 `samples` 長度 `n` 自動決定，並自動推斷小數位數。
 

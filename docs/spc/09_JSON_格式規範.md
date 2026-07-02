@@ -198,7 +198,7 @@
 
 ## 2.8 Nelson Rules Settings 尼爾森法則
 
-**建立 (CreateQuantNelsonRulesSettingPayload)** — 各法則為**結構化物件**，未提供或 `null` = 停用。
+**建立 (CreateQuantNelsonRulesSettingPayload)** — 各法則為**結構化物件**（不支援舊版 `N(x):S(y)` 字串格式），未提供或 `null` = 停用。
 
 | 欄位 | 型別 | 參數（預設） |
 | :--- | :--- | :--- |
