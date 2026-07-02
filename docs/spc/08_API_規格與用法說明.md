@@ -579,6 +579,18 @@ Quantitative CCM（管制計畫）
 | `completed` | 處理成功 |
 | `failed` | 處理失敗 |
 
+### 管制圖自動判定
+
+All-in-One 匯入**不需指定 chart_type**：系統依每筆 `samples` 的長度（子組大小 `n`）自動決定管制圖類型與副圖，並自動推斷小數位數。
+
+| 樣本數 `n` | 主圖 | 副圖 |
+| :--- | :--- | :--- |
+| `n = 1` | X̄-MR | `moving_range` |
+| `2 ≤ n ≤ 10` | X̄-R | `range` |
+| `n > 10` | X̄-S | `std_dev` |
+
+> **注意**：同一 `characteristic_name` 在**單次呼叫**內的所有 `samples` 長度必須一致，否則回傳 `Inconsistent sample sizes` 錯誤。
+
 ---
 
 ## 2.10 Export 匯出
@@ -879,6 +891,4 @@ POST /private/ccm/quantitative/all-in-one
 
 # 修訂歷史
 
-| 日期 | 版本 | 說明 |
-| :--- | :--- | :--- |
-| 2026-04-14 | 1.0 | 初始版本 |
+本文件修訂歷史已統一彙整至 [12 文件版次異動 (Changelog)](./12_版次異動差異化說明.md)。
