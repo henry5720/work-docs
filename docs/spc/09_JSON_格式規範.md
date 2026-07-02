@@ -1,8 +1,8 @@
 # 09 JSON 格式定義 (JSON Schema)
 
-本文件定義批量匯入與維護接口之資料交換格式、结构標準與系統核心業務驗證規則。
+本文件定義 Quantitative 定量管制接口之資料交換格式、結構標準與驗證規則，與後端現行實作同步。
 
-> **提示**：關於 API 的接口路徑、異步處理、自動化處理邏輯與調用範例，請參閱 **[08 API 規格文件](./08_API_規格與用法說明.md)**。
+> **提示**：接口路徑、調用流程與存取控制請參閱 **[08 API 規格文件](./08_API_規格與用法說明.md)**。型別以 OpenAPI 為準；標示 `null` 者為可選（可省略或傳 null）。
 
 ---
 
@@ -10,38 +10,65 @@
 
 ## 1.1 單一項目 (AllInOnePayload)
 
-用於 `POST /private/ccm/quantitative/all-in-one` 接口。
+用於 `POST /all-in-one` 的 `items[]`。
 
-| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
-| :--- | :--- | :--- | :--- | :--- |
-| `characteristic_name` | String | 是 | 管制項目名稱 | 最大 128 字元。 |
-| `part_number` | String | 否 | 產品料號 | 最大 128 字元。 |
-| `batch_number` | String | 否 | 產品批號 | 最大 128 字元。 |
-| `samples` | Array | 是 | 樣本值列表 | **字串數組**。建議保留位數 (如 `"1.250"`)。 |
-| `category_information` | Array | 是 | 層別資訊 | 至少包含一個 `naming=True` 的項目。 |
+| 欄位 | 型別 | 必填 | 說明 / 限制 |
+| :--- | :--- | :--- | :--- |
+| `characteristic_name` | String | 是 | 管制項目名稱，最大 128 字元 |
+| `station` | String | 是 | 站別（**新增必填**） |
+| `category_information` | Array&lt;CategoryInfo&gt; | 是 | 層別資訊；未使用 preset 時至少一項 `naming=true` |
+| `samples` | Array&lt;String&gt; | 是 | 樣本值（**字串**陣列，建議保留位數如 `"1.250"`） |
+| `part_number` | String \| null | 否 | 產品料號，最大 128 字元 |
+| `batch_number` | String \| null | 否 | 產品批號，最大 128 字元 |
+| `ucl` | Number \| null | 否 | 規格上限（可於匯入時直接帶入） |
+| `cl` | Number \| null | 否 | 規格中心值 |
+| `lcl` | Number \| null | 否 | 規格下限 |
 
 ## 1.2 層別資訊單項 (CategoryInfo)
 
-| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
-| :--- | :--- | :--- | :--- | :--- |
-| `key` | String | 是 | 層別名稱 | 最大 128 字元 (如：線別、機台)。 |
-| `value` | String | 是 | 層別數值 | 最大 128 字元 (如：A線、M01)。 |
-| `naming` | Boolean | 是 | 參與命名 | `True`: 用於產生計畫名稱；`False`: 僅作紀錄。 |
-| `order` | Integer | 是 | 排序權重 | 決定命名拼接順序，**同項目內必須唯一**。 |
+| 欄位 | 型別 | 必填 | 說明 / 限制 |
+| :--- | :--- | :--- | :--- |
+| `key` | String | 是 | 層別名稱，最大 128 字元（如：線別、機台） |
+| `value` | String | 是 | 層別數值，最大 128 字元（如：A線、M01） |
+| `order` | Integer | 是 | 命名拼接順序，**同項目內必須唯一** |
+| `naming` | Boolean | 否 | `true`：參與計畫命名；`false`/省略：僅作紀錄 |
 
-## 1.3 任務執行結果 (TaskStatusResult)
+## 1.3 批量匯入根物件 (BulkAllInOnePayload)
 
-這是 `GET /all-in-one/{task_id}` 的回傳結構。
+| 欄位 | 型別 | 必填 | 說明 |
+| :--- | :--- | :--- | :--- |
+| `items` | Array&lt;AllInOnePayload&gt; | 是 | 批量匯入項目，1–10,000 筆 |
+| `preset_id` | String \| null | 否 | 匯入預設 ID；提供時套用該預設命名鍵，否則走 `naming=true` 邏輯 |
 
-| 欄位名稱 | 型別 | 說明 |
+## 1.4 任務執行結果 (TaskStatusResult)
+
+`GET /all-in-one/{task_id}` 的回傳。
+
+| 欄位 | 型別 | 說明 |
 | :--- | :--- | :--- |
-| `task_id` | String | 任務唯一識別碼。 |
-| `status` | String | `pending`, `processing`, `completed`, `failed`。 |
-| `total` | Integer | 總待處理項目數。 |
-| `processed` | Integer | 已處理成功項目數。 |
-| `errors` | Array[Str] | 錯誤訊息列表（僅於 `status=failed` 或部分失敗時出現）。 |
-| `created_ccm_ids` | Array[Str] | 本次任務新建的 CCM ID。 |
-| `created_entity_ids` | Array[Str] | 本次任務新建的 Entity ID。 |
+| `task_id` | String | 任務唯一識別碼 |
+| `status` | String | `pending` / `processing` / `completed` / `failed` |
+| `total` | Integer | 總待處理項目數 |
+| `processed` | Integer | 已處理數 |
+| `errors` | Array&lt;String&gt; | 錯誤訊息列表 |
+| `created_ccm_ids` | Array&lt;String&gt; | 建立的計畫 ID |
+| `created_entity_ids` | Array&lt;String&gt; | 建立的管制項目 ID |
+
+## 1.5 比對預覽 (CompareAllInOnePayload / CompareResponse)
+
+`POST /all-in-one/compare`（無狀態預覽，不寫入）。
+
+**Request（CompareAllInOnePayload）**：
+
+| 欄位 | 型別 | 必填 | 說明 |
+| :--- | :--- | :--- | :--- |
+| `import_items` | Array&lt;AllInOnePayload&gt; | 是 | 原始 SPC 匯入資料 |
+| `teamsync_table_rows` | Array&lt;Object&gt; | 是 | 前端已扁平化的 TeamSync 規格表列 |
+| `composite_keys` | Array&lt;KeyMapping&gt; | 是 | 複合比對鍵映射（`spc_column_key` ↔ `etl_column_key`） |
+| `limit_mappings` | LimitMapping | 是 | 上/中/下限欄位映射（`ucl_/cl_/lcl_etl_column_key`） |
+| `naming_keys` | Array&lt;String&gt; | 是 | 組裝計畫名稱的層別鍵 |
+
+**Response（CompareResponse.comparisons[] = PlanCompareResult）**：`plan_name`、`station`、`characteristic_name`、`ucl`/`cl`/`lcl`（映射後）、`samples_count`、`source_rows[]`（`spc_row_index`、`category_values`、映射 `ucl`/`cl`/`lcl`）。
 
 ---
 
@@ -49,386 +76,230 @@
 
 ## 2.1 Control Plans 管制計畫
 
-### 2.1.1 建立 (CreateCCMPayload)
+**建立 (CreateQuantitativeCCMPayload)**
 
-用於 `POST /private/ccm/quantitative/` 接口。
+| 欄位 | 型別 | 必填 | 說明 |
+| :--- | :--- | :--- | :--- |
+| `source` | String(enum) | 是 | `api` / `mqtt` / `manual` |
+| `name` | String | 是 | 計畫名稱 |
+| `part_number` | String | 是 | 產品料號 |
+| `batch_number` | String | 是 | 產品批號 |
+| `category_information` | Object | 是 | 層別資訊（**物件**鍵值對，如 `{"線別":"A線"}`） |
+| `spec` | String \| null | 否 | 規格 |
+| `station` | String \| null | 否 | 站別 |
+| `chatroom_ids` | Array&lt;String&gt; \| null | 否 | 通知聊天室 ID |
 
-| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
-| :--- | :--- | :--- | :--- | :--- |
-| `source` | String | 是 | 資料來源 | `api`, `mqtt`, `manual` |
-| `name` | String | 是 | 計畫名稱 | 1-128 字元。 |
-| `part_number` | String | 是 | 產品料號 | 1-128 字元。 |
-| `batch_number` | String | 是 | 產品批號 | 1-128 字元。 |
-| `spec` | String | 否 | 規格說明 | 最大 128 字元。 |
-| `station` | String | 否 | 工站名稱 | 最大 128 字元。 |
-| `category_information` | Dict | 是 | 層別字典 | 格式：`{ "Key": "Value" }`。 |
-| `chatroom_ids` | Array | 否 | 通報群組 ID | 字串數組。 |
+**更新 (UpdateQuantitativeCCMPayload)**：上述欄位皆為選填（部分更新）。
 
-### 2.1.2 更新 (UpdateCCMPayload)
-
-用於 `PUT /private/ccm/quantitative/{ccm_id}` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
-| :--- | :--- | :--- | :--- | :--- |
-| `name` | String | 否 | 計畫名稱 | 1-128 字元。 |
-| `part_number` | String | 否 | 產品料號 | 1-128 字元。 |
-| `batch_number` | String | 否 | 產品批號 | 1-128 字元。 |
-| `spec` | String | 否 | 規格說明 | 最大 128 字元。 |
-| `station` | String | 否 | 工站名稱 | 最大 128 字元。 |
-| `category_information` | Dict | 否 | 層別字典 | 格式：`{ "Key": "Value" }`。 |
-| `chatroom_ids` | Array | 否 | 通報群組 ID | 字串數組。 |
-
-### 2.1.3 回傳 (CCMInfo)
-
-| 欄位名稱 | 型別 | 說明 |
-| :--- | :--- | :--- |
-| `id` | String | 計畫唯一識別碼。 |
-| `source` | String | 資料來源：`api`, `mqtt`, `manual`。 |
-| `name` | String | 計畫名稱。 |
-| `part_number` | String | 產品料號。 |
-| `batch_number` | String | 產品批號。 |
-| `spec` | String | 規格說明。 |
-| `station` | String | 工站名稱。 |
-| `category_information` | Dict | 層別資訊字典。 |
-| `chatroom_ids` | Array | 通報群組 ID。 |
-| `entities` | Array | 管制項目列表。 |
-| `created_at` | DateTime | 建立時間 (ISO 8601)。 |
-| `updated_at` | DateTime | 更新時間 (ISO 8601)。 |
-
----
+**回傳 (QuantitativeCCMInfo)**：`id`、上述欄位、`created_at`、`updated_at`、`entities[]`。清單版 `QuantitativeCCMBasicInfo` 不含 `entities`。
 
 ## 2.2 Entities 管制項目
 
-### 2.2.1 建立 (CreateEntityPayload)
+**建立（基本，CreateQuantitativeCCMEntityPayload）**
 
-用於 `POST /private/ccm/quantitative/{ccm_id}/entities` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
-| :--- | :--- | :--- | :--- | :--- |
-| `characteristic_name` | String | 是 | 管制項目名稱 | 1-128 字元。 |
-| `measurement_unit` | String | 是 | 量測單位 | 1-128 字元。 |
-| `manufacturing_information` | Dict | 是 | 製程資訊 | 格式：`{ "Key": "Value" }`。 |
-
-### 2.2.2 建立（含所有設定）(CreateEntityWithSettingsPayload)
-
-用於 `POST /private/ccm/quantitative/{ccm_id}/entities/with-settings` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
+| 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
 | `characteristic_name` | String | 是 | 管制項目名稱 |
 | `measurement_unit` | String | 是 | 量測單位 |
-| `manufacturing_information` | Dict | 是 | 製程資訊 |
-| `chart_settings` | Array | 否 | Chart Setting 列表（含 limits） |
-| `sampling_settings` | Array | 否 | Sampling Setting 列表 |
-| `alert_settings` | Array | 否 | Alert Setting 列表 |
+| `manufacturing_information` | Object | 是 | 製造資訊（可為 `{}`） |
 
-### 2.2.3 更新 (UpdateEntityPayload)
+**建立（含設定，CreateQuantitativeCCMEntityWithSettingsPayload）**：上述 + `chart_settings[]`（ChartSettingWithLimitsPayload）+ `sampling_settings[]` + `alert_settings[]`。
 
-用於 `PUT /private/ccm/quantitative/{ccm_id}/entities/{entity_id}` 接口。
+**更新 (UpdateQuantitativeCCMEntityPayload)**：`characteristic_name`、`measurement_unit`、`manufacturing_information` 皆選填。
 
-| 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :--- | :--- |
-| `characteristic_name` | String | 否 | 管制項目名稱 |
-| `measurement_unit` | String | 否 | 量測單位 |
-| `manufacturing_information` | Dict | 否 | 製程資訊 |
+**排序**：`ReorderEntitiesPayload` = `{ entity_ids: [...] }`（全量）；`SwapEntityOrderPayload` = `{ entity_id_1, entity_id_2 }`（交換）。
 
-### 2.2.4 重新排序 (ReorderEntitiesPayload)
-
-用於 `PUT /private/ccm/quantitative/{ccm_id}/entities/reorder` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :--- | :--- |
-| `entity_ids` | Array | 是 | 所有 Entity ID，依排序順序排列 |
-
-### 2.2.5 回傳 (EntityInfo)
-
-| 欄位名稱 | 型別 | 說明 |
-| :--- | :--- | :--- |
-| `id` | String | 管制項目唯一識別碼。 |
-| `characteristic_name` | String | 管制項目名稱。 |
-| `measurement_unit` | String | 量測單位。 |
-| `order` | Integer | 顯示順序。 |
-| `manufacturing_information` | Dict | 製程資訊。 |
-| `chart_settings` | Array | 管制圖設定列表。 |
-| `sampling_settings` | Array | 抽樣設定列表。 |
-| `alert_settings` | Array | 警示設定列表。 |
-| `created_at` | DateTime | 建立時間。 |
-
----
+**回傳 (QuantitativeCCMEntityInfo)**：`id`、`order`、`characteristic_name`、`measurement_unit`、`manufacturing_information`，彙總統計 `total_samples_count`、`samples_mean_avg`、`samples_overall_mean`、`samples_overall_std_dev`、`samples_range_avg`、`samples_std_dev_avg`、`samples_mr_avg`，及 `chart_settings[]`/`sampling_settings[]`/`alert_settings[]`。
 
 ## 2.3 Chart Settings 管制圖設定
 
-### 2.3.1 建立 (CreateChartSettingPayload)
+**建立 (CreateQuantitativeCCMChartSettingPayload)**
 
-用於 `POST /.../chart-settings` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
-| :--- | :--- | :--- | :--- | :--- |
-| `chart_type` | String | 是 | 管制圖類型 | `x_bar_mr`, `x_bar_r`, `x_bar_s` |
-| `subgroup_size` | Integer | 是 | 子組大小（n）| n≥1 |
-
-> **chart_type 說明**:
-> - `x_bar_mr`: X̄-MR 圖（n=1，均值-移動全距圖）
-> - `x_bar_r`: X̄-R 圖（2≤n≤10，均值-全距圖）
-> - `x_bar_s`: X̄-S 圖（n>10，均值-標準差圖）
-
-### 2.3.2 更新 (UpdateChartSettingPayload)
-
-用於 `PUT /.../chart-settings/{setting_id}` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
+| 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
-| `chart_type` | String | 否 | 管制圖類型 |
-| `subgroup_size` | Integer | 否 | 子組大小（n） |
+| `chart_type` | String(enum) | 是 | `x_bar_mr` / `x_bar_r` / `x_bar_s` |
+| `subgroup_size` | Integer | 是 | 子組大小 n（1 / 2–10 / >10） |
 
-### 2.3.3 建立 Chart Limit (CreateChartLimitPayload)
+**更新 (UpdateQuantitativeCCMChartSettingPayload)**：`chart_type`、`subgroup_size` 選填。
 
-用於 `POST /.../chart-settings/{setting_id}/limits` 接口。
+**建立管制界限 (CreateQuantitativeCCMChartLimitPayload)**
 
-| 欄位名稱 | 型別 | 必填 | 說明 |
+| 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
-| `entity_name` | String | 是 | 圖類型：`x_bar`, `range`, `std_dev`, `moving_range` |
-| `ucl` | Float | 否 | 上規格限 (USL) |
-| `lcl` | Float | 否 | 下規格限 (LSL) |
-| `cl` | Float | 否 | 中心線 (CL) |
-| `ucl_management` | Float | 否 | 上管理限 |
-| `lcl_management` | Float | 否 | 下管理限 |
-| `cl_management` | Float | 否 | 中心管理值 |
-| `ucl_alarm` | Float | 否 | 上警戒限 |
-| `lcl_alarm` | Float | 否 | 下警戒限 |
-| `cl_alarm` | Float | 否 | 中心警戒值 |
+| `entity_name` | String(enum) | 是 | `x_bar` / `range` / `moving_range` / `std_dev` |
+| `ucl` | Number \| null | 否 | 上規格限（上單邊/雙邊需要） |
+| `lcl` | Number \| null | 否 | 下規格限（下單邊/雙邊需要） |
+| `cl` | Number \| null | 否 | 中心線/目標值（Ca 計算需要） |
+| `ucl_management` / `lcl_management` / `cl_management` | Number \| null | 否 | 管理限 |
+| `ucl_alarm` / `lcl_alarm` / `cl_alarm` | Number \| null | 否 | 警戒限 |
 
-> **entity_name 說明**:
-> - `x_bar`: 均值圖界限
-> - `range`: 全距圖界限（x_bar_r 使用）
-> - `std_dev`: 標準差圖界限（x_bar_s 使用）
-> - `moving_range`: 移動全距圖界限（x_bar_mr 使用）
+> **公差類型**：雙邊（ucl+lcl）、上單邊（僅 ucl）、下單邊（僅 lcl）。
+> **更新 (UpdateQuantitativeCCMChartLimitPayload)**：所有欄位選填；設為 `null` 可清除該界限（轉為單邊）。
 
-### 2.3.4 更新 Chart Limit (UpdateChartLimitPayload)
-
-用於 `PUT /.../limits/{limit_id}` 接口（同 2.3.3 結構，可 partial update）。
-
-### 2.3.5 回傳 (ChartSettingInfo)
-
-| 欄位名稱 | 型別 | 說明 |
-| :--- | :--- | :--- |
-| `id` | String | 設定 ID。 |
-| `chart_type` | String | 管制圖類型。 |
-| `subgroup_size` | Integer | 子組大小。 |
-| `limits` | Array | 管制界限列表。 |
-
----
+**回傳 (QuantitativeCCMChartLimitInfo)**：上述界限欄位 + `sigma_within` + 能力指標 `cp`/`ca`/`cpu`/`cpl`/`cpk`/`pp`/`ppu`/`ppl`/`ppk`（不適用時 `null`）。
 
 ## 2.4 Sampling Settings 抽樣設定
 
-### 2.4.1 建立 (CreateSamplingSettingPayload)
+**建立 (CreateQuantitativeCCMSamplingSettingPayload)**
 
-用於 `POST /.../sampling-settings` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 | 限制/驗證規則 |
-| :--- | :--- | :--- | :--- | :--- |
-| `num_of_samples` | Integer | 是 | 樣本數（n）| n≥1 |
-| `num_of_digits` | Integer | 是 | 小數位數 | n≥0 |
-| `frequency` | String | 是 | 抽樣頻率 | 1-128 字元。 |
-| `sampling_method` | String | 是 | 抽樣方法 | 1-128 字元。 |
-
-### 2.4.2 更新 (UpdateSamplingSettingPayload)
-
-用於 `PUT /.../sampling-settings/{setting_id}` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
+| 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
-| `num_of_samples` | Integer | 否 | 樣本數（n） |
-| `num_of_digits` | Integer | 否 | 小數位數 |
-| `frequency` | String | 否 | 抽樣頻率 |
-| `sampling_method` | String | 否 | 抽樣方法 |
+| `num_of_samples` | Integer | 是 | 子組大小 n |
+| `num_of_digits` | Integer | 是 | 小數位精度 |
+| `frequency` | String | 是 | 抽樣頻率 |
+| `sampling_method` | String | 是 | 抽樣方法 |
 
-### 2.4.3 回傳 (SamplingSettingInfo)
-
-| 欄位名稱 | 型別 | 說明 |
-| :--- | :--- | :--- |
-| `id` | String | 設定 ID。 |
-| `num_of_samples` | Integer | 樣本數。 |
-| `num_of_digits` | Integer | 小數位數。 |
-| `frequency` | String | 抽樣頻率。 |
-| `sampling_method` | String | 抽樣方法。 |
-
----
+**更新**：以上皆選填。**回傳 (SamplingSettingInfo)**：+ `id`。
 
 ## 2.5 Alert Settings 警示設定
 
-### 2.5.1 建立 (CreateAlertSettingPayload)
-
-用於 `POST /.../alert-settings` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :--- | :--- |
-| `ca_upper_limit` | Float | 是 | CA 上限 |
-| `cp_upper_limit` | Float | 是 | CP 上限 |
-| `cpk_lower_limit` | Float | 是 | Cpk 下限 |
-| `alert_upper_limit` | Float | 是 | 警示上限 |
-| `alert_lower_limit` | Float | 是 | 警示下限 |
-
-### 2.5.2 更新 (UpdateAlertSettingPayload)
-
-用於 `PUT /.../alert-settings/{setting_id}` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :--- | :--- |
-| `ca_upper_limit` | Float | 否 | CA 上限 |
-| `cp_upper_limit` | Float | 否 | CP 上限 |
-| `cpk_lower_limit` | Float | 否 | Cpk 下限 |
-| `alert_upper_limit` | Float | 否 | 警示上限 |
-| `alert_lower_limit` | Float | 否 | 警示下限 |
-
-### 2.5.3 回傳 (AlertSettingInfo)
-
-| 欄位名稱 | 型別 | 說明 |
-| :--- | :--- | :--- |
-| `id` | String | 設定 ID。 |
-| `ca_upper_limit` | Float | CA 上限。 |
-| `cp_upper_limit` | Float | CP 上限。 |
-| `cpk_lower_limit` | Float | Cpk 下限。 |
-| `alert_upper_limit` | Float | 警示上限。 |
-| `alert_lower_limit` | Float | 警示下限。 |
-
----
+**建立 (CreateQuantitativeCCMAlertSettingPayload)**：`ca_upper_limit`、`cp_upper_limit`、`cpk_lower_limit`、`alert_upper_limit`、`alert_lower_limit`（皆為 Number，建立時必填）。
+**更新**：以上皆選填。**回傳**：+ `id`。
 
 ## 2.6 Samples 抽樣資料
 
-### 2.6.1 建立 (CreateSamplePayload)
+**建立單一 (CreateQuantitativeCCMEntitySamplePayload)**
 
-用於 `POST /.../samples` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
+| 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
-| `samples` | Array | 是 | 樣本值列表（需與 sampling_settings.num_of_samples 一致） |
-| `operator_name` | String | 是 | 操作員名稱 |
-| `category_information` | Dict | 否 | 層別資訊（覆蓋 CCM 預設值） |
+| `samples` | Array&lt;Number&gt; | 是 | 樣本值（**數值**陣列；注意與 all-in-one 的字串陣列不同） |
+| `operator_name` | String | 是 | 操作員 |
+| `category_information` | Object \| null | 否 | 覆寫層別（提供至少一組鍵值時覆寫父 CCM） |
 
-### 2.6.2 批量建立 (BulkCreateSamplePayload)
+**批量 (BulkCreateQuantitativeCCMEntitySamplePayload)**：`{ samples: [CreateSamplePayload, ...] }`。
+**更新 (UpdateQuantitativeCCMEntitySamplePayload)**：`samples`、`operator_name` 選填。
 
-用於 `POST /.../samples/bulk` 接口。
+**回傳 (QuantitativeCCMEntitySampleInfo)**
 
-| 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :--- | :--- |
-| `samples` | Array | 是 | 多筆 CreateSamplePayload |
-
-### 2.6.3 更新 (UpdateSamplePayload)
-
-用於 `PUT /.../samples/{sample_id}` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
-| :--- | :--- | :--- | :--- |
-| `samples` | Array | 否 | 樣本值列表 |
-| `operator_name` | String | 否 | 操作員名稱 |
-
-### 2.6.4 回傳 (SampleInfo)
-
-| 欄位名稱 | 型別 | 說明 |
+| 欄位 | 型別 | 說明 |
 | :--- | :--- | :--- |
-| `id` | String | 樣本 ID。 |
-| `idx` | Integer | 樣本序號（系統自動遞增）。 |
-| `samples` | Array[Float] | 量測值列表。 |
-| `mean_value` | Float | 樣本平均值。 |
-| `range_value` | Float | 樣本全距 (Max - Min)。 |
-| `std_dev` | Float | 樣本標準差（n>10 時）。 |
-| `operator_name` | String | 操作員名稱。 |
-| `category_information` | Dict | 層別資訊。 |
-| `created_at` | DateTime | 建立時間。 |
+| `id` / `idx` | String / Integer | 樣本 ID / 索引 |
+| `samples` | Array&lt;Number&gt; | 樣本值 |
+| `mean_value` | Number | 平均值 |
+| `range_value` | Number | 全距（max−min，X̄-R 用） |
+| `std_dev` | Number | 標準差（X̄-S，n=1 時為 0） |
+| `mr_value` | Number | 移動全距（X̄-MR，n>1 或首筆為 0） |
+| `total_value` | Number | 總和 |
+| `operator_name` | String | 操作員 |
+| `part_number` / `batch_number` / `category_information` | — | 由 CCM 複製 |
+| `created_at` | String | 建立時間 |
+
+**層別唯一值 (CategoryUniqueValuesResponse)**：`{ "values": { "<key>": ["v1","v2"] } }`。
+
+## 2.7 Capability 能力分析
+
+**CapabilityIndicesInfo**：`total_samples_count`、`samples_mean_avg`、`samples_overall_mean`、`samples_overall_std_dev`、`samples_range_avg`、`samples_std_dev_avg`、`samples_mr_avg`、`chart_limits[]`。
+
+**FilteredChartLimitCapabilityInfo**（`chart_limits[]` 元素）：`chart_setting_id`、`chart_type`、`subgroup_size`、`limit_id`、`entity_name`、`ucl`/`lcl`/`cl`、`sigma_within`，及 `cp`/`ca`/`cpu`/`cpl`/`cpk`/`pp`/`ppu`/`ppl`/`ppk`（不適用 `null`）。
+
+**CapabilityAnalysisResponse**：`{ capability: CapabilityIndicesInfo, samples: [...] }`。
+
+**RecommendedLimitsResponse**：`target_index`(cp/cpk/pp/ppk)、`target_value`、`total_samples_count`、`samples_overall_mean`、`samples_overall_std_dev`、`recommendations[]`（每 chart setting 的 `recommended_ucl`/`recommended_lcl`/`recommended_cl`、`sigma_within`）。
+
+## 2.8 Nelson Rules Settings 尼爾森法則
+
+**建立 (CreateQuantNelsonRulesSettingPayload)** — 各法則為**結構化物件**，未提供或 `null` = 停用。
+
+| 欄位 | 型別 | 參數（預設） |
+| :--- | :--- | :--- |
+| `nelson_rules_1` | Object \| null | `{ n }`（n=1） |
+| `nelson_rules_2` | Object \| null | `{ n, side }`（n=9, side=both） |
+| `nelson_rules_3` | Object \| null | `{ n, side }`（n=6, side=both） |
+| `nelson_rules_4` | Object \| null | `{ n }`（n=14） |
+| `nelson_rules_5` | Object \| null | `{ m, n }`（m=2, n=3） |
+| `nelson_rules_6` | Object \| null | `{ m, n }`（m=4, n=5） |
+| `nelson_rules_7` | Object \| null | `{ n }`（n=15） |
+| `nelson_rules_8` | Object \| null | `{ n }`（n=8） |
+
+> `side`（`NelsonRuleSide`）：`both` / `upper` / `lower`。
+> **更新 (UpdateQuantNelsonRulesSettingPayload)**：部分更新；設 `null` 停用該法則。
+> **回傳 (QuantNelsonRulesSettingInfo)**：`id`、`quant_ccm_id`、`created_at`、`updated_at` + 各法則 Info 物件（含實際參數）。
+
+## 2.9 Sample Alerts 樣本警報紀錄
+
+**回傳 (QuantitativeCCMSampleAlertInfo)**
+
+| 欄位 | 型別 | 說明 |
+| :--- | :--- | :--- |
+| `id` / `created_at` | String | 警報 ID / 時間 |
+| `quant_ccm_entity_id` | String | 管制項目 ID |
+| `quant_ccm_entity_sample_id` | String | 觸發樣本 ID |
+| `alert_type` | String(enum) | `nelson_rule` / `alarm_limit` |
+| `rule_number` | Integer \| null | Nelson 法則編號（1–8，nelson_rule 用） |
+| `entity_name` | String \| null | 界限類型（alarm_limit 用） |
+| `direction` | String \| null | 超標方向 upper/lower（alarm_limit 用） |
+| `actual_value` / `limit_value` | Number \| null | 觸發值 / 被超越的界限值 |
+| `description` | String | 可讀警報描述 |
+| `sample` | Object | 觸發的樣本（SampleInfo） |
 
 ---
 
-## 2.7 Nelson Rules Settings 尼爾森法則
+# 第三部分：Import Presets 與 Permissions
 
-### 2.7.1 建立 (CreateNelsonRulesPayload)
+## 3.1 匯入預設 (ImportPresetCreate / ImportPresetResponse)
 
-用於 `POST /.../nelson-rules` 接口。
-
-| 欄位名稱 | 型別 | 必填 | 說明 |
+| 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
-| `nelson_rules_1` | String | 否 | 法則 1（格式：`N(x)`） |
-| `nelson_rules_2` | String | 否 | 法則 2（格式：`N(x):S(y)`） |
-| `nelson_rules_3` | String | 否 | 法則 3 |
-| `nelson_rules_4` | String | 否 | 法則 4 |
-| `nelson_rules_5` | String | 否 | 法則 5（格式：`M(x)/N(x):S(y)`） |
-| `nelson_rules_6` | String | 否 | 法則 6 |
-| `nelson_rules_7` | String | 否 | 法則 7（格式：`N(x)`） |
-| `nelson_rules_8` | String | 否 | 法則 8 |
+| `name` | String | 是 | 預設名稱 |
+| `naming_keys` | Array&lt;String&gt; | 是 | 命名鍵（支援 `_part_number_`、`_batch_number_`） |
+| `station_id` | String \| null | 否 | 綁定站別 ID |
+| `chatroom_id` | String \| null | 否 | 匯入 UI 預設聊天室 ID |
+| `table_id` | String \| null | 否 | 匯入 UI 預設 TeamSync 表格 ID |
+| `timestamp_key` | String \| null | 否 | 時間格式的層別欄位名 |
+| `default_ucl` / `default_cl` / `default_lcl` | Number \| null | 否 | 預設規格界限 |
+| `composite_keys` / `limit_mappings` | Array / Object | 否 | 保留欄位（僅儲存與回傳） |
 
-> **格式說明**:
-> - `N`: 連續點數
-> - `M`: 點數閾值
-> - `S` 方向: `both`, `upper`, `lower`
-> - 範例：`"N(1)"`, `"N(9):S(both)"`, `"M(2)/N(3):S(lower)"`
+回傳額外含：`id`、`tenant_id`、`created_at`、`updated_at`。
 
-### 2.7.2 更新 (UpdateNelsonRulesPayload)
+## 3.2 權限 (SPCPermission*)
 
-用於 `PUT /.../nelson-rules/{setting_id}` 接口（同 2.7.1 結構，可 partial update）。
+**設定 (SPCPermissionUpsert)**：`{ "role": "<SPCPermissionRole>" }`。
 
-### 2.7.3 回傳 (NelsonRulesInfo)
+**自己的權限 (SPCMyPermissionResponse)**：`user_id`、`tenant_id`、`role`、`is_default`、`can_manage_permissions`、`can_read_all_departments`。
 
-| 欄位名稱 | 型別 | 說明 |
-| :--- | :--- | :--- |
-| `id` | String | 設定 ID。 |
-| `nelson_rules_1` | String | 法則 1 設定。 |
-| `nelson_rules_2` | String | 法則 2 設定。 |
-| ... | ... | ... |
-| `nelson_rules_8` | String | 法則 8 設定。 |
-
----
-
-## 2.8 Sample Alerts 樣本警報紀錄
-
-### 2.8.1 回傳 (SampleAlertInfo)
-
-| 欄位名稱 | 型別 | 說明 |
-| :--- | :--- | :--- |
-| `id` | String | 警報 ID。 |
-| `sample_id` | String | 關聯樣本 ID。 |
-| `alert_type` | String | 警報類型：`nelson_rule`, `alarm_limit`。 |
-| `rule_id` | Integer | 觸發的法則編號（1-8）。 |
-| `message` | String | 警報訊息。 |
-| `created_at` | DateTime | 觸發時間。 |
+**列表項 (SPCPermissionResponse)**：`id`、`tenant_id`、`user_id`、`role`、`created_at`、`updated_at`。
 
 ---
 
 # 附錄：常見類型枚舉值
 
-## Chart Type (管制圖類型)
-
+## Control Chart Type (`chart_type`)
 | 值 | 說明 |
 | :--- | :--- |
-| `x_bar_mr` | X̄-MR 圖（n=1） |
-| `x_bar_r` | X̄-R 圖（2≤n≤10） |
-| `x_bar_s` | X̄-S 圖（n>10） |
+| `x_bar_mr` | X̄-MR（n=1） |
+| `x_bar_r` | X̄-R（2≤n≤10） |
+| `x_bar_s` | X̄-S（n>10） |
 
-## Chart Limit Entity Name
-
+## Chart Limit Entity Name (`entity_name`)
 | 值 | 說明 |
 | :--- | :--- |
-| `x_bar` | 均值圖 |
-| `range` | 全距圖 |
-| `std_dev` | 標準差圖 |
-| `moving_range` | 移動全距圖 |
+| `x_bar` | 平均值/個別值圖 |
+| `range` | 全距圖（x_bar_r） |
+| `moving_range` | 移動全距圖（x_bar_mr） |
+| `std_dev` | 標準差圖（x_bar_s） |
 
-## Source (資料來源)
-
+## Source (`source`)
 | 值 | 說明 |
 | :--- | :--- |
 | `api` | API 匯入 |
-| `mqtt` | MQTT 訊息 |
-| `manual` | 手動輸入 |
+| `mqtt` | MQTT 串流 |
+| `manual` | 手動建立 |
 
-## Alert Type
-
+## Alert Type (`alert_type`)
 | 值 | 說明 |
 | :--- | :--- |
 | `nelson_rule` | 尼爾森法則觸發 |
 | `alarm_limit` | 界限超標觸發 |
 
----
+## Nelson Rule Side (`side`)
+`both` / `upper` / `lower`
 
-# 修訂歷史
+## SPC Permission Role (`role`)
+| 值 | 寫入 | 說明 |
+| :--- | :--- | :--- |
+| `system_admin` | ✓ | 系統管理者 |
+| `quality_staff` | ✓ | 品保人員 |
+| `line_operator` | ✓ | 線上操作員 |
+| `viewer` | ✗ | 唯讀檢視者（預設） |
 
-本文件修訂歷史已統一彙整至 [12 文件版次異動 (Changelog)](./12_版次異動差異化說明.md)。
+> **修訂歷史**已統一彙整至 [12 文件版次異動 (Changelog)](./12_版次異動差異化說明.md)。
