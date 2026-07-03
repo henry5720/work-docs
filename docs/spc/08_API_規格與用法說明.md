@@ -71,9 +71,11 @@ Quantitative CCM（管制計畫）
 
 ## 2.0.2 部門級資料隔離
 
-- 每筆計畫（CCM）與匯入預設綁定建立者的 `department_id`。
+- 每筆計畫（CCM）與管制項目（Entity）綁定建立者的 `department_id`；**匯入預設（Import Presets）為租戶層級，不分部門**。
 - 一般使用者**只能存取自己部門**的資料；跨部門資料不會出現在清單，存取會被拒。
+- **精確比對**：部門比對為精確相等。既有 `department_id` 為 NULL 的歷史資料，對「已設定部門」的使用者**不可見**；無部門的使用者則只看得到 NULL 記錄。遷移上線前若要保留歷史資料可見，需先回填 `department_id`。
 - 具跨部門讀取權限者（系統最高層級）方可讀取所有部門資料。
+- **例外**：能力分析／樣本子集分析端點（§3.7 的 capability、capability/count、recommended-limits）**僅做租戶隔離、刻意不套部門可見性**，跨部門的 `entity_id` 亦可查詢成功。
 - 因此「查不到某筆資料」或「回傳清單較少」可能是部門隔離所致，並非資料不存在。
 
 ---
@@ -304,6 +306,8 @@ Quantitative CCM（管制計畫）
 
 依「篩選後的樣本集」計算製程能力指標。
 
+> **隔離注意**：能力分析端點僅租戶層級隔離、**不受部門隔離**（見 §2.0.2 例外），跨部門 `entity_id` 亦可查詢成功。
+
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
 | 1 | GET | `.../samples/capability` | 篩選樣本 + 能力指標 |
@@ -425,9 +429,10 @@ Quantitative CCM（管制計畫）
 > - `characteristic_name`、`station`、`category_information`、`samples` **為必填**（`station` 為新增必填欄）。
 > - `part_number`、`batch_number` 為選填。
 > - `ucl`/`cl`/`lcl` 為選填規格界限，可於匯入時直接帶入。
-> - `samples` 為**字串陣列**（保留位數，如 `"1.250"`），至少 1 筆。
+> - `samples` 為**字串陣列**（以字串傳遞以避免浮點誤差、保留數值原樣），至少 1 筆。詳見下方「精度自動推斷」。
 > - `station` 長度 1–128 字元、前後空白會被去除；**恆為必填**。若使用綁定站別的 `preset_id`，該 preset 的站別會**覆寫**此處送出的 `station`。
 > - `BulkAllInOnePayload.preset_id` 選填；提供時套用該匯入預設（命名鍵、綁定站別等），否則走 `naming=true` 邏輯。
+> - **自動抽出料號/批號**：若 `category_information` 含鍵 `料號`/`part_number` 或 `批號`/`batch_number`，系統會將其值填入 `part_number`/`batch_number`，並**從層別清單移除**（不再作為一般層別）。
 
 **自動圖型判定**：不需指定 chart_type，系統依每筆 `samples` 長度 `n` 自動決定，並自動推斷小數位數。
 
@@ -438,6 +443,13 @@ Quantitative CCM（管制計畫）
 | `n > 10` | X̄-S | `std_dev` |
 
 > 同一 `characteristic_name` 單次呼叫內的 `samples` 長度須一致，否則回 `Inconsistent sample sizes`。
+
+### 精度自動推斷 (Precision Inference) {#precision-inference}
+
+匯入時系統會掃描該次全部 `samples` 字串，取小數點後**有效位數（去除尾端 0）的最大值**作為該計畫的小數位數（`num_of_digits`），後續統計計算與顯示皆以此精度為準。
+
+- 例：整批最精細為 `"1.251"` → 3 位；`"1.250"` 會被視為 **2 位**（尾端 0 不計入）。若需固定位數，請確保資料中確有該精度的值。
+- 以字串（而非數值）傳遞，可避免浮點解析誤差（如 `1.24999999`）影響 Cp/Cpk 統計。
 
 **查詢任務狀態 — Response**：
 ```json
@@ -476,7 +488,7 @@ Quantitative CCM（管制計畫）
 
 ## 3.12 Import Presets 匯入預設
 
-匯入 UI 使用的預設設定（命名鍵、綁定站別/聊天室/表格、預設界限）。寫入僅限 `system_admin`、`quality_staff`；受部門隔離。
+匯入 UI 使用的預設設定（命名鍵、綁定站別/聊天室/表格、預設界限）。**為租戶層級（不分部門）**。**讀取**需 `system_admin` / `quality_staff` / `line_operator`（viewer 讀取會回 `403`）；**寫入**僅限 `system_admin`、`quality_staff`。
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -498,7 +510,9 @@ Quantitative CCM（管制計畫）
   "default_ucl": 10.5, "default_cl": 10.0, "default_lcl": 9.5
 }
 ```
-> `naming_keys` 支援特殊符 `_part_number_`、`_batch_number_`。`composite_keys`/`limit_mappings` 目前為保留欄位（僅儲存與回傳）。
+> `naming_keys` **必填且至少 1 個鍵**（空陣列回 `422`）；支援特殊符 `_part_number_`、`_batch_number_`。
+> `timestamp_key`：指定後，匯入時系統依該層別欄位的時間值排序決定樣本順序（`idx`）；**不含時區的時間一律視為 UTC**；無法解析的非空時間值會使該計畫匯入失敗。
+> `composite_keys`/`limit_mappings` 目前為保留欄位（僅儲存與回傳）。
 
 ---
 

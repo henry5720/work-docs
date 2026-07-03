@@ -20,7 +20,7 @@
 | [12 版次異動說明](#doc-12) | Changelog | 文件集修訂歷史；以 JSON 範本呈現差異，差異處以註解標註 |
 
 ---
-**最後更新**：2026-07-02
+**最後更新**：2026-07-03
 **負責團隊**：數辰 PM 團隊 / IT 開發組
 
 # 01 軟體需求規格書 (SRS) - SPC 系統全範疇規範 {#doc-01}
@@ -1358,9 +1358,11 @@ Quantitative CCM（管制計畫）
 
 ## 2.0.2 部門級資料隔離
 
-- 每筆計畫（CCM）與匯入預設綁定建立者的 `department_id`。
+- 每筆計畫（CCM）與管制項目（Entity）綁定建立者的 `department_id`；**匯入預設（Import Presets）為租戶層級，不分部門**。
 - 一般使用者**只能存取自己部門**的資料；跨部門資料不會出現在清單，存取會被拒。
+- **精確比對**：部門比對為精確相等。既有 `department_id` 為 NULL 的歷史資料，對「已設定部門」的使用者**不可見**；無部門的使用者則只看得到 NULL 記錄。遷移上線前若要保留歷史資料可見，需先回填 `department_id`。
 - 具跨部門讀取權限者（系統最高層級）方可讀取所有部門資料。
+- **例外**：能力分析／樣本子集分析端點（§3.7 的 capability、capability/count、recommended-limits）**僅做租戶隔離、刻意不套部門可見性**，跨部門的 `entity_id` 亦可查詢成功。
 - 因此「查不到某筆資料」或「回傳清單較少」可能是部門隔離所致，並非資料不存在。
 
 ---
@@ -1591,6 +1593,8 @@ Quantitative CCM（管制計畫）
 
 依「篩選後的樣本集」計算製程能力指標。
 
+> **隔離注意**：能力分析端點僅租戶層級隔離、**不受部門隔離**（見 §2.0.2 例外），跨部門 `entity_id` 亦可查詢成功。
+
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
 | 1 | GET | `.../samples/capability` | 篩選樣本 + 能力指標 |
@@ -1712,9 +1716,10 @@ Quantitative CCM（管制計畫）
 > - `characteristic_name`、`station`、`category_information`、`samples` **為必填**（`station` 為新增必填欄）。
 > - `part_number`、`batch_number` 為選填。
 > - `ucl`/`cl`/`lcl` 為選填規格界限，可於匯入時直接帶入。
-> - `samples` 為**字串陣列**（保留位數，如 `"1.250"`），至少 1 筆。
+> - `samples` 為**字串陣列**（以字串傳遞以避免浮點誤差、保留數值原樣），至少 1 筆。詳見下方「精度自動推斷」。
 > - `station` 長度 1–128 字元、前後空白會被去除；**恆為必填**。若使用綁定站別的 `preset_id`，該 preset 的站別會**覆寫**此處送出的 `station`。
 > - `BulkAllInOnePayload.preset_id` 選填；提供時套用該匯入預設（命名鍵、綁定站別等），否則走 `naming=true` 邏輯。
+> - **自動抽出料號/批號**：若 `category_information` 含鍵 `料號`/`part_number` 或 `批號`/`batch_number`，系統會將其值填入 `part_number`/`batch_number`，並**從層別清單移除**（不再作為一般層別）。
 
 **自動圖型判定**：不需指定 chart_type，系統依每筆 `samples` 長度 `n` 自動決定，並自動推斷小數位數。
 
@@ -1725,6 +1730,13 @@ Quantitative CCM（管制計畫）
 | `n > 10` | X̄-S | `std_dev` |
 
 > 同一 `characteristic_name` 單次呼叫內的 `samples` 長度須一致，否則回 `Inconsistent sample sizes`。
+
+### 精度自動推斷 (Precision Inference) {#precision-inference}
+
+匯入時系統會掃描該次全部 `samples` 字串，取小數點後**有效位數（去除尾端 0）的最大值**作為該計畫的小數位數（`num_of_digits`），後續統計計算與顯示皆以此精度為準。
+
+- 例：整批最精細為 `"1.251"` → 3 位；`"1.250"` 會被視為 **2 位**（尾端 0 不計入）。若需固定位數，請確保資料中確有該精度的值。
+- 以字串（而非數值）傳遞，可避免浮點解析誤差（如 `1.24999999`）影響 Cp/Cpk 統計。
 
 **查詢任務狀態 — Response**：
 ```json
@@ -1763,7 +1775,7 @@ Quantitative CCM（管制計畫）
 
 ## 3.12 Import Presets 匯入預設
 
-匯入 UI 使用的預設設定（命名鍵、綁定站別/聊天室/表格、預設界限）。寫入僅限 `system_admin`、`quality_staff`；受部門隔離。
+匯入 UI 使用的預設設定（命名鍵、綁定站別/聊天室/表格、預設界限）。**為租戶層級（不分部門）**。**讀取**需 `system_admin` / `quality_staff` / `line_operator`（viewer 讀取會回 `403`）；**寫入**僅限 `system_admin`、`quality_staff`。
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1785,7 +1797,9 @@ Quantitative CCM（管制計畫）
   "default_ucl": 10.5, "default_cl": 10.0, "default_lcl": 9.5
 }
 ```
-> `naming_keys` 支援特殊符 `_part_number_`、`_batch_number_`。`composite_keys`/`limit_mappings` 目前為保留欄位（僅儲存與回傳）。
+> `naming_keys` **必填且至少 1 個鍵**（空陣列回 `422`）；支援特殊符 `_part_number_`、`_batch_number_`。
+> `timestamp_key`：指定後，匯入時系統依該層別欄位的時間值排序決定樣本順序（`idx`）；**不含時區的時間一律視為 UTC**；無法解析的非空時間值會使該計畫匯入失敗。
+> `composite_keys`/`limit_mappings` 目前為保留欄位（僅儲存與回傳）。
 
 ---
 
@@ -1901,12 +1915,12 @@ Quantitative CCM（管制計畫）
 
 | 欄位 | 型別 | 必填 | 說明 / 限制 |
 | :--- | :--- | :--- | :--- |
-| `characteristic_name` | String | 是 | 管制項目名稱，最大 128 字元 |
-| `station` | String | 是 | 站別（**新增必填**） |
+| `characteristic_name` | String | 是 | 管制項目名稱，上限 128 字元（DB，見下） |
+| `station` | String | 是 | 站別（必填，1–128 字元；API 層驗證） |
 | `category_information` | Array&lt;CategoryInfo&gt; | 是 | 層別資訊；未使用 preset 時至少一項 `naming=true` |
-| `samples` | Array&lt;String&gt; | 是 | 樣本值（**字串**陣列，建議保留位數如 `"1.250"`） |
-| `part_number` | String \| null | 否 | 產品料號，最大 128 字元 |
-| `batch_number` | String \| null | 否 | 產品批號，最大 128 字元 |
+| `samples` | Array&lt;String&gt; | 是 | 樣本值（**字串**陣列，以字串傳遞避免浮點誤差；精度取小數點後有效位數最大值，見 08 §3.10） |
+| `part_number` | String \| null | 否 | 產品料號，上限 128 字元（DB，見下） |
+| `batch_number` | String \| null | 否 | 產品批號，上限 128 字元（DB，見下） |
 | `ucl` | Number \| null | 否 | 規格上限（可於匯入時直接帶入） |
 | `cl` | Number \| null | 否 | 規格中心值 |
 | `lcl` | Number \| null | 否 | 規格下限 |
@@ -1915,10 +1929,14 @@ Quantitative CCM（管制計畫）
 
 | 欄位 | 型別 | 必填 | 說明 / 限制 |
 | :--- | :--- | :--- | :--- |
-| `key` | String | 是 | 層別名稱，最大 128 字元（如：線別、機台） |
-| `value` | String | 是 | 層別數值，最大 128 字元（如：A線、M01） |
+| `key` | String | 是 | 層別名稱（如：線別、機台） |
+| `value` | String | 是 | 層別數值（如：A線、M01） |
 | `order` | Integer | 是 | 命名拼接順序，**同項目內必須唯一** |
 | `naming` | Boolean | 否 | `true`：參與計畫命名；`false`/省略：僅作紀錄 |
+
+> **字串長度政策**：`characteristic_name`／`part_number`／`batch_number`／`station`（及逐步建立的 `name`／`spec`／`measurement_unit`）在資料庫層皆為 **VARCHAR(128)**，有效上限 **128** 字元；`operator_name` 為 **64**。
+> **強制層級不同**：`station` 於 API 層驗證（超過回 `422`）；其餘欄位在 **All-in-One 路徑不做前置驗證**，超過 128 會在**寫入資料庫時失敗**（回 `500` 或依 DB 設定截斷），而非乾淨的 `422`。逐步建立（§2）API 多數欄位於 API 層即驗證 128。
+> 層別 `category_information` 的 `key`／`value` 存於 **JSON 欄位，無長度上限**。
 
 ## 1.3 批量匯入根物件 (BulkAllInOnePayload)
 
@@ -2050,7 +2068,7 @@ Quantitative CCM（管制計畫）
 | 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
 | `samples` | Array&lt;Number&gt; | 是 | 樣本值（**數值**陣列；注意與 all-in-one 的字串陣列不同） |
-| `operator_name` | String | 是 | 操作員 |
+| `operator_name` | String | 是 | 操作員（最大 64 字元） |
 | `category_information` | Object \| null | 否 | 覆寫層別（提供至少一組鍵值時覆寫父 CCM） |
 
 **批量 (BulkCreateQuantitativeCCMEntitySamplePayload)**：`{ samples: [CreateSamplePayload, ...] }`。
@@ -2241,13 +2259,13 @@ Quantitative CCM（管制計畫）
 
 ### Q5: 欄位長度與格式有什麼具體限制？
 **系統現狀**：
-- **字串長度**：`part_number`、`batch_number`、`characteristic_name` 與層別鍵值對均限制為 **128** 字元。
+- **字串長度**：`name`、`part_number`、`batch_number`、`spec`、`station`、`characteristic_name`、`measurement_unit` 在 DB 層皆為 **128** 字元（`VARCHAR(128)`），`operator_name` 為 **64**。**強制層級不同**：`station` 於 API 層驗證（超過回 `422`）；All-in-One 其餘欄位不做前置驗證，超過 128 會在**寫入時失敗**（`500`／截斷）。層別 `key`／`value`（JSON）無長度上限（詳見 09 §1.2）。
 - **特殊符號**：支援大多數標準字元，建議避開特殊路徑字元（如 `/ \ : * ? " < > |`）。
 
 ### Q6: API 是否有頻率限制 (Rate Limit)？
 **系統現狀**：
 - **單次請求**：技術上限為 **10,000 筆** items。
-- **頻率限制**：目前未設置硬性 Rate Limit，但建議每批次間隔 1 秒以上，並採用指數退避 (Exponential Backoff) 處理可能的 429 錯誤。
+- **頻率限制**：後端目前**未實作** Rate Limit，正常情況不會回傳 `429`。仍建議大量匯入時控制併發、批次間留間隔（如 1 秒以上），以降低後端負載。
 
 ---
 
@@ -2266,7 +2284,7 @@ Quantitative CCM（管制計畫）
 ### Q9: 為什麼樣本值一定要用字串格式？
 **系統現狀**：
 - **高精度推斷**：系統會從字串內容推斷原始精度（如 `"1.250"` 代表 3 位小數）。
-- **避開浮點數誤差**：數值型態 (Float) 可能因解析產生微小誤差（如 `1.24999999`），進而影響 Cp/Cpk 統計。詳見 [08 節 3.1](#31-樣本精度自動推斷-precision-inference)。
+- **避開浮點數誤差**：數值型態 (Float) 可能因解析產生微小誤差（如 `1.24999999`），進而影響 Cp/Cpk 統計。詳見 [08 §3.10 精度自動推斷](#precision-inference)。
 
 ### Q10: 如果部分資料匯入失敗，會發生什麼？
 **系統現狀**：系統採 **「計畫級別事務 (CCM-Level Transaction)」**。
@@ -2301,6 +2319,8 @@ Quantitative CCM（管制計畫）
 
 > **建議**：自動化匯入請向數辰申請一組**專用整合帳號**，勿綁定個人帳號，以利權限控管與輪換。
 > 若「取得 Token」與「SPC API」分屬不同網域，數辰會分別提供，請對應替換。
+>
+> **互動式 API 文件**：多數部署提供 Swagger UI 於 `https://<your-api-host>/docs`，可線上瀏覽最新端點與 schema、直接試打。對接前建議先開來與本文件對照。
 
 ---
 
@@ -2527,6 +2547,53 @@ if __name__ == "__main__":
 
 ---
 
+## 第四步：讀回資料（能力分析／樣本／警報）
+
+匯入後，可透過下列唯讀端點把統計結果拉回自有系統。全部相對於 Base Path `/private/ccm/quantitative`，皆需帶 Bearer Token。
+
+> **共通陷阱**（前端實作即如此，整合者最常卡在這）：
+> - **`category_filters` 是 JSON-in-query**：把篩選條件序列化成 **JSON 字串**再放進 query，並整包 URL-encode。值為**單一物件**（多維度是 AND），不是陣列、不是重複參數、不是逗號分隔。維度 key 即計畫的層別鍵（實務常為中文）。
+>   例：`{"批號":"A01"}` → `category_filters=%7B%22%E6%89%B9%E8%99%9F%22%3A%22A01%22%7D`。**不篩選就整個省略此參數**（代表「全部」）。
+>   多值（如批號 A01+A02）需**展開成多次呼叫**（每次帶一個組合），後端不吃一次多值。
+> - **`merge_duplicates`**：只有要合併重複時才帶字串 `'true'`；否則**省略**。
+> - **分頁靠「短頁結束」**：回傳筆數 `< limit`（100）即最後一頁，**不要用 `total_samples_count` 判斷**——`merge_duplicates=true` 時它是去重後數字，與未去重的 `samples` 長度刻意不一致。`offset` = 已載入的原始樣本數。
+
+### 1. 能力分析 Cp/Cpk
+
+```
+GET .../{ccm_id}/entities/{entity_id}/samples/capability
+    ?offset=0&limit=100&order=asc
+    &category_filters=<JSON,URL-encoded，有篩選才帶>
+    &start_date=YYYY-MM-DD&end_date=YYYY-MM-DD   （選填）
+    &merge_duplicates=true                        （選填，僅 true 時帶）
+```
+> **Cp/Cpk 在哪**：不在頂層。取 `capability.chart_limits[]` 中 `entity_name === "x_bar"` 那筆的 `cp`/`cpk`/`pp`/`ppk`/`ca`/`cpu`/`cpl`…；彙總統計在 `capability.*`，原始樣本在 `samples`。
+
+### 2. 樣本清單／計數
+
+```
+GET .../{ccm_id}/entities/{entity_id}/samples?offset=0&limit=100&order=asc&start_date=&end_date=
+GET .../{ccm_id}/entities/{entity_id}/samples/count?start_date=&end_date=   → { "num": 1234 }
+```
+
+### 3. 樣本警報
+
+```
+GET .../{ccm_id}/entities/{entity_id}/sample-alerts?limit=100&order=desc&alert_type=nelson_rule
+```
+> `alert_type` 為單值枚舉 `nelson_rule` / `alarm_limit`，省略則回全部類型。
+
+### 4. 建議界限
+
+```
+GET .../{ccm_id}/entities/{entity_id}/samples/capability/recommended-limits
+    ?target_index=cpk&target_value=1.33
+    &category_filters=<...>&start_date=&end_date=&merge_duplicates=
+```
+> `target_index` 必帶（`cp`/`cpk`/`pp`/`ppk`）；`target_value` 必帶，範圍 **0.5–3.0**（常用 1.33 / 1.67 / 2.0）。回傳含建議的 UCL/CL/LCL。
+
+---
+
 ## 替代路徑：網頁手動匯入
 
 若不自行撰寫程式，也可使用 TeamSync 網頁介面手動上傳 CSV：
@@ -2558,6 +2625,7 @@ if __name__ == "__main__":
 | 2026-04-14 | 09 JSON 格式規範 | 初始版本，按 08 順序擴充 |
 | 2026-07-02 | 08、11、12、00 | 新增 [11 對接快速指南](#doc-11)（取得 Token → 提交 → 輪詢，含 JS/Python 可執行範例）；[08](#doc-08) §2.9 補「管制圖自動判定」表；修正取得 Token 端點為 `/public/auth/signin`、補 Token 效期（約 15 分鐘）與更新機制；本文件由「JSON 範本差異說明」擴充為文件集 Changelog，並集中 08／09 之修訂歷史；目錄補列 11／12 並將版次異動置底；移除過時的匯入範本拷貝，改指站台即時範本 |
 | 2026-07-02 | 08、09、11 | **全量同步後端 quant_ccm（61 端點）**：08/09 重寫為完整 API reference。新增 Capability 能力分析、Import Presets、Permissions、all-in-one/compare、Export v2、count/category-values/swap-order 等；新增「存取控制與權限模型」章節（角色 + 部門隔離）。**行為校正**：all-in-one `AllInOnePayload` 新增必填 `station`、選填 `ucl/cl/lcl`，`BulkAllInOnePayload` 新增 `preset_id`；**Nelson Rules 由字串格式改為結構化物件**；Chart Limit 回傳加能力指標、Sample 回傳加 `std_dev/mr_value/total_value`。11 範例同步補 `station` |
+| 2026-07-03 | 08、09、10、11、12、00 | **對照後端+前端最新實作校正**：更正部門隔離描述（匯入預設為**租戶層級非部門隔離**；能力分析端點**刻意繞過**部門隔離；部門**精確比對** → NULL 舊資料對已設部門者不可見，遷移前需回填 `department_id`）；補 viewer 讀 import-presets 為 `403`、`naming_keys` 必填至少 1、`timestamp_key` UTC 排序與失敗行為、All-in-One 自動抽出料號/批號。**釐清長度限制**：scalar 字串欄位（`name`/`part_number`/`batch_number`/`spec`/`station`/`characteristic_name`/`measurement_unit`）DB 層均為 `VARCHAR(128)`；`station` 於 API 層驗證，All-in-One 其餘欄位不前置驗證、超過於寫入時失敗（500/截斷）；層別 `key`/`value`（JSON）無上限；`operator_name` 限 64。11 新增「讀回資料」小節（capability/samples/alerts/recommended-limits，及 `category_filters` JSON-in-query、`merge_duplicates` 省略、短頁分頁等陷阱）並補 Swagger `/docs`。移除後端不存在的 `429` 處理建議；修正精度說明（去尾端 0 取最大有效位，`"1.250"` 視為 2 位）。舊版散稿（CCM/JSON_SCHEMA/SAMPLES/FRONTEND_INTEGRATION_GUIDE/DOCUMENTATION_PLAN）移入 `legacy/` |
 
 ---
 
@@ -2572,8 +2640,7 @@ if __name__ == "__main__":
   "items": [
     {
       "characteristic_name": "鎳",
-      // 第一版：無明確限制
-      // 第二版：最大 128 字元
+      // DB 上限 128（All-in-One 不前置驗證，超過於寫入時失敗）
 
       "station": "電鍍",
       // 現行版新增：必填（站別）
@@ -2588,16 +2655,15 @@ if __name__ == "__main__":
 
       "category_information": [
         {
-          "key": "線別",                // 第二版新增：最大 128 字元
-          "value": "A線",               // 第二版新增：最大 128 字元
+          "key": "線別",                // JSON 儲存，無長度上限
+          "value": "A線",               // JSON 儲存，無長度上限
           "naming": true,               // 第一版：無說明 → 第二版：必填，需至少一個 naming=true
           "order": 1                    // 第一版：無說明 → 第二版：同項目內必須唯一
         }
       ],
 
       "samples": ["9.781", "9.567", "9.461"]
-      // 第一版：無格式說明
-      // 第二版：建議保留位數（如 "1.250"）
+      // 字串傳遞避免浮點誤差；精度取小數點後有效位數最大值（"1.250" 視為 2 位）
     }
   ]
 }
@@ -2622,10 +2688,10 @@ if __name__ == "__main__":
 | 變更項目 | 第一版 | 第二版 |
 | :--- | :--- | :--- |
 | `part_number` / `batch_number` | 必填 | 選填 |
-| `characteristic_name` 長度 | 無限制 | 最大 128 字元 |
-| `category_information[].key/value` 長度 | 無限制 | 最大 128 字元 |
+| `characteristic_name` 長度 | 無限制 | DB 上限 128（All-in-One 不前置驗證，超過於寫入失敗） |
+| 層別 `key`/`value` 長度 | 無限制 | 無上限（JSON 儲存） |
 | `category_information[].naming` | 無說明 | 至少需一個 `naming=true` |
 | `category_information[].order` | 無說明 | 同項目內必須唯一 |
-| `samples` 格式 | 無說明 | 建議保留位數（字串格式） |
+| `samples` 格式 | 無說明 | 字串格式，精度取有效位數最大值 |
 | `station` | 無此欄 | **現行版新增：必填** |
 | `ucl` / `cl` / `lcl` | 無此欄 | 現行版新增：選填（可直接帶入規格界限） |

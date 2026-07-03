@@ -14,12 +14,12 @@
 
 | 欄位 | 型別 | 必填 | 說明 / 限制 |
 | :--- | :--- | :--- | :--- |
-| `characteristic_name` | String | 是 | 管制項目名稱，最大 128 字元 |
-| `station` | String | 是 | 站別（**新增必填**） |
+| `characteristic_name` | String | 是 | 管制項目名稱，上限 128 字元（DB，見下） |
+| `station` | String | 是 | 站別（必填，1–128 字元；API 層驗證） |
 | `category_information` | Array&lt;CategoryInfo&gt; | 是 | 層別資訊；未使用 preset 時至少一項 `naming=true` |
-| `samples` | Array&lt;String&gt; | 是 | 樣本值（**字串**陣列，建議保留位數如 `"1.250"`） |
-| `part_number` | String \| null | 否 | 產品料號，最大 128 字元 |
-| `batch_number` | String \| null | 否 | 產品批號，最大 128 字元 |
+| `samples` | Array&lt;String&gt; | 是 | 樣本值（**字串**陣列，以字串傳遞避免浮點誤差；精度取小數點後有效位數最大值，見 08 §3.10） |
+| `part_number` | String \| null | 否 | 產品料號，上限 128 字元（DB，見下） |
+| `batch_number` | String \| null | 否 | 產品批號，上限 128 字元（DB，見下） |
 | `ucl` | Number \| null | 否 | 規格上限（可於匯入時直接帶入） |
 | `cl` | Number \| null | 否 | 規格中心值 |
 | `lcl` | Number \| null | 否 | 規格下限 |
@@ -28,10 +28,14 @@
 
 | 欄位 | 型別 | 必填 | 說明 / 限制 |
 | :--- | :--- | :--- | :--- |
-| `key` | String | 是 | 層別名稱，最大 128 字元（如：線別、機台） |
-| `value` | String | 是 | 層別數值，最大 128 字元（如：A線、M01） |
+| `key` | String | 是 | 層別名稱（如：線別、機台） |
+| `value` | String | 是 | 層別數值（如：A線、M01） |
 | `order` | Integer | 是 | 命名拼接順序，**同項目內必須唯一** |
 | `naming` | Boolean | 否 | `true`：參與計畫命名；`false`/省略：僅作紀錄 |
+
+> **字串長度政策**：`characteristic_name`／`part_number`／`batch_number`／`station`（及逐步建立的 `name`／`spec`／`measurement_unit`）在資料庫層皆為 **VARCHAR(128)**，有效上限 **128** 字元；`operator_name` 為 **64**。
+> **強制層級不同**：`station` 於 API 層驗證（超過回 `422`）；其餘欄位在 **All-in-One 路徑不做前置驗證**，超過 128 會在**寫入資料庫時失敗**（回 `500` 或依 DB 設定截斷），而非乾淨的 `422`。逐步建立（§2）API 多數欄位於 API 層即驗證 128。
+> 層別 `category_information` 的 `key`／`value` 存於 **JSON 欄位，無長度上限**。
 
 ## 1.3 批量匯入根物件 (BulkAllInOnePayload)
 
@@ -163,7 +167,7 @@
 | 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
 | `samples` | Array&lt;Number&gt; | 是 | 樣本值（**數值**陣列；注意與 all-in-one 的字串陣列不同） |
-| `operator_name` | String | 是 | 操作員 |
+| `operator_name` | String | 是 | 操作員（最大 64 字元） |
 | `category_information` | Object \| null | 否 | 覆寫層別（提供至少一組鍵值時覆寫父 CCM） |
 
 **批量 (BulkCreateQuantitativeCCMEntitySamplePayload)**：`{ samples: [CreateSamplePayload, ...] }`。
