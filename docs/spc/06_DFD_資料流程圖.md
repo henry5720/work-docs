@@ -6,7 +6,7 @@
 
 ```mermaid
 graph TD
-    A[外部系統 Payload] --> B{API Gateway 認證}
+    A[外部系統 Payload] --> B{Bearer Token 認證}
     B -->|認證通過| C[FastAPI POST /all-in-one]
 
     subgraph Phase1 [階段一：提交 (同步)]
