@@ -62,7 +62,7 @@ graph LR
 ```mermaid
 erDiagram
     TENANT ||--o{ STATION : "1:N"
-    TENANT ||--o{ PRODUCT_LAYOUT : "1:N"
+    TENANT ||--|| PRODUCT_LAYOUT : "1:1"
     TENANT ||--o{ QC_PLAN_LAYOUT : "1:N"
     TENANT ||--o{ QUANT_CCM : "1:N"
     TENANT ||--o{ MEASUREMENT_UNIT : "1:N"
@@ -77,8 +77,8 @@ erDiagram
     QC_PLAN_LAYOUT ||--o{ QC_PLAN_GROUP : "1:N"
     QC_PLAN_GROUP ||--o{ QC_PLAN_GROUP_COLUMN : "1:N"
 
-    SPC_ENTITY_GROUP ||--o{ SPC_ENTITY : "1:N"
-    SPC_ENTITY }o--|| BLOB : "0:1"
+    SPC_ENTITY_GROUP }o--o{ SPC_ENTITY : "N:M (association)"
+    SPC_ENTITY }o--o| BLOB : "0:1"
 
     QUANT_CCM ||--o{ QUANT_CCM_ENTITY : "1:N"
     QUANT_CCM ||--o{ QUANT_NELSON_RULES_SETTING : "1:N"
