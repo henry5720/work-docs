@@ -1,4 +1,4 @@
-# 數辰 SPC 系統對接規範文件索引 (v1.1)
+# 數辰 SPC 系統對接規範文件索引 (v1.3)
 
 本目錄包含 SPC 系統整合之完整技術規格文件，旨在提供開發、測試與維護之標準指引。
 
@@ -20,7 +20,7 @@
 | [12 版次異動說明](#doc-12) | Changelog | 文件集修訂歷史；以 JSON 範本呈現差異，差異處以註解標註 |
 
 ---
-**最後更新**：2026-07-03
+**最後更新**：2026-07-06
 **負責團隊**：數辰 PM 團隊 / IT 開發組
 
 # 01 軟體需求規格書 (SRS) - SPC 系統全範疇規範 {#doc-01}
@@ -69,7 +69,7 @@ graph TD
 - **量測單位 (Measurement Units)**: 標準化物理單位字典（mm, kg, μm）。需設定預設的小數位數 (Digits)。
 - **等級基準 (Grade Standards)**: 定義 Cpk 燈號規則（例如：Cpk > 1.33 為綠色 A 級）。
 - **檢驗標準 (Inspection Standards)**: **[UI 預留]** 關聯至 SOP 文件或 AQL 抽樣計畫，目前僅需儲存鏈結。
-- **檔案群組 (File Groups)**: 提供虛擬資料夾結構，用於分類管理大量的管制計畫檔案。
+- **檔案群組 (File Groups)**: 提供虛擬資料夾結構，用於分類管理大量的管制計畫。
 
 ## 2.1 辭庫 Table 結構彙整
 
@@ -206,7 +206,7 @@ graph TD
 | **辭庫** | 檢驗標準關聯 | **UI 預留** | 僅前端 UI 框架，邏輯待對接 |
 | **分析** | 管制圖基本功能 | 已完成 | 支援 8 大尼爾森規則 |
 | **分析** | 趨勢預測面板 | **UI 預留** | 僅前端 UI 佔位，後端算法開發中 |
-| **檔案** | 檔案群組管理 | 已完成 | 支援多級虛擬目錄 |
+| **計畫** | 檔案群組管理 | 已完成 | 支援多級虛擬目錄 |
 
 ---
 
@@ -295,10 +295,10 @@ graph TD
 | `/spc/dictionary/level` | 等級基準管理 |
 | `/spc/dictionary/standard` | 檢驗標準管理 |
 | `/spc/dictionary/file-group` | 檔案群組管理 |
-| `/spc/files/measurement-value` | 量測值檔案列表 |
+| `/spc/files/measurement-value` | 量測值計畫列表 |
 | `/spc/files/measurement-value/samples` | 樣本資料檢視/編輯 |
 | `/spc/files/measurement-value/import` | Excel/CSV 匯入 |
-| `/spc/files/measurement-value/settings` | 檔案設定 |
+| `/spc/files/measurement-value/settings` | 計畫設定 |
 | `/spc/analysis` | SPC 分析工具 |
 | `/spc/export` | 匯出報表 |
 | `/spc/exceptions` | 異常彙總 |
@@ -343,8 +343,8 @@ sequenceDiagram
 
 前端以 React 搭配資料取得層（data-fetching）向後端 REST API 讀寫資料，並以快取與分頁機制支撐大量樣本的效能。功能上分為三類：
 
-- **資料讀取**：載入計畫（含管制項目與各項設定）、辭庫資料（產品、站台、單位、群組、等級、檢驗標準）、檔案與樣本清單，以及分析所需的層化資料、統計摘要與能力分析的建議界限。
-  - **列表載入策略**：檔案/樣本清單支援「過濾查詢」、「延遲載入」與「混合模式」；大量樣本採**無限滾動**分批取回，避免一次載入全部資料。
+- **資料讀取**：載入計畫（含管制項目與各項設定）、辭庫資料（產品、站台、單位、群組、等級、檢驗標準）、計畫與樣本清單，以及分析所需的層化資料、統計摘要與能力分析的建議界限。
+  - **列表載入策略**：計畫/樣本清單支援「過濾查詢」、「延遲載入」與「混合模式」；大量樣本採**無限滾動**分批取回，避免一次載入全部資料。
 - **匯入流程**：支援新版匯入流程、對應到既有計畫的匯入，以及匯入時的辭庫（層別/單位等）解析與比對。
 - **資料表運算**：提供樞紐分析、統計彙總，以及 Excel 匯入/匯出的前端處理。
 
@@ -354,24 +354,24 @@ sequenceDiagram
 
 ## 2.4 前端狀態管理機制
 
-檔案編輯頁採用 Zustand 作為**前端本地狀態**（client-side state），在使用者按下儲存前於瀏覽器暫存草稿，減少往返請求。管理的內容與行為包含：
+計畫編輯頁採用 Zustand 作為**前端本地狀態**（client-side state），在使用者按下儲存前於瀏覽器暫存草稿，減少往返請求。管理的內容與行為包含：
 
-- **檔案基本設定**：名稱、料號、批號、規格、站別、層別資訊等（對應建立/更新 CCM 的欄位）。
+- **計畫基本設定**：名稱、料號、批號、規格、站別、層別資訊等（對應建立/更新 CCM 的欄位）。
 - **管制項目編輯**：新增、更新、刪除、重新排序管制項目，並可設定層別維度與目前選取的項目。
 - **未儲存變更追蹤**：以「dirty」標記提示尚未儲存的變更；新建立但未落庫的項目使用臨時識別碼，儲存後再由後端配發正式 ID。
-- **載入與重設**：可從 API 載入既有檔案資料至本地狀態，或完全重設/重設設定。
+- **載入與重設**：可從 API 載入既有計畫資料至本地狀態，或完全重設/重設設定。
 
 ---
 
 ## 2.5 常數定義
 
-### 2.5.1 檔案類型
+### 2.5.1 計畫類型
 
 | 值 | 說明 |
 | :--- | :--- |
-| `measurement-value` | 計量值檔案（本文件對接對象） |
-| `count-value` | 計數值檔案 |
-| `merged` | 合併檔案 |
+| `measurement-value` | 計量值計畫（本文件對接對象） |
+| `count-value` | 計數值計畫 |
+| `merged` | 合併計畫 |
 
 ### 2.5.2 辭庫類型
 
@@ -505,7 +505,7 @@ graph LR
 | :--- | :--- |
 | **API 路由層** | 對外端點。分為受保護路由（`/private`，需 Bearer Token）、管理路由（`/db`、`/root`，以管理權杖授權）；定量管制（Quantitative CCM）為主要業務路由群。 |
 | **業務邏輯層** | CCM、管制圖、能力分析、Excel 匯出等領域邏輯。 |
-| **資料存取層 (CRUD)** | 產品版面、QC Plan 版面、檔案物件、租戶等實體的存取。 |
+| **資料存取層 (CRUD)** | 產品版面、QC Plan 版面、計畫物件、租戶等實體的存取。 |
 | **資料模型層** | 資料庫實體與關聯定義（產品、站台、SPC 實體、定量 CCM、品質標準、量測單位、等級標籤、租戶等）。 |
 | **依賴與工具層** | 認證/授權、DB 與 Redis 連線、能力指標計算、憑證處理、錯誤處理、物件儲存、日誌與通知。 |
 | **Schema 層** | 請求 Payload 與回應模型（對應 OpenAPI 定義）。 |
@@ -901,7 +901,7 @@ $$CL = μ$$
 
 前端採用集中式狀態管理（Zustand），將 CCM 編輯狀態與辭庫快取分層管理，供整合方理解互動模型：
 
-- **檔案編輯狀態**: 保存目前編輯中的 CCM 基本資訊、層別資訊、管制項目清單與 Nelson Rules 設定，並追蹤「是否有未儲存變更（dirty）」；新增中的項目以暫時性負值 ID 標記，儲存後由後端換發正式 ID。
+- **計畫編輯狀態**: 保存目前編輯中的 CCM 基本資訊、層別資訊、管制項目清單與 Nelson Rules 設定，並追蹤「是否有未儲存變更（dirty）」；新增中的項目以暫時性負值 ID 標記，儲存後由後端換發正式 ID。
 - **辭庫快取**: 產品、站台、量測單位等主資料的前端快取。
 - **分析狀態**: 圖表縮放、層別過濾器等檢視狀態。
 - **檔案樹狀態**: 檔案群組樹與拖放操作的暫存。
@@ -1300,7 +1300,7 @@ erDiagram
 
 | # | Resource（資源）| 功能說明 |
 | :--- | :--- | :--- |
-| 1 | **Control Plans 管制計畫** | 建立、管理 SPC 檔案（名稱、料號、批號、站別、層別資訊） |
+| 1 | **Control Plans 管制計畫** | 建立、管理 SPC 計畫（名稱、料號、批號、站別、層別資訊） |
 | 2 | **Entities 管制項目** | 管制項目（如厚度、長度）及其排序 |
 | 3 | **Chart Settings 管制圖設定** | 管制圖類型（X̄-R/X̄-S/X̄-MR）與界限（含能力指標） |
 | 4 | **Sampling Settings 抽樣設定** | 樣本數、精度、抽樣頻率、方法 |
@@ -2598,7 +2598,7 @@ GET .../{ccm_id}/entities/{entity_id}/samples/capability/recommended-limits
 
 若不自行撰寫程式，也可使用 TeamSync 網頁介面手動上傳 CSV：
 
-- **操作路徑**：登入你的 TeamSync → **SPC → 計量值檔案 → 匯入**。
+- **操作路徑**：登入你的 TeamSync → **SPC → 計量值計畫 → 匯入**。
 - **下載範本**：於匯入介面點「**下載範本**」按鈕取得最新範本（此為主要方式，網址由系統依部署自動產生）。
   範本檔名為 `量測值匯入範本_AllInOne.csv`，一般位於 `https://<your-api-host>/spc/量測值匯入範本_AllInOne.csv`（實際路徑視站台部署而定）。
 
@@ -2625,6 +2625,7 @@ GET .../{ccm_id}/entities/{entity_id}/samples/capability/recommended-limits
 | 2026-04-14 | 09 JSON 格式規範 | 初始版本，按 08 順序擴充 |
 | 2026-07-02 | 08、11、12、00 | 新增 [11 對接快速指南](#doc-11)（取得 Token → 提交 → 輪詢，含 JS/Python 可執行範例）；[08](#doc-08) §2.9 補「管制圖自動判定」表；修正取得 Token 端點為 `/public/auth/signin`、補 Token 效期（約 15 分鐘）與更新機制；本文件由「JSON 範本差異說明」擴充為文件集 Changelog，並集中 08／09 之修訂歷史；目錄補列 11／12 並將版次異動置底；移除過時的匯入範本拷貝，改指站台即時範本 |
 | 2026-07-02 | 08、09、11 | **全量同步後端 quant_ccm（61 端點）**：08/09 重寫為完整 API reference。新增 Capability 能力分析、Import Presets、Permissions、all-in-one/compare、Export v2、count/category-values/swap-order 等；新增「存取控制與權限模型」章節（角色 + 部門隔離）。**行為校正**：all-in-one `AllInOnePayload` 新增必填 `station`、選填 `ucl/cl/lcl`，`BulkAllInOnePayload` 新增 `preset_id`；**Nelson Rules 由字串格式改為結構化物件**；Chart Limit 回傳加能力指標、Sample 回傳加 `std_dev/mr_value/total_value`。11 範例同步補 `station` |
+| 2026-07-06 | 01、02、03、04、08、11、00 | **術語統一（v1.3）**：因應前端 UI 改版，將「計量值檔案」實體一律更名為「**計量值計畫**」（沿用前端與現有文件「計畫」用字，非「計劃」）。涵蓋 檔案設定→計畫設定、檔案基本設定→計畫基本設定、檔案編輯（頁/狀態）→計畫編輯、檔案類型→計畫類型、計數值/合併檔案→計數值/合併計畫、SPC 檔案→SPC 計畫、計畫與樣本清單等。**保留原詞**：`檔案群組 (File Groups)` 虛擬資料夾、blobs 檔案儲存表、Excel 檔案串流等泛稱「檔案」，以及路由與程式碼識別碼（`/spc/files/measurement-value`、`fileGroup`）不變 |
 | 2026-07-03 | 08、09、10、11、12、00 | **對照後端+前端最新實作校正**：更正部門隔離描述（匯入預設為**租戶層級非部門隔離**；能力分析端點**刻意繞過**部門隔離；部門**精確比對** → NULL 舊資料對已設部門者不可見，遷移前需回填 `department_id`）；補 viewer 讀 import-presets 為 `403`、`naming_keys` 必填至少 1、`timestamp_key` UTC 排序與失敗行為、All-in-One 自動抽出料號/批號。**釐清長度限制**：scalar 字串欄位（`name`/`part_number`/`batch_number`/`spec`/`station`/`characteristic_name`/`measurement_unit`）DB 層均為 `VARCHAR(128)`；`station` 於 API 層驗證，All-in-One 其餘欄位不前置驗證、超過於寫入時失敗（500/截斷）；層別 `key`/`value`（JSON）無上限；`operator_name` 限 64。11 新增「讀回資料」小節（capability/samples/alerts/recommended-limits，及 `category_filters` JSON-in-query、`merge_duplicates` 省略、短頁分頁等陷阱）並補 Swagger `/docs`。移除後端不存在的 `429` 處理建議；修正精度說明（去尾端 0 取最大有效位，`"1.250"` 視為 2 位）。舊版散稿（CCM/JSON_SCHEMA/SAMPLES/FRONTEND_INTEGRATION_GUIDE/DOCUMENTATION_PLAN）移入 `legacy/` |
 
 ---
