@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TeamSync 表格設定 - 審核</title>
+  <style>
+    :root {
+      --page-dim: rgba(20, 23, 24, 0.42);
+      --block-default: #ffffff;
+      --block-muted: #f7f8fa;
+      --brand: #43bf8e;
+      --brand-soft: #effaf5;
+      --text-primary: #141718;
+      --text-secondary: #363c41;
+      --text-tertiary: #6d7782;
+      --text-placeholder: #b5bec7;
+      --border: #e8eaec;
+      --border-strong: #d1d5d9;
+      --shadow-dialog: 0 10px 32px -4px rgba(0, 0, 0, 0.2);
+      --shadow-module: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: var(--page-dim);
+      font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+      color: var(--text-secondary);
+    }
+
+    button { font: inherit; }
+
+    .dialog {
+      width: 640px;
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      background: var(--block-default);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow-dialog);
+      padding: 32px;
+      position: relative;
+      display: grid;
+      gap: 24px;
+    }
+
+    .close {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      width: 28px;
+      height: 28px;
+      border: 0;
+      background: transparent;
+      color: var(--text-secondary);
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .title {
+      margin: 0 0 20px;
+      color: var(--text-secondary);
+      font-size: 18px;
+      line-height: 24px;
+      font-weight: 600;
+      letter-spacing: -0.25px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      height: 38px;
+      border: 0;
+      background: transparent;
+      color: var(--text-placeholder);
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 400;
+      padding: 0;
+      position: relative;
+    }
+
+    .tab.active {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .tab.active:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      background: var(--brand);
+    }
+
+    .body {
+      display: grid;
+      gap: 20px;
+    }
+
+    .setting-summary {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      display: grid;
+      gap: 4px;
+      background: #fff;
+    }
+
+    .summary-title {
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .summary-copy {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-tertiary);
+    }
+
+    .approval-card {
+      border-radius: 10px;
+      background: var(--block-muted);
+      box-shadow: var(--shadow-module);
+      overflow: hidden;
+    }
+
+    .approval-head {
+      min-height: 44px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .approval-title {
+      font-size: 16px;
+      line-height: 24px;
+      color: #3e3d3d;
+      font-weight: 500;
+    }
+
+    .switch {
+      width: 40px;
+      height: 20px;
+      border: 0;
+      border-radius: 20px;
+      background: var(--brand);
+      position: relative;
+      padding: 0;
+    }
+
+    .switch:after {
+      content: "";
+      position: absolute;
+      right: 2px;
+      top: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .approval-body {
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .flow-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .flow-title {
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .flow-copy {
+      color: var(--text-tertiary);
+      font-size: 12px;
+      line-height: 16px;
+      text-align: right;
+    }
+
+    .flow-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .flow-picker {
+      position: relative;
+      display: grid;
+      gap: 8px;
+    }
+
+    .flow-select {
+      width: 100%;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .flow-select-arrow {
+      width: 8px;
+      height: 8px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: rotate(45deg) translateY(-2px);
+      flex: 0 0 auto;
+    }
+
+    .flow-picker.open .flow-select {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 2px rgba(67, 191, 142, 0.12);
+    }
+
+    .flow-menu {
+      position: absolute;
+      top: 48px;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      display: none;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(20, 23, 24, 0.12);
+    }
+
+    .flow-picker.open .flow-menu { display: grid; gap: 6px; }
+
+    .flow-search {
+      width: 100%;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      outline: none;
+    }
+
+    .flow-search:focus { border-color: var(--brand); }
+
+    .flow-results {
+      max-height: 184px;
+      overflow: auto;
+      display: grid;
+      gap: 2px;
+    }
+
+    .flow-result {
+      width: 100%;
+      min-height: 44px;
+      padding: 6px 8px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      display: grid;
+      gap: 2px;
+      text-align: left;
+    }
+
+    .flow-result:hover,
+    .flow-result.active { background: var(--brand-soft); }
+
+    .flow-result strong { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .flow-result span { color: var(--text-tertiary); font-size: 12px; line-height: 16px; }
+    .flow-empty { padding: 12px 8px; color: var(--text-tertiary); font-size: 12px; line-height: 16px; text-align: center; }
+    .flow-summary-card { display: none; }
+    .flow-summary-card.show { display: grid; }
+    .approval-card { overflow: visible; }
+
+    .flow-option {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+      background: #fff;
+      cursor: default;
+    }
+
+    .flow-option.selected {
+      border-color: var(--brand);
+      background: var(--brand-soft);
+    }
+
+    .flow-option-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .flow-name {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+    }
+
+    .pill {
+      height: 22px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: var(--text-tertiary);
+      background: #fff;
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+    }
+
+    .flow-path {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      line-height: 16px;
+      flex-wrap: wrap;
+    }
+
+    .flow-chip {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: #fff;
+      color: var(--text-secondary);
+    }
+
+    .flow-meta,
+    .approval-note {
+      color: var(--text-tertiary);
+      font-size: 12px;
+      line-height: 16px;
+    }
+
+    .footer {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .btn {
+      min-width: 64px;
+      height: 36px;
+      border-radius: 8px;
+      border: 0;
+      padding: 4px 12px;
+      font-size: 14px;
+      line-height: 16px;
+      font-weight: 400;
+      letter-spacing: 0.84px;
+      background: transparent;
+      color: #6b7279;
+    }
+
+    .btn.primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    @media (max-width: 720px) {
+      body { place-items: stretch; }
+      .dialog {
+        width: 100%;
+        min-height: 100vh;
+        max-height: none;
+        border-radius: 0;
+      }
+      .tabs {
+        gap: 20px;
+        overflow: auto;
+        padding-bottom: 1px;
+      }
+      .flow-head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .flow-copy { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <main class="dialog">
+    <button class="close" aria-label="關閉">
+      <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+
+    <header>
+      <h1 class="title">設定</h1>
+      <nav class="tabs" aria-label="表格設定">
+        <button class="tab">基本資訊</button>
+        <button class="tab">欄位管理</button>
+        <button class="tab">權限</button>
+        <button class="tab active">審核</button>
+        <button class="tab">通知</button>
+      </nav>
+    </header>
+
+    <section class="body">
+      <div class="setting-summary">
+        <div class="summary-title">報帳紀錄表格</div>
+        <div class="summary-copy" id="summaryCopy">目前套用「報帳簽核流程」，新增資料會先進入審核，通過後才會寫入可用資料。</div>
+      </div>
+
+      <div class="approval-card">
+        <div class="approval-head">
+          <div class="approval-title">啟用審核</div>
+          <button class="switch" aria-label="啟用審核"></button>
+        </div>
+        <div class="approval-body">
+          <div class="flow-head">
+            <div class="flow-title">選擇審核流程</div>
+            <div class="flow-copy">通過後才納入 AI 搜尋、匯出與統計</div>
+          </div>
+
+          <div class="flow-picker" id="flowPicker">
+            <button class="flow-select" id="flowSelect" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="flowSelectLabel">報帳簽核流程</span>
+              <span class="flow-select-arrow" aria-hidden="true"></span>
+            </button>
+            <div class="flow-menu" id="flowMenu">
+              <input class="flow-search" id="flowSearch" type="search" placeholder="搜尋流程名稱或關卡" aria-label="搜尋審核流程" />
+              <div class="flow-results" id="flowResults" role="listbox"></div>
+            </div>
+          </div>
+          <div class="flow-option flow-summary-card show" id="selectedFlowCard"></div>
+
+          <div class="approval-note">若無適用流程，請先至 審核流程設定 建立流程後再回到此處套用</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <button class="btn">取消</button>
+      <div class="footer-actions">
+        <button class="btn primary">儲存</button>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const flows = [
+      { id: "leave", name: "請假簽核流程", path: ["主管", "人資"], detail: "2 關｜任一 HR 通過即可", usage: "已套用 2 張表格｜2026/05/28 更新" },
+      { id: "expense", name: "報帳簽核流程", path: ["主管", "財務", "會計"], detail: "3 關｜財務群組任一人通過", usage: "已套用 4 張表格｜2026/06/10 更新" },
+      { id: "purchase", name: "設備採購流程", path: ["部門主管", "行政採購"], detail: "2 關｜所有人核可", usage: "已套用 1 張表格｜2026/06/08 更新" },
+      { id: "customer", name: "客服升級審核流程", path: ["客服主管", "營運"], detail: "2 關｜任一人核可", usage: "尚未套用｜2026/06/02 更新" }
+    ];
+
+    const flowPicker = document.getElementById("flowPicker");
+    const flowSelect = document.getElementById("flowSelect");
+    const flowSearch = document.getElementById("flowSearch");
+    const flowResults = document.getElementById("flowResults");
+    const selectedFlowCard = document.getElementById("selectedFlowCard");
+    let selectedFlowId = "expense";
+
+    function renderFlowResults() {
+      const keyword = flowSearch.value.trim().toLowerCase();
+      const visible = flows.filter(flow => [flow.name, ...flow.path].join(" ").toLowerCase().includes(keyword));
+      flowResults.innerHTML = visible.length ? visible.map(flow => `
+        <button class="flow-result ${flow.id === selectedFlowId ? "active" : ""}" type="button" data-flow-id="${flow.id}" role="option" aria-selected="${flow.id === selectedFlowId}">
+          <strong>${flow.name}</strong>
+          <span>${flow.path.join(" → ")} · ${flow.detail}</span>
+        </button>
+      `).join("") : '<div class="flow-empty">找不到符合的審核流程</div>';
+    }
+
+    function selectFlow(id) {
+      const flow = flows.find(item => item.id === id);
+      if (!flow) return;
+      selectedFlowId = id;
+      document.getElementById("flowSelectLabel").textContent = flow.name;
+      document.getElementById("summaryCopy").textContent = `目前選擇「${flow.name}」，儲存後新增資料會先進入審核，通過後才會寫入可用資料。`;
+      selectedFlowCard.innerHTML = `
+        <div class="flow-option-top">
+          <div class="flow-name">${flow.name}</div>
+          <span class="pill">啟用中</span>
+        </div>
+        <div class="flow-path">${flow.path.map(stage => `<span class="flow-chip">${stage}</span>`).join("<span>→</span>")}<span class="flow-meta">${flow.detail}</span></div>
+        <div class="flow-meta">${flow.usage}</div>
+      `;
+      selectedFlowCard.classList.add("show");
+      flowPicker.classList.remove("open");
+      flowSelect.setAttribute("aria-expanded", "false");
+      flowSearch.value = "";
+      renderFlowResults();
+    }
+
+    flowSelect.addEventListener("click", () => {
+      const open = flowPicker.classList.toggle("open");
+      flowSelect.setAttribute("aria-expanded", String(open));
+      renderFlowResults();
+      if (open) requestAnimationFrame(() => flowSearch.focus());
+    });
+    flowSearch.addEventListener("input", renderFlowResults);
+    flowResults.addEventListener("click", event => {
+      const option = event.target.closest("[data-flow-id]");
+      if (option) selectFlow(option.dataset.flowId);
+    });
+    document.addEventListener("click", event => {
+      if (!event.target.closest("#flowPicker")) {
+        flowPicker.classList.remove("open");
+        flowSelect.setAttribute("aria-expanded", "false");
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        flowPicker.classList.remove("open");
+        flowSelect.setAttribute("aria-expanded", "false");
+        flowSelect.focus();
+      }
+    });
+    renderFlowResults();
+    selectFlow("expense");
+  </script>
+</body>
+</html>

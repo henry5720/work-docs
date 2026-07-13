@@ -1,0 +1,2324 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TeamSync 簽核中心 Prototype</title>
+  <style>
+    :root {
+      --page: #f7f8fa;
+      --sunken: #ffffff;
+      --raised: #f1f3f5;
+      --brand: #43bf8e;
+      --brand-strong: #2fa376;
+      --brand-subtle: #e9f8f1;
+      --text-primary: #141718;
+      --text-secondary: #363c41;
+      --text-tertiary: #6d7782;
+      --text-placeholder: #b5bec7;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --blue: #3b7cc4;
+      --shadow: 0 8px 24px rgba(20, 23, 24, 0.08);
+      --font-h1: 32px;
+      --line-h1: 40px;
+      --font-h2: 24px;
+      --line-h2: 32px;
+      --font-h3: 18px;
+      --line-h3: 24px;
+      --font-h4: 16px;
+      --line-h4: 20px;
+      --font-body1: 14px;
+      --line-body1: 24px;
+      --font-body2: 12px;
+      --line-body2: 18px;
+      --font-caption1: 14px;
+      --line-caption1: 16px;
+      --font-caption2: 12px;
+      --line-caption2: 16px;
+      --font-caption3: 9px;
+      --line-caption3: 14px;
+      --font-button: 14px;
+      --line-button: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #dfe3e8;
+      font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+      color: var(--text-primary);
+      overflow: auto;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .canvas {
+      width: 100%;
+      min-height: 100vh;
+      background: var(--page);
+      overflow: visible;
+      position: relative;
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      border: 1px solid var(--border-strong);
+    }
+
+    .rail {
+      background: #eef1f5;
+      border-right: 1px solid var(--border);
+      padding: 18px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--brand-strong);
+      font-weight: 700;
+      font-size: var(--font-button);
+      line-height: var(--line-button);
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      color: var(--text-tertiary);
+      display: grid;
+      place-items: center;
+      background: transparent;
+      cursor: default;
+      position: relative;
+    }
+
+    .nav-icon.active {
+      background: #d9f4e8;
+      color: var(--brand-strong);
+      border-color: #c5ecd9;
+    }
+
+    .nav-icon svg,
+    .top-icon svg,
+    .button svg,
+    .small-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .badge {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      font-size: var(--font-caption3);
+      line-height: 16px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: 48px auto;
+      min-width: 0;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 48px;
+      background: var(--sunken);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      height: 48px;
+    }
+
+    .page-title {
+      font-size: var(--font-h4);
+      line-height: var(--line-h4);
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      margin: 16px 0;
+    }
+
+    .source-note {
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      color: var(--text-tertiary);
+      padding-left: 12px;
+      border-left: 1px solid var(--border);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-tertiary);
+    }
+
+    .top-icon {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: transparent;
+      color: var(--text-tertiary);
+      display: grid;
+      place-items: center;
+      position: relative;
+      border-radius: 8px;
+    }
+
+    .top-icon.active {
+      color: var(--brand-strong);
+      background: var(--brand-subtle);
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #c8f3df;
+      display: grid;
+      place-items: center;
+      color: var(--brand-strong);
+      font-size: var(--font-body1);
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .content {
+      padding: 12px 16px 16px;
+      min-height: calc(100vh - 48px);
+      overflow: visible;
+      display: grid;
+      grid-template-rows: auto;
+      gap: 0;
+    }
+
+    .summary {
+      display: none;
+      grid-template-columns: 1.2fr repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .summary-card {
+      background: var(--sunken);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      min-height: 78px;
+    }
+
+    .summary-card.primary {
+      border-color: #b8ead1;
+      background: linear-gradient(0deg, var(--brand-subtle), var(--brand-subtle));
+    }
+
+    .summary-label {
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+    }
+
+    .summary-value {
+      font-size: var(--font-h2);
+      line-height: var(--line-h2);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .summary-caption {
+      margin-top: 2px;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      color: var(--text-tertiary);
+    }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 430px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .workspace.detail-closed {
+      grid-template-columns: 1fr;
+    }
+
+    .workspace.detail-closed .drawer {
+      display: none;
+    }
+
+    .panel {
+      background: var(--sunken);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-width: 0;
+      min-height: 620px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .panel-head {
+      padding: 12px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .tab {
+      border: 0;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      padding: 0 0 4px;
+      position: relative;
+    }
+
+    .tab.active {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .tab.active:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -13px;
+      height: 2px;
+      background: var(--brand);
+    }
+
+    .count {
+      min-width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: var(--brand-subtle);
+      color: var(--brand-strong);
+      display: inline-grid;
+      place-items: center;
+      margin-left: 6px;
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      font-weight: 600;
+    }
+
+    .button {
+      border: 1px solid var(--border-strong);
+      background: #fff;
+      height: 34px;
+      border-radius: 8px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: var(--font-button);
+      line-height: var(--line-button);
+      font-weight: 400;
+    }
+
+    .button.brand {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+
+    .button.ghost {
+      border-color: transparent;
+      color: var(--text-tertiary);
+      background: transparent;
+    }
+
+    .button.danger {
+      border-color: #ffd0d0;
+      color: var(--danger);
+      background: #fff7f7;
+    }
+
+    .filters {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background: #fbfcfd;
+    }
+
+    .filter-controls {
+      display: grid;
+      grid-template-columns: 160px 160px 200px;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .field {
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text-secondary);
+      padding: 0 12px;
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      min-width: 0;
+    }
+
+    .hidden { display: none !important; }
+
+    .list-wrap {
+      min-height: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .table-head,
+    .approval-row {
+      display: grid;
+      grid-template-columns: 88px minmax(260px, 1.5fr) minmax(170px, 1fr) 128px 156px 112px;
+      column-gap: 12px;
+      align-items: center;
+    }
+
+    .table-head {
+      height: 48px;
+      padding: 0 16px;
+      background: #e8f5ea;
+      color: var(--text-secondary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .approval-list {
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    .approval-row {
+      min-height: 56px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      cursor: default;
+    }
+
+    .approval-row.active {
+      background: #f7fffb;
+      box-shadow: inset 3px 0 0 var(--brand);
+    }
+
+    .approval-row:hover { background: #fbfcfd; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      border-radius: 999px;
+      padding: 0 9px;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      font-weight: 500;
+      width: fit-content;
+      border: 1px solid transparent;
+    }
+
+    .status.waiting {
+      color: var(--brand-strong);
+      background: var(--brand-subtle);
+      border-color: #b9ebd1;
+    }
+
+    .status.urgent {
+      color: #b45309;
+      background: #fff7e6;
+      border-color: #fed7aa;
+    }
+
+    .status.done {
+      color: var(--blue);
+      background: #eef6ff;
+      border-color: #cfe4ff;
+    }
+
+    .status.returned {
+      color: var(--danger);
+      background: #fff4f4;
+      border-color: #ffd4d4;
+    }
+
+    .status.rejected {
+      color: var(--danger);
+      background: #fff0f0;
+      border-color: #ffbdbd;
+    }
+
+    .main-text {
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sub-text {
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      color: var(--text-tertiary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .amount {
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .progress-cell {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .progress-title {
+      font-size: var(--font-body1);
+      line-height: 20px;
+      color: var(--text-primary);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .progress-track {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      width: 96px;
+    }
+
+    .progress-seg {
+      height: 4px;
+      border-radius: 999px;
+      background: #dfe4ea;
+    }
+
+    .progress-seg.done,
+    .progress-seg.current {
+      background: var(--brand);
+    }
+
+    .progress-seg.current {
+      box-shadow: 0 0 0 1px #b9ebd1;
+    }
+
+    .drawer {
+      background: var(--sunken);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-width: 0;
+      min-height: 620px;
+      max-height: none;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      box-shadow: var(--shadow);
+    }
+
+    .drawer-head {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      gap: 10px;
+    }
+
+    .drawer-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .drawer-title {
+      font-size: var(--font-h3);
+      line-height: var(--line-h3);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .drawer-subtitle {
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      color: var(--text-tertiary);
+      margin-top: 3px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .meta-item {
+      background: #fbfcfd;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+
+    .meta-label {
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      color: var(--text-tertiary);
+    }
+
+    .meta-value {
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      color: var(--text-secondary);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .meta-value-text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .meta-jump {
+      width: 24px;
+      height: 24px;
+      border: 0;
+      background: transparent;
+      color: var(--text-tertiary);
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      flex: 0 0 auto;
+    }
+
+    .meta-jump svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .meta-jump:hover {
+      background: #eef1f5;
+      color: var(--brand-strong);
+    }
+
+    .drawer-body {
+      overflow: visible;
+      min-height: 0;
+      overscroll-behavior: contain;
+      padding: 14px 18px 18px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .drawer-body.sent-mode:not(.result-mode) .timeline-section {
+      order: -1;
+    }
+
+    .drawer-body.result-mode #summarySection {
+      order: -2;
+    }
+
+    .timeline-section.collapsed .section-body {
+      display: none;
+    }
+
+    .timeline-section .section-title {
+      cursor: pointer;
+    }
+
+    .section {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .section-title {
+      min-height: 38px;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--font-body1);
+      line-height: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-body {
+      padding: 12px;
+    }
+
+    .key-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .key-item {
+      min-width: 0;
+    }
+
+    .key-label {
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      color: var(--text-tertiary);
+      margin-bottom: 2px;
+    }
+
+    .key-value {
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      color: var(--text-primary);
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .detail-table th {
+      text-align: left;
+      color: var(--text-tertiary);
+      font-weight: 600;
+      background: #f6f8fa;
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    .detail-table tr:last-child td { border-bottom: 0; }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .step-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      font-weight: 600;
+      background: var(--brand);
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .step.pending .step-dot {
+      background: #fff;
+      color: var(--text-tertiary);
+      border: 1px solid var(--border-strong);
+    }
+
+    .step-title {
+      font-size: var(--font-body1);
+      line-height: 20px;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .step-note {
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .source-button {
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fbfcfd;
+      color: var(--text-secondary);
+      font-size: var(--font-button);
+      line-height: var(--line-button);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 400;
+    }
+
+    .source-preview {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fbfcfd;
+      overflow: hidden;
+      display: none;
+    }
+
+    .source-preview.show { display: block; }
+
+    .source-preview-head {
+      height: 36px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      font-weight: 600;
+    }
+
+    .source-preview-body {
+      max-height: 150px;
+      overflow: auto;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      overscroll-behavior: contain;
+    }
+
+    .chat-bubble {
+      width: fit-content;
+      max-width: 100%;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #ecf8f2;
+      color: var(--text-secondary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      background: #fff;
+    }
+
+    .mini-table th,
+    .mini-table td {
+      text-align: left;
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .mini-table th {
+      background: #e4f4e8;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      right: 470px;
+      bottom: 18px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(20, 23, 24, 0.76);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+
+    .scroll-hint.show { opacity: 1; }
+
+    .note {
+      width: 100%;
+      min-height: 72px;
+      resize: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text-secondary);
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+    }
+
+    .drawer-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: #fbfcfd;
+    }
+
+    .footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .review-action-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    .return-menu {
+      position: absolute;
+      right: 0;
+      bottom: 42px;
+      width: 190px;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      box-shadow: var(--shadow);
+      display: none;
+      z-index: 4;
+    }
+
+    .return-menu.show {
+      display: grid;
+      gap: 4px;
+    }
+
+    .return-option {
+      height: auto;
+      min-height: 38px;
+      width: 100%;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 7px 8px;
+      text-align: left;
+      display: grid;
+      gap: 2px;
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .return-option:hover {
+      background: #f3f5f7;
+    }
+
+    .return-option small {
+      color: var(--text-tertiary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .small-icon {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      color: var(--text-tertiary);
+      background: transparent;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(14px);
+      background: var(--text-primary);
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: var(--font-caption1);
+      line-height: var(--line-caption1);
+      opacity: 0;
+      transition: 180ms ease;
+      pointer-events: none;
+      box-shadow: var(--shadow);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      body { display: block; }
+      .canvas {
+        width: 100vw;
+        height: 100vh;
+        grid-template-columns: 54px 1fr;
+      }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .workspace { grid-template-columns: 1fr; }
+      .drawer { display: none; }
+      .filters { grid-template-columns: 1fr 1fr; }
+      .table-head,
+      .approval-row {
+        grid-template-columns: 84px 1.4fr 1fr 100px;
+      }
+      .hide-mobile { display: none; }
+    }
+    /* V3 borderless surface system */
+    body { background: var(--page); }
+
+    .canvas {
+      border: 0;
+      background: var(--page);
+    }
+
+    .topbar {
+      background: transparent;
+      border-bottom: 0.7px solid var(--border);
+    }
+
+    .content { padding: 12px 16px 16px; }
+
+    .workspace {
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .panel {
+      border: 0;
+      box-shadow: none;
+      background: var(--sunken);
+    }
+
+    .panel-head {
+      padding: 12px 16px 0;
+      border-bottom: 0;
+    }
+
+    .filters {
+      padding: 12px 16px;
+      background: var(--sunken);
+    }
+
+    /* This is an embedded Detail Panel, not an overlay drawer. */
+    .drawer {
+      border: 0;
+      box-shadow: none;
+      background: var(--sunken);
+      height: calc(100vh - 76px);
+      min-height: 0;
+      position: sticky;
+      top: 12px;
+    }
+
+    .drawer-head {
+      padding: 14px 16px 12px;
+      gap: 12px;
+    }
+
+    .drawer-title {
+      font-size: var(--font-h4);
+      line-height: 24px;
+      font-weight: 500;
+    }
+
+    .meta-grid {
+      gap: 0 16px;
+      padding-top: 2px;
+    }
+
+    .meta-item {
+      padding: 8px 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      border-top: 1px solid var(--border);
+    }
+
+    .drawer-body {
+      overflow: auto;
+      padding: 0;
+      gap: 0;
+    }
+
+    .section {
+      border: 0;
+      border-radius: 0;
+      border-top: 1px solid var(--border);
+      overflow: visible;
+    }
+
+    .drawer-body > .section:first-child { border-top: 0; }
+
+    .section-title {
+      min-height: 42px;
+      padding: 12px 16px 6px;
+      border-bottom: 0;
+      font-weight: 500;
+    }
+
+    .section-body { padding: 8px 16px 14px; }
+
+    .drawer-footer {
+      min-height: 58px;
+      padding: 10px 16px;
+      background: var(--sunken);
+    }
+
+    .source-button,
+    .source-preview,
+    .note { border-radius: 6px; }
+
+    .note.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    @media (max-width: 1120px) {
+      .workspace { grid-template-columns: 1fr; }
+      .workspace:not(.detail-closed) .panel { display: none; }
+      .drawer {
+        display: grid;
+        min-height: calc(100vh - 76px);
+        max-height: calc(100vh - 76px);
+      }
+      .workspace.detail-closed .panel { display: grid; }
+    }
+
+    /* V3 interaction alignment: module tabs + persistent row selection. */
+    .panel { grid-template-rows: auto auto auto 1fr; }
+
+    .panel-head {
+      min-height: 48px;
+      padding: 0 16px;
+      align-items: center;
+    }
+
+    .tabs { gap: 28px; }
+
+    .tab {
+      height: 40px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .tab.active { font-weight: 500; }
+
+    .tab.active:after {
+      bottom: 0;
+      height: 2px;
+    }
+
+    .table-head,
+    .approval-row {
+      grid-template-columns: 32px 88px minmax(260px, 1.5fr) minmax(170px, 1fr) 128px 156px 112px;
+    }
+
+    .row-check {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--brand);
+      cursor: pointer;
+    }
+
+    .approval-row.batch-selected {
+      background: var(--brand-subtle);
+      box-shadow: inset 3px 0 0 var(--brand);
+    }
+
+    .batch-bar {
+      min-height: 44px;
+      padding: 6px 16px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--brand-subtle);
+      border-bottom: 1px solid #c7ead9;
+      color: var(--text-secondary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .batch-bar.show { display: flex; }
+    .batch-actions { display: flex; align-items: center; gap: 8px; }
+
+    .panel.sent-view .selection-cell { display: none; }
+
+    .panel.sent-view .table-head,
+    .panel.sent-view .approval-row {
+      grid-template-columns: 88px minmax(260px, 1.5fr) minmax(170px, 1fr) 128px 156px 112px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(20, 23, 24, 0.42);
+    }
+
+    .modal-backdrop.show { display: grid; }
+
+    .confirm-modal {
+      width: min(420px, 100%);
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--sunken);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 16px;
+    }
+
+    .confirm-modal h3 {
+      margin: 0;
+      font-size: var(--font-h4);
+      line-height: 24px;
+      font-weight: 500;
+    }
+
+    .confirm-modal p {
+      margin: 0;
+      color: var(--text-tertiary);
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <aside class="rail" aria-label="主導覽">
+      <div class="logo">TS</div>
+      <div class="nav-icon" title="關係管理">
+        <svg viewBox="0 0 24 24"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      </div>
+      <div class="nav-icon" title="聊天室">
+        <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-5a8 8 0 1 1 18-6Z"/></svg>
+      </div>
+      <div class="nav-icon active" title="簽核中心">
+        <span class="badge">6</span>
+        <svg viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="m3 6 1 1 2-2"/><path d="m3 12 1 1 2-2"/><path d="m3 18 1 1 2-2"/></svg>
+      </div>
+      <div class="nav-icon" title="表格">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Z"/><path d="M4 10h16"/><path d="M9 5v14"/></svg>
+      </div>
+      <div class="nav-icon" title="資料夾">
+        <svg viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+      </div>
+      <div class="nav-icon" title="工作流">
+        <svg viewBox="0 0 24 24"><path d="M7 7h4v4H7Z"/><path d="M17 13h4v4h-4Z"/><path d="M3 15h4v4H3Z"/><path d="M11 9h3a3 3 0 0 1 3 3v1"/><path d="M7 17h10"/></svg>
+      </div>
+      <div style="flex:1"></div>
+      <div class="nav-icon" title="設定">
+        <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.8 1.8 0 0 0-1.98-.36a1.8 1.8 0 0 0-1.1 1.66V21a2 2 0 1 1-4 0v-.08a1.8 1.8 0 0 0-1.1-1.66a1.8 1.8 0 0 0-1.98.36l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.66-1.1H3a2 2 0 1 1 0-4h.08a1.8 1.8 0 0 0 1.66-1.1a1.8 1.8 0 0 0-.36-1.98l-.05-.05A2 2 0 1 1 7.16 3.94l.05.05a1.8 1.8 0 0 0 1.98.36a1.8 1.8 0 0 0 1.1-1.66V3a2 2 0 1 1 4 0v.08a1.8 1.8 0 0 0 1.1 1.66a1.8 1.8 0 0 0 1.98-.36l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.8 1.8 0 0 0-.36 1.98a1.8 1.8 0 0 0 1.66 1.1H21a2 2 0 1 1 0 4h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg>
+      </div>
+    </aside>
+
+    <main class="app">
+      <header class="topbar">
+        <div class="crumb">
+          <h1 class="page-title">簽核中心</h1>
+          <div class="source-note">跨聊天室、表格與工作流的待辦簽核</div>
+        </div>
+        <div class="top-actions">
+          <button class="top-icon" title="聊天">
+            <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-5a8 8 0 1 1 18-6Z"/></svg>
+          </button>
+          <button class="top-icon" title="一對一">
+            <svg viewBox="0 0 24 24"><path d="M7 8h10"/><path d="M7 12h7"/><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 3v-3H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+          </button>
+          <button class="top-icon" title="表格">
+            <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Z"/><path d="M4 10h16"/><path d="M9 5v14"/></svg>
+          </button>
+          <button class="top-icon active" title="簽核">
+            <span class="badge">6</span>
+            <svg viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="m3 6 1 1 2-2"/><path d="m3 12 1 1 2-2"/><path d="m3 18 1 1 2-2"/></svg>
+          </button>
+          <button class="top-icon" title="通知">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          </button>
+          <button class="top-icon" title="設定">
+            <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.8 1.8 0 0 0-1.98-.36a1.8 1.8 0 0 0-1.1 1.66V21a2 2 0 1 1-4 0v-.08a1.8 1.8 0 0 0-1.1-1.66a1.8 1.8 0 0 0-1.98.36l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.66-1.1H3a2 2 0 1 1 0-4h.08a1.8 1.8 0 0 0 1.66-1.1a1.8 1.8 0 0 0-.36-1.98l-.05-.05A2 2 0 1 1 7.16 3.94l.05.05a1.8 1.8 0 0 0 1.98.36a1.8 1.8 0 0 0 1.1-1.66V3a2 2 0 1 1 4 0v.08a1.8 1.8 0 0 0 1.1 1.66a1.8 1.8 0 0 0 1.98-.36l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.8 1.8 0 0 0-.36 1.98a1.8 1.8 0 0 0 1.66 1.1H21a2 2 0 1 1 0 4h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg>
+          </button>
+          <div class="avatar">Y</div>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="workspace detail-closed" id="workspace">
+          <section class="panel">
+            <div class="panel-head">
+              <div class="tabs" role="tablist">
+                <button class="tab active" data-tab="todo">待我簽核 <span class="count">4</span></button>
+                <button class="tab" data-tab="sent">我送出的 <span class="count">3</span></button>
+              </div>
+            </div>
+
+            <div class="filters">
+              <div class="filter-controls">
+                <select class="field" aria-label="狀態">
+                  <option>全部狀態</option>
+                  <option>待簽核</option>
+                  <option>即將逾期</option>
+                  <option>已退回</option>
+                </select>
+                <select class="field" aria-label="來源">
+                  <option>全部來源</option>
+                  <option>人資聊天室</option>
+                  <option>財務聊天室</option>
+                  <option>工作流</option>
+                </select>
+                <input class="field" type="search" placeholder="搜尋申請人、單號、聊天室或表格" />
+              </div>
+            </div>
+
+            <div class="batch-bar" id="batchBar" aria-live="polite">
+              <span>已選取 <strong id="selectedCount">0</strong> 筆</span>
+              <div class="batch-actions">
+                <button class="button ghost" id="clearSelectionButton">清除選取</button>
+                <button class="button danger" id="batchRejectButton">批次否決</button>
+                <button class="button brand" id="batchApproveButton">批次通過</button>
+              </div>
+            </div>
+
+            <div class="list-wrap">
+              <div class="table-head">
+                <div class="selection-cell"><input class="row-check" id="selectAllApprovals" type="checkbox" aria-label="全選待簽核項目" /></div>
+                <div>狀態</div>
+                <div>簽核內容</div>
+                <div>來源</div>
+                <div>申請人</div>
+                <div class="hide-mobile">簽核進度</div>
+                <div class="hide-mobile">送出時間</div>
+              </div>
+              <div class="approval-list" id="approvalList">
+                <div class="approval-row" data-id="trip" data-tabs="todo">
+                  <div class="selection-cell"><input class="row-check approval-check" type="checkbox" data-approval-id="trip" aria-label="選取差旅費申請單" /></div>
+                  <div><span class="status urgent">即將逾期</span></div>
+                  <div>
+                    <div class="main-text">差旅費申請單 TR-20260615-018</div>
+                    <div class="sub-text">高鐵、住宿、交通共 4 筆明細，總額 NT$ 8,460</div>
+                  </div>
+                  <div>
+                    <div class="main-text">財務報帳聊天室</div>
+                    <div class="sub-text">報帳紀錄表格</div>
+                  </div>
+                  <div>
+                    <div class="main-text">王大明</div>
+                    <div class="sub-text">業務一部</div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="progress-cell">
+                      <div class="progress-title">主管簽核</div>
+                      <div class="progress-track" aria-label="第 1 / 3 關"><span class="progress-seg current"></span><span class="progress-seg"></span><span class="progress-seg"></span></div>
+                    </div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="main-text">06/15 10:42</div>
+                    <div class="sub-text">剩 6 小時</div>
+                  </div>
+                </div>
+
+                <div class="approval-row" data-id="leave" data-tabs="todo">
+                  <div class="selection-cell"><input class="row-check approval-check" type="checkbox" data-approval-id="leave" aria-label="選取請假申請" /></div>
+                  <div><span class="status waiting">待簽核</span></div>
+                  <div>
+                    <div class="main-text">請假申請 LA-20260615-027</div>
+                    <div class="sub-text">特休 2 日，含交接說明與附件</div>
+                  </div>
+                  <div>
+                    <div class="main-text">人資請假聊天室</div>
+                    <div class="sub-text">員工請假紀錄</div>
+                  </div>
+                  <div>
+                    <div class="main-text">陳小美</div>
+                    <div class="sub-text">設計部</div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="progress-cell">
+                      <div class="progress-title">主管簽核</div>
+                      <div class="progress-track" aria-label="第 1 / 2 關"><span class="progress-seg current"></span><span class="progress-seg"></span><span class="progress-seg"></span></div>
+                    </div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="main-text">06/15 09:18</div>
+                    <div class="sub-text">今天</div>
+                  </div>
+                </div>
+
+                <div class="approval-row" data-id="purchase" data-tabs="todo">
+                  <div class="selection-cell"><input class="row-check approval-check" type="checkbox" data-approval-id="purchase" aria-label="選取設備採購申請" /></div>
+                  <div><span class="status waiting">待簽核</span></div>
+                  <div>
+                    <div class="main-text">設備採購申請 PR-20260614-009</div>
+                    <div class="sub-text">設計用螢幕 2 台，總額 NT$ 24,800</div>
+                  </div>
+                  <div>
+                    <div class="main-text">行政採購聊天室</div>
+                    <div class="sub-text">採購申請表格</div>
+                  </div>
+                  <div>
+                    <div class="main-text">林佳儀</div>
+                    <div class="sub-text">設計部</div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="progress-cell">
+                      <div class="progress-title">部門主管</div>
+                      <div class="progress-track" aria-label="第 1 / 2 關"><span class="progress-seg current"></span><span class="progress-seg"></span><span class="progress-seg"></span></div>
+                    </div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="main-text">06/14 16:35</div>
+                    <div class="sub-text">昨天</div>
+                  </div>
+                </div>
+
+                <div class="approval-row" data-id="rpa" data-tabs="todo">
+                  <div class="selection-cell"><input class="row-check approval-check" type="checkbox" data-approval-id="rpa" aria-label="選取客服回覆確認" /></div>
+                  <div><span class="status waiting">待簽核</span></div>
+                  <div>
+                    <div class="main-text">客服回覆正式回信確認</div>
+                    <div class="sub-text">工作流節點產生資料，等待人工確認後寫入</div>
+                  </div>
+                  <div>
+                    <div class="main-text">客服回覆自動化</div>
+                    <div class="sub-text">工作流 / 正式回信表格</div>
+                  </div>
+                  <div>
+                    <div class="main-text">系統代理</div>
+                    <div class="sub-text">由 Ling 觸發</div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="progress-cell">
+                      <div class="progress-title">客服主管</div>
+                      <div class="progress-track" aria-label="第 2 / 2 關"><span class="progress-seg done"></span><span class="progress-seg current"></span><span class="progress-seg"></span></div>
+                    </div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="main-text">06/14 14:12</div>
+                    <div class="sub-text">昨天</div>
+                  </div>
+                </div>
+
+                <div class="approval-row" data-id="sent" data-tabs="sent">
+                  <div class="selection-cell"></div>
+                  <div><span class="status done">簽核中</span></div>
+                  <div>
+                    <div class="main-text">外部訓練費用申請 EX-20260613-012</div>
+                    <div class="sub-text">等待財務簽核，通過後納入報帳統計</div>
+                  </div>
+                  <div>
+                    <div class="main-text">財務報帳聊天室</div>
+                    <div class="sub-text">報帳紀錄表格</div>
+                  </div>
+                  <div>
+                    <div class="main-text">You</div>
+                    <div class="sub-text">產品設計</div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="progress-cell">
+                      <div class="progress-title">財務簽核</div>
+                      <div class="progress-track" aria-label="第 2 / 2 關"><span class="progress-seg done"></span><span class="progress-seg current"></span><span class="progress-seg"></span></div>
+                    </div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="main-text">06/13 11:06</div>
+                    <div class="sub-text">2 天前</div>
+                  </div>
+                </div>
+
+                <div class="approval-row" data-id="returned" data-tabs="sent">
+                  <div class="selection-cell"></div>
+                  <div><span class="status returned">已退回</span></div>
+                  <div>
+                    <div class="main-text">公出交通費 CL-20260612-031</div>
+                    <div class="sub-text">缺少發票附件，需補件後重新送出</div>
+                  </div>
+                  <div>
+                    <div class="main-text">財務報帳聊天室</div>
+                    <div class="sub-text">報帳紀錄表格</div>
+                  </div>
+                  <div>
+                    <div class="main-text">You</div>
+                    <div class="sub-text">產品設計</div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="progress-cell">
+                      <div class="progress-title">財務退回</div>
+                      <div class="progress-track" aria-label="第 2 / 2 關"><span class="progress-seg done"></span><span class="progress-seg current"></span><span class="progress-seg"></span></div>
+                    </div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="main-text">06/12 15:20</div>
+                    <div class="sub-text">3 天前</div>
+                  </div>
+                </div>
+
+                <div class="approval-row" data-id="rejected" data-tabs="sent">
+                  <div class="selection-cell"></div>
+                  <div><span class="status rejected">已否決</span></div>
+                  <div>
+                    <div class="main-text">活動預算申請 MK-20260611-014</div>
+                    <div class="sub-text">預算項目不符合本季支出規範</div>
+                  </div>
+                  <div>
+                    <div class="main-text">行銷企劃聊天室</div>
+                    <div class="sub-text">活動預算表格</div>
+                  </div>
+                  <div>
+                    <div class="main-text">You</div>
+                    <div class="sub-text">產品設計</div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="progress-cell">
+                      <div class="progress-title">主管否決</div>
+                      <div class="progress-track" aria-label="第 1 / 2 關"><span class="progress-seg current"></span><span class="progress-seg"></span><span class="progress-seg"></span></div>
+                    </div>
+                  </div>
+                  <div class="hide-mobile">
+                    <div class="main-text">06/11 17:40</div>
+                    <div class="sub-text">4 天前</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="drawer" aria-label="審核資訊">
+            <div class="drawer-head">
+              <div class="drawer-title-row">
+                <div>
+                  <h2 class="drawer-title" id="detailTitle">差旅費申請單</h2>
+                  <div class="drawer-subtitle" id="detailCode">TR-20260615-018 · 簽核中 · 第 1 / 3 關</div>
+                </div>
+                <button class="small-icon" title="關閉詳情">
+                  <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              </div>
+              <div class="meta-grid">
+                <div class="meta-item">
+                  <div class="meta-label">申請人</div>
+                  <div class="meta-value" id="detailApplicant">王大明 / 業務一部</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">送出時間</div>
+                  <div class="meta-value" id="detailTime">2026/06/15 10:42</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">來源聊天室</div>
+                  <div class="meta-value">
+                    <span class="meta-value-text" id="detailRoom">財務報帳聊天室</span>
+                    <button class="meta-jump" data-toast="已前往來源聊天室" title="前往來源聊天室">
+                      <svg viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">來源表格</div>
+                  <div class="meta-value">
+                    <span class="meta-value-text" id="detailTable">報帳紀錄表格</span>
+                    <button class="meta-jump" data-toast="已前往來源表格列" title="前往來源表格列">
+                      <svg viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="drawer-body">
+              <section class="section" id="summarySection">
+                <div class="section-title">
+                  <span id="summaryTitle">審核摘要</span>
+                  <span class="status urgent" id="detailStatus">即將逾期</span>
+                </div>
+                <div class="section-body">
+                  <div class="key-grid" id="keyGrid">
+                    <div class="key-item">
+                      <div class="key-label">申請類型</div>
+                      <div class="key-value">差旅費報帳</div>
+                    </div>
+                    <div class="key-item">
+                      <div class="key-label">總金額</div>
+                      <div class="key-value">NT$ 8,460</div>
+                    </div>
+                    <div class="key-item">
+                      <div class="key-label">出差日期</div>
+                      <div class="key-value">2026/06/10 - 06/12</div>
+                    </div>
+                    <div class="key-item">
+                      <div class="key-label">目的</div>
+                      <div class="key-value">高雄客戶拜訪</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section hidden" id="detailRowsSection">
+                <div class="section-title">
+                  <span id="detailRowsTitle">明細</span>
+                  <span class="sub-text" id="detailRowsHint">同一單號包成一張單審核</span>
+                </div>
+                <div class="section-body" style="padding:0 16px 14px">
+                  <table class="detail-table" id="detailRowsTable">
+                    <thead></thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="section timeline-section collapsed" id="timelineSection">
+                <div class="section-title" id="timelineTitle">簽核流程</div>
+                <div class="section-body">
+                  <div class="timeline">
+                    <div class="step">
+                      <div class="step-dot">1</div>
+                      <div>
+                        <div class="step-title">主管簽核</div>
+                        <div class="step-note">你目前正在此關卡，需要核准或退回</div>
+                      </div>
+                      <span class="status waiting">待處理</span>
+                    </div>
+                    <div class="step pending">
+                      <div class="step-dot">2</div>
+                      <div>
+                        <div class="step-title">財務簽核</div>
+                        <div class="step-note">任一財務群組成員核准即可</div>
+                      </div>
+                      <span class="status">未開始</span>
+                    </div>
+                    <div class="step pending">
+                      <div class="step-dot">3</div>
+                      <div>
+                        <div class="step-title">會計入帳</div>
+                        <div class="step-note">通過後資料才進入 AI 搜尋、匯出與統計</div>
+                      </div>
+                      <span class="status">未開始</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section">
+                <div class="section-title" id="noteTitle">審核備註</div>
+                <div class="section-body">
+                  <textarea class="note" id="detailNote" placeholder="可輸入備註；否決或退回必填原因。"></textarea>
+                </div>
+              </section>
+            </div>
+
+            <div class="drawer-footer">
+              <span></span>
+              <div class="footer-actions" id="reviewActions">
+                <div class="review-action-group">
+                  <button class="button danger" id="rejectButton" title="否決會結束這筆申請，不會回到申請人修改。">否決</button>
+                  <button class="button" id="returnMenuButton" title="退回代表請對方修改內容後重新送出。">
+                    退回
+                    <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <div class="return-menu" id="returnMenu">
+                    <button class="return-option" data-return-target="previous">
+                      退回上一層
+                      <small>請前一關審核人補充或修正</small>
+                    </button>
+                    <button class="return-option" data-return-target="applicant">
+                      退回申請人
+                      <small>請申請人修改內容後重新送出</small>
+                    </button>
+                  </div>
+                  <button class="button brand" id="approveButton">通過</button>
+                </div>
+              </div>
+              <div class="footer-actions hidden" id="sentActions">
+                <button class="button brand" id="sentPrimaryAction" data-toast="已前往來源聊天室">前往來源聊天室</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <div class="toast" id="toast">已更新</div>
+    <div class="modal-backdrop" id="batchConfirmModal" role="dialog" aria-modal="true" aria-labelledby="batchConfirmTitle">
+      <div class="confirm-modal">
+        <div>
+          <h3 id="batchConfirmTitle">確認批次通過</h3>
+          <p id="batchConfirmCopy">將通過已選取的簽核項目。</p>
+        </div>
+        <div class="modal-actions">
+          <button class="button" id="cancelBatchConfirm">取消</button>
+          <button class="button brand" id="confirmBatchAction">確認通過</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop" id="reviewConfirmModal" role="dialog" aria-modal="true" aria-labelledby="reviewConfirmTitle">
+      <div class="confirm-modal">
+        <div>
+          <h3 id="reviewConfirmTitle">確認送出</h3>
+          <p id="reviewConfirmCopy">此動作送出後會通知申請人。</p>
+        </div>
+        <div class="modal-actions">
+          <button class="button" id="cancelReviewConfirm">取消</button>
+          <button class="button brand" id="confirmReviewAction">確認送出</button>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-hint" id="scrollHint">
+      <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 5v14" stroke="currentColor" fill="none" stroke-width="2"/><path d="m19 12-7 7-7-7" stroke="currentColor" fill="none" stroke-width="2"/></svg>
+      可捲動查看更多
+    </div>
+  </div>
+
+  <script>
+    const details = {
+      trip: {
+        title: "差旅費申請單",
+        code: "TR-20260615-018 · 簽核中 · 第 1 / 3 關",
+        applicant: "王大明 / 業務一部",
+        time: "2026/06/15 10:42",
+        room: "財務報帳聊天室",
+        table: "報帳紀錄表格",
+        status: "即將逾期",
+        statusClass: "status urgent",
+        keys: [
+          ["申請類型", "差旅費報帳"],
+          ["總金額", "NT$ 8,460"],
+          ["出差日期", "2026/06/10 - 06/12"],
+          ["目的", "高雄客戶拜訪"]
+        ],
+        detailRowsTitle: "費用明細",
+        detailRowsHint: "同一單號包成一張單審核",
+        detailColumns: ["項目", "日期", "金額", "附件"],
+        detailRows: [
+          ["高鐵票", "06/10", "NT$ 2,980", "2 張"],
+          ["住宿", "06/10-06/12", "NT$ 4,800", "1 張"],
+          ["計程車", "06/11", "NT$ 680", "1 張"]
+        ],
+        chat: [
+          "王大明：我 6/10 到 6/12 去高雄拜訪客戶，想送出這次差旅費報帳。",
+          "AI：已整理 4 筆費用明細，總額 NT$ 8,460，將送交主管與財務簽核。",
+          "王大明：確認送出。"
+        ],
+        tablePreview: [
+          ["申請單號", "申請人", "總金額", "簽核狀態"],
+          ["TR-20260615-018", "王大明", "NT$ 8,460", "簽核中"]
+        ]
+      },
+      leave: {
+        title: "請假申請",
+        code: "LA-20260615-027 · 簽核中 · 第 1 / 2 關",
+        applicant: "陳小美 / 設計部",
+        time: "2026/06/15 09:18",
+        room: "人資請假聊天室",
+        table: "員工請假紀錄",
+        status: "待簽核",
+        statusClass: "status waiting",
+        keys: [
+          ["假別", "特休"],
+          ["請假期間", "2026/06/20 - 06/21"],
+          ["天數", "2 日"],
+          ["代理人", "林佳儀"]
+        ],
+        chat: [
+          "陳小美：我要請 6/20 到 6/21 的特休，代理人是林佳儀。",
+          "AI：已建立請假申請 LA-20260615-027，等待主管簽核。",
+          "陳小美：確認送出。"
+        ],
+        tablePreview: [
+          ["申請單號", "姓名", "假別", "簽核狀態"],
+          ["LA-20260615-027", "陳小美", "特休 2 日", "簽核中"]
+        ]
+      },
+      purchase: {
+        title: "設備採購申請",
+        code: "PR-20260614-009 · 簽核中 · 第 1 / 2 關",
+        applicant: "林佳儀 / 設計部",
+        time: "2026/06/14 16:35",
+        room: "行政採購聊天室",
+        table: "採購申請表格",
+        status: "待簽核",
+        statusClass: "status waiting",
+        keys: [
+          ["採購品項", "設計用螢幕 2 台"],
+          ["總金額", "NT$ 24,800"],
+          ["需求日期", "2026/06/25"],
+          ["用途", "新進設計師工作設備"]
+        ],
+        detailRowsTitle: "採購明細",
+        detailRowsHint: "多品項可一起送審",
+        detailColumns: ["項目", "規格", "金額", "附件"],
+        detailRows: [
+          ["螢幕", "27 吋", "NT$ 12,400", "報價單"],
+          ["數量", "2", "NT$ 24,800", "報價單"],
+          ["供應商", "宏達資訊", "-", "1 份"]
+        ],
+        chat: [
+          "林佳儀：設計部新進同仁需要兩台 27 吋螢幕。",
+          "AI：已依報價單建立採購申請 PR-20260614-009。",
+          "林佳儀：送出簽核。"
+        ],
+        tablePreview: [
+          ["申請單號", "品項", "總金額", "簽核狀態"],
+          ["PR-20260614-009", "設計用螢幕 2 台", "NT$ 24,800", "簽核中"]
+        ]
+      },
+      rpa: {
+        title: "客服回覆正式回信確認",
+        code: "WF-20260614-044 · 簽核中 · 第 2 / 2 關",
+        applicant: "系統代理 / Ling 觸發",
+        time: "2026/06/14 14:12",
+        room: "客服回覆自動化",
+        table: "正式回信表格",
+        status: "待簽核",
+        statusClass: "status waiting",
+        keys: [
+          ["客戶", "BeautyLoop"],
+          ["回覆類型", "正式回信"],
+          ["觸發來源", "客服工作流節點"],
+          ["風險", "需人工確認語氣與承諾內容"]
+        ],
+        chat: [
+          "工作流：客服回覆節點已完成草稿。",
+          "AI：此回覆包含方案承諾與價格文字，建議人工確認後再正式寫入。",
+          "Ling：送客服主管簽核。"
+        ],
+        tablePreview: [
+          ["工作流", "客戶", "節點", "簽核狀態"],
+          ["客服回覆自動化", "BeautyLoop", "正式回信確認", "簽核中"]
+        ]
+      },
+      sent: {
+        title: "外部訓練費用申請",
+        code: "EX-20260613-012 · 簽核中 · 第 2 / 2 關",
+        applicant: "You / 產品設計",
+        time: "2026/06/13 11:06",
+        room: "財務報帳聊天室",
+        table: "報帳紀錄表格",
+        status: "簽核中",
+        statusClass: "status done",
+        keys: [
+          ["申請類型", "教育訓練"],
+          ["總金額", "NT$ 6,200"],
+          ["課程日期", "2026/07/03"],
+          ["目前等待", "財務簽核"]
+        ],
+        detailRowsTitle: "費用明細",
+        detailRowsHint: "通過後納入報帳統計",
+        detailColumns: ["項目", "日期", "金額", "附件"],
+        detailRows: [
+          ["課程費", "07/03", "NT$ 6,200", "收據"],
+          ["課程名稱", "Enterprise UX Workshop", "-", "簡章"],
+          ["備註", "通過後納入報帳統計", "-", "無"]
+        ],
+        chat: [
+          "You：我要送出外部訓練費用申請，課程費 NT$ 6,200。",
+          "AI：已建立 EX-20260613-012，目前等待財務簽核。",
+          "You：確認。"
+        ],
+        tablePreview: [
+          ["申請單號", "申請人", "金額", "簽核狀態"],
+          ["EX-20260613-012", "You", "NT$ 6,200", "簽核中"]
+        ]
+      },
+      returned: {
+        title: "公出交通費",
+        code: "CL-20260612-031 · 已退回 · 第 2 / 2 關",
+        applicant: "You / 產品設計",
+        time: "2026/06/12 15:20",
+        room: "財務報帳聊天室",
+        table: "報帳紀錄表格",
+        status: "已退回",
+        statusClass: "status returned",
+        keys: [
+          ["狀態", "已退回"],
+          ["退回原因", "缺少發票附件"],
+          ["審核備註", "請補上可報帳憑證"],
+          ["下一步", "回到來源聊天室重新送出"],
+          ["申請類型", "交通費"],
+          ["總金額", "NT$ 540"]
+        ],
+        resultType: "returned",
+        resultReason: "缺少發票附件",
+        resultNote: "請補上可報帳憑證後，回到來源聊天室重新送出一張新的申請單。",
+        detailRowsTitle: "費用明細",
+        detailRowsHint: "退回後可補件重送",
+        detailColumns: ["項目", "日期", "金額", "附件"],
+        detailRows: [
+          ["計程車", "06/12", "NT$ 540", "缺少"],
+          ["退回備註", "請補上可報帳憑證", "-", "無"],
+          ["資料狀態", "已退回，不進入搜尋與統計", "-", "無"]
+        ],
+        chat: [
+          "You：送出公出交通費 NT$ 540。",
+          "財務：缺少可報帳憑證，請補上發票後重新送出。",
+          "系統：此筆資料已退回，不進入搜尋、匯出與統計。"
+        ],
+        tablePreview: [
+          ["申請單號", "項目", "金額", "簽核狀態"],
+          ["CL-20260612-031", "公出交通費", "NT$ 540", "已退回"]
+        ]
+      },
+      rejected: {
+        title: "活動預算申請",
+        code: "MK-20260611-014 · 已否決 · 第 1 / 2 關",
+        applicant: "You / 產品設計",
+        time: "2026/06/11 17:40",
+        room: "行銷企劃聊天室",
+        table: "活動預算表格",
+        status: "已否決",
+        statusClass: "status rejected",
+        keys: [
+          ["狀態", "已否決"],
+          ["否決原因", "預算項目不符合本季支出規範"],
+          ["審核備註", "此筆申請已結束，若仍需申請請重新送出新單。"],
+          ["申請類型", "活動預算"],
+          ["總金額", "NT$ 36,000"],
+          ["活動日期", "2026/07/15"]
+        ],
+        resultType: "rejected",
+        resultReason: "預算項目不符合本季支出規範",
+        resultNote: "此筆申請已被否決並結束；如需再次申請，請回來源聊天室建立新單。",
+        detailRowsTitle: "預算明細",
+        detailRowsHint: "否決後此單不再進入後續簽核",
+        detailColumns: ["項目", "日期", "金額", "狀態"],
+        detailRows: [
+          ["場地租借", "07/15", "NT$ 20,000", "未通過"],
+          ["設計輸出", "07/10", "NT$ 16,000", "未通過"]
+        ],
+        chat: [
+          "You：送出活動預算申請 NT$ 36,000。",
+          "主管：此預算項目不符合本季支出規範，先否決。",
+          "系統：此筆資料已否決，不進入後續簽核。"
+        ],
+        tablePreview: [
+          ["申請單號", "項目", "金額", "簽核狀態"],
+          ["MK-20260611-014", "活動預算", "NT$ 36,000", "已否決"]
+        ]
+      }
+    };
+
+    let currentDetailId = "";
+    let currentTab = "todo";
+    let pendingBatchAction = "";
+    let pendingReviewAction = null;
+    const selectedApprovals = new Set();
+
+    function setDetail(id) {
+      const item = details[id] || details.trip;
+      currentDetailId = id;
+      document.getElementById("workspace").classList.remove("detail-closed");
+      document.querySelectorAll(".approval-row").forEach(row => row.classList.toggle("active", row.dataset.id === id));
+      document.getElementById("detailTitle").textContent = item.title;
+      document.getElementById("detailCode").textContent = item.code;
+      document.getElementById("detailApplicant").textContent = item.applicant;
+      document.getElementById("detailTime").textContent = item.time;
+      document.getElementById("detailRoom").textContent = item.room;
+      document.getElementById("detailTable").textContent = item.table;
+      const status = document.getElementById("detailStatus");
+      status.textContent = item.status;
+      status.className = item.statusClass;
+      document.getElementById("keyGrid").innerHTML = item.keys.map(([label, value]) => `
+        <div class="key-item">
+          <div class="key-label">${label}</div>
+          <div class="key-value">${value}</div>
+        </div>
+      `).join("");
+      renderDetailRows(item);
+      updateDetailMode(id);
+    }
+
+    function renderDetailRows(item) {
+      const section = document.getElementById("detailRowsSection");
+      const hasRows = Array.isArray(item.detailRows) && item.detailRows.length > 0;
+      section.classList.toggle("hidden", !hasRows);
+      if (!hasRows) return;
+      document.getElementById("detailRowsTitle").textContent = item.detailRowsTitle || "明細";
+      document.getElementById("detailRowsHint").textContent = item.detailRowsHint || "";
+      document.querySelector("#detailRowsTable thead").innerHTML = `
+        <tr>${(item.detailColumns || []).map(column => `<th>${column}</th>`).join("")}</tr>
+      `;
+      document.querySelector("#detailRowsTable tbody").innerHTML = item.detailRows.map(row => `
+        <tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>
+      `).join("");
+    }
+
+    function updateDetailMode(id) {
+      const isSentView = currentTab === "sent" || id === "sent" || id === "returned" || id === "rejected";
+      const isResultView = id === "returned" || id === "rejected";
+      const isRejected = id === "rejected";
+      const item = details[id] || details.trip;
+      document.getElementById("summaryTitle").textContent = isSentView ? "送審內容摘要" : "審核摘要";
+      document.getElementById("timelineTitle").textContent = isSentView ? "目前簽核進度" : "簽核流程";
+      document.getElementById("noteTitle").textContent = isResultView ? "處理結果與原因" : isSentView ? "送審備註" : "審核備註";
+      const note = document.getElementById("detailNote");
+      note.value = isResultView ? item.resultNote : "";
+      note.readOnly = isSentView;
+      note.placeholder = isResultView
+        ? ""
+        : isSentView
+          ? "這裡顯示簽核者備註或系統通知。"
+          : "可輸入備註；否決或退回必填原因。";
+      note.classList.remove("error");
+      document.getElementById("reviewActions").classList.toggle("hidden", isSentView);
+      document.getElementById("sentActions").classList.toggle("hidden", !isSentView);
+      const sentAction = document.getElementById("sentPrimaryAction");
+      sentAction.textContent = id === "returned" ? "前往來源聊天室重新送出" : "前往來源聊天室";
+      sentAction.dataset.toast = id === "returned"
+        ? "已前往來源聊天室，可重新送出新的申請單"
+        : isRejected
+          ? "已前往來源聊天室，可視需要建立新的申請單"
+          : "已前往來源聊天室";
+      document.querySelector(".drawer-body").classList.toggle("sent-mode", isSentView);
+      document.querySelector(".drawer-body").classList.toggle("result-mode", isResultView);
+      document.getElementById("timelineSection").classList.toggle("collapsed", !isSentView);
+    }
+
+    function closeDetail() {
+      currentDetailId = "";
+      document.getElementById("workspace").classList.add("detail-closed");
+      document.querySelectorAll(".approval-row").forEach(row => row.classList.remove("active"));
+    }
+
+    function filterRows(tabName) {
+      currentTab = tabName;
+      clearApprovalSelection();
+      document.querySelector(".panel").classList.toggle("sent-view", tabName === "sent");
+      document.querySelectorAll(".approval-row").forEach(row => {
+        const tabs = (row.dataset.tabs || "").split(" ");
+        row.hidden = !tabs.includes(tabName);
+      });
+    }
+
+    function updateApprovalSelection() {
+      document.querySelectorAll(".approval-check").forEach(check => {
+        check.checked = selectedApprovals.has(check.dataset.approvalId);
+        check.closest(".approval-row").classList.toggle("batch-selected", check.checked);
+      });
+      const visibleChecks = [...document.querySelectorAll('.approval-row[data-tabs~="todo"] .approval-check')];
+      const selectedVisible = visibleChecks.filter(check => check.checked);
+      const selectAll = document.getElementById("selectAllApprovals");
+      selectAll.checked = visibleChecks.length > 0 && selectedVisible.length === visibleChecks.length;
+      selectAll.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visibleChecks.length;
+      document.getElementById("selectedCount").textContent = selectedApprovals.size;
+      document.getElementById("batchBar").classList.toggle("show", currentTab === "todo" && selectedApprovals.size > 0);
+    }
+
+    function clearApprovalSelection() {
+      selectedApprovals.clear();
+      updateApprovalSelection();
+    }
+
+    function openBatchConfirm(action) {
+      if (!selectedApprovals.size) return;
+      pendingBatchAction = action;
+      const approve = action === "approve";
+      document.getElementById("batchConfirmTitle").textContent = approve ? "確認批次通過" : "確認批次否決";
+      document.getElementById("batchConfirmCopy").textContent = approve
+        ? `將通過已選取的 ${selectedApprovals.size} 筆簽核項目。`
+        : `將否決已選取的 ${selectedApprovals.size} 筆簽核項目，否決後流程將直接結束。`;
+      const confirmButton = document.getElementById("confirmBatchAction");
+      confirmButton.textContent = approve ? "確認通過" : "確認否決";
+      confirmButton.className = approve ? "button brand" : "button danger";
+      document.getElementById("batchConfirmModal").classList.add("show");
+    }
+
+    function closeBatchConfirm() {
+      document.getElementById("batchConfirmModal").classList.remove("show");
+      pendingBatchAction = "";
+    }
+
+    function requireReviewReason() {
+      const note = document.getElementById("detailNote");
+      if (note.value.trim()) {
+        note.classList.remove("error");
+        return true;
+      }
+      note.classList.add("error");
+      note.focus();
+      showToast("請先填寫原因");
+      return false;
+    }
+
+    function openReviewConfirm(action, target = "") {
+      const requiresReason = action === "reject" || action === "return";
+      if (requiresReason && !requireReviewReason()) return;
+      pendingReviewAction = { action, target };
+      const titleMap = {
+        approve: "確認通過",
+        reject: "確認否決",
+        return: target === "previous" ? "確認退回上一層" : "確認退回申請人"
+      };
+      const copyMap = {
+        approve: "通過後，資料會進入下一關或寫入正式表格。",
+        reject: "否決後，這筆申請會直接結束，申請人需重新送出新單。",
+        previous: "退回上一層後，前一關審核人會收到通知並可補充處理。",
+        applicant: "退回申請人後，申請人可修改內容並重新送出。"
+      };
+      const confirmButton = document.getElementById("confirmReviewAction");
+      document.getElementById("reviewConfirmTitle").textContent = titleMap[action];
+      document.getElementById("reviewConfirmCopy").textContent = action === "return" ? copyMap[target] : copyMap[action];
+      confirmButton.textContent = action === "approve" ? "確認通過" : action === "reject" ? "確認否決" : "確認退回";
+      confirmButton.className = action === "reject" ? "button danger" : "button brand";
+      document.getElementById("reviewConfirmModal").classList.add("show");
+    }
+
+    function closeReviewConfirm() {
+      document.getElementById("reviewConfirmModal").classList.remove("show");
+      pendingReviewAction = null;
+    }
+
+    function confirmReviewAction() {
+      if (!pendingReviewAction) return;
+      const { action, target } = pendingReviewAction;
+      const message = action === "approve"
+        ? "已通過，資料狀態將更新為已通過"
+        : action === "reject"
+          ? "已否決，此申請單已結束"
+          : target === "previous"
+            ? "已退回上一層，前一位審核人會收到通知"
+            : "已退回申請人，申請人可修改後重新送出";
+      closeReviewConfirm();
+      document.getElementById("returnMenu").classList.remove("show");
+      showToast(message);
+    }
+
+    function confirmBatchAction() {
+      const count = selectedApprovals.size;
+      const approve = pendingBatchAction === "approve";
+      selectedApprovals.forEach(id => {
+        const row = document.querySelector(`.approval-row[data-id="${id}"]`);
+        if (!row) return;
+        const status = row.querySelector(".status");
+        status.textContent = approve ? "已通過" : "已否決";
+        status.className = approve ? "status done" : "status rejected";
+      });
+      closeBatchConfirm();
+      clearApprovalSelection();
+      showToast(approve ? `已批次通過 ${count} 筆簽核` : `已批次否決 ${count} 筆簽核`);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    document.querySelectorAll(".approval-row").forEach(row => {
+      row.addEventListener("click", event => {
+        if (event.target.closest(".row-check")) return;
+        setDetail(row.dataset.id);
+      });
+    });
+
+    document.querySelectorAll(".approval-check").forEach(check => {
+      check.addEventListener("change", () => {
+        if (check.checked) selectedApprovals.add(check.dataset.approvalId);
+        else selectedApprovals.delete(check.dataset.approvalId);
+        updateApprovalSelection();
+      });
+    });
+
+    document.getElementById("selectAllApprovals").addEventListener("change", event => {
+      document.querySelectorAll('.approval-row[data-tabs~="todo"] .approval-check').forEach(check => {
+        if (event.target.checked) selectedApprovals.add(check.dataset.approvalId);
+        else selectedApprovals.delete(check.dataset.approvalId);
+      });
+      updateApprovalSelection();
+    });
+
+    document.getElementById("clearSelectionButton").addEventListener("click", clearApprovalSelection);
+    document.getElementById("batchApproveButton").addEventListener("click", () => openBatchConfirm("approve"));
+    document.getElementById("batchRejectButton").addEventListener("click", () => openBatchConfirm("reject"));
+    document.getElementById("cancelBatchConfirm").addEventListener("click", closeBatchConfirm);
+    document.getElementById("confirmBatchAction").addEventListener("click", confirmBatchAction);
+    document.getElementById("batchConfirmModal").addEventListener("click", event => {
+      if (event.target.id === "batchConfirmModal") closeBatchConfirm();
+    });
+
+    document.getElementById("approveButton").addEventListener("click", () => openReviewConfirm("approve"));
+    document.getElementById("rejectButton").addEventListener("click", () => openReviewConfirm("reject"));
+    document.getElementById("cancelReviewConfirm").addEventListener("click", closeReviewConfirm);
+    document.getElementById("confirmReviewAction").addEventListener("click", confirmReviewAction);
+    document.getElementById("reviewConfirmModal").addEventListener("click", event => {
+      if (event.target.id === "reviewConfirmModal") closeReviewConfirm();
+    });
+
+    document.getElementById("detailNote").addEventListener("input", event => {
+      if (event.currentTarget.value.trim()) event.currentTarget.classList.remove("error");
+    });
+
+    document.querySelector(".drawer-title-row .small-icon").addEventListener("click", closeDetail);
+
+    document.querySelectorAll("[data-toast]").forEach(el => {
+      el.addEventListener("click", () => showToast(el.dataset.toast));
+    });
+
+    document.getElementById("returnMenuButton").addEventListener("click", event => {
+      event.stopPropagation();
+      document.getElementById("returnMenu").classList.toggle("show");
+    });
+
+    document.getElementById("returnMenu").addEventListener("click", event => {
+      const option = event.target.closest("[data-return-target]");
+      if (!option) return;
+      openReviewConfirm("return", option.dataset.returnTarget);
+      document.getElementById("returnMenu").classList.remove("show");
+    });
+
+    document.addEventListener("click", event => {
+      if (!event.target.closest("#returnMenu") && !event.target.closest("#returnMenuButton")) {
+        document.getElementById("returnMenu").classList.remove("show");
+      }
+    });
+
+    const scrollHint = document.getElementById("scrollHint");
+    document.querySelectorAll(".approval-list, .drawer-body").forEach(el => {
+      el.addEventListener("mouseenter", () => {
+        if (el.scrollHeight > el.clientHeight) scrollHint.classList.add("show");
+      });
+      el.addEventListener("mouseleave", () => scrollHint.classList.remove("show"));
+      el.addEventListener("scroll", () => scrollHint.classList.remove("show"), { passive: true });
+    });
+
+    document.querySelector("#timelineSection .section-title").addEventListener("click", () => {
+      document.getElementById("timelineSection").classList.toggle("collapsed");
+    });
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        closeDetail();
+        filterRows(tab.dataset.tab);
+        if (tab.dataset.tab === "sent") {
+          showToast("已切換到我送出的簽核");
+        } else {
+          showToast("已切換到待我簽核");
+        }
+      });
+    });
+
+    filterRows("todo");
+  </script>
+</body>
+</html>

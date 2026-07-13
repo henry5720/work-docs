@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TeamSync 審核模組 UI 調整整理</title>
+  <style>
+    :root {
+      --page: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --text: #141718;
+      --text-2: #3f4751;
+      --text-3: #73808c;
+      --line: #e4e8ee;
+      --line-strong: #d4dbe4;
+      --brand: #43bf8e;
+      --brand-soft: #ebfaf3;
+      --blue: #3b7cc4;
+      --blue-soft: #eef4fb;
+      --amber: #f59e0b;
+      --amber-soft: #fff7e8;
+      --shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, #fbfcfe 0%, #f5f7fb 100%);
+      color: var(--text);
+      font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px 24px 56px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 24px 26px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, rgba(67,191,142,0.08), rgba(59,124,196,0.05)),
+        var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      color: var(--text-3);
+      font-size: 12px;
+      line-height: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-copy {
+      max-width: 920px;
+      color: var(--text-2);
+      font-size: 15px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .hero-stat {
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.84);
+    }
+
+    .hero-stat strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .hero-stat span {
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 30px 0 14px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(248,250,252,0.75), rgba(255,255,255,0.98));
+    }
+
+    .card-title {
+      display: grid;
+      gap: 8px;
+    }
+
+    .card-title h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .card-title p {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 14px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--text-3);
+      background: var(--panel-soft);
+      font-size: 12px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .tag.brand {
+      color: #1f7b59;
+      background: var(--brand-soft);
+      border-color: #cdeedc;
+    }
+
+    .tag.blue {
+      color: #2b5f98;
+      background: var(--blue-soft);
+      border-color: #cadef6;
+    }
+
+    .tag.amber {
+      color: #a16207;
+      background: var(--amber-soft);
+      border-color: #fbd38d;
+    }
+
+    .card-body {
+      padding: 18px 22px 22px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 0.8fr;
+      gap: 18px;
+    }
+
+    .block {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .block h4 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    .block p {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 13px;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      display: grid;
+      gap: 2px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel-soft);
+    }
+
+    .item strong {
+      font-size: 13px;
+      line-height: 18px;
+    }
+
+    .item span {
+      color: var(--text-3);
+      font-size: 12px;
+      line-height: 16px;
+    }
+
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--text-2);
+      font-size: 13px;
+      line-height: 16px;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+
+    .link-button:hover {
+      transform: translateY(-1px);
+      border-color: #bfd8ec;
+      box-shadow: 0 10px 18px rgba(59, 124, 196, 0.10);
+    }
+
+    .link-button.primary {
+      border-color: #bfe7d3;
+      background: var(--brand-soft);
+      color: #1f7b59;
+    }
+
+    .matrix {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--text-2);
+      font-weight: 600;
+    }
+
+    td {
+      color: var(--text-2);
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .footer-note {
+      margin-top: 20px;
+      padding: 16px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.9);
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid,
+      .card-body {
+        grid-template-columns: 1fr 1fr;
+      }
+      .card-body > .block:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 18px 14px 40px; }
+      h1 { font-size: 24px; }
+      .hero-grid,
+      .card-body {
+        grid-template-columns: 1fr;
+      }
+      .section-head,
+      .card-top {
+        display: grid;
+      }
+      .card-actions {
+        justify-content: start;
+      }
+      th, td {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">TeamSync / 審核模組 UI 初版交付整理</div>
+      <h1>審核模組 UI 調整說明</h1>
+      <div class="hero-copy">
+        本文件整理目前已完成的五個介面原型，內容以 PM wireframe 與開發文件為基礎，再依照 TS 實際使用情境調整。
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>頁面整理</h2>
+      <p>每頁包含：設計重點、主要調整、待優化與原型入口</p>
+    </div>
+
+    <section class="card-grid">
+      <article class="card">
+        <div class="card-top">
+          <div class="card-title">
+            <h3>1. 審核流程設定頁</h3>
+            <p>將原本偏系統設定導向的流程頁，調整成可視化但低門檻的線性簽核編排工具。</p>
+          </div>
+          <div class="card-actions">
+            <a class="link-button primary" href="./teamsync-approval-flow-settings.html" target="_blank">開啟原型</a>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="block">
+            <h4>設計重點</h4>
+            <div class="list">
+              <div class="item">
+                <strong>參考工作流形式，但限制為線性單向流程</strong>
+                <span>保留可視化與排序能力，避免過度技術化。</span>
+              </div>
+              <div class="item">
+                <strong>關卡設定直接整合在節點內</strong>
+                <span>不再使用複雜節點工具箱，降低視線切換。</span>
+              </div>
+              <div class="item">
+                <strong>新增關卡後預設可直接編輯名稱</strong>
+                <span>減少額外點擊，順著建立流程心智操作。</span>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h4>相較 Wireframe 的主要調整</h4>
+            <div class="list">
+              <div class="item">
+                <strong>新增動態審核對象</strong>
+                <span>支援直屬主管、職務代理人等依申請人帶入的角色。</span>
+              </div>
+              <div class="item">
+                <strong>補上找不到對應人時的處理</strong>
+                <span>如不可送出、改送人資，避免流程卡住。</span>
+              </div>
+              <div class="item">
+                <strong>完成後可直接套用到表格</strong>
+                <span>縮短設定完流程還要跳回表格的路徑。</span>
+              </div>
+              <div class="item">
+                <strong>增加退回規則與套用位置查看</strong>
+                <span>可設定退回上一關或申請人，也可查看目前套用在哪些表格。</span>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h4>待優化</h4>
+            <div class="list">
+              <div class="item">
+                <strong>新增審核對象的彈窗</strong>
+                <span>固定人員、群組標籤、動態角色的選擇方式仍可再細修。</span>
+              </div>
+              <div class="item">
+                <strong>建立群組標籤</strong>
+                <span>可再串接至系統管理的群組標籤頁，讓流程中能快速使用既有人員群組。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="card-title">
+            <h3>2. 審核中心頁面</h3>
+            <p>整理跨聊天室的待審與送審資訊，讓使用者先看得到要處理什麼、進度走到哪裡。</p>
+          </div>
+          <div class="card-actions">
+            <a class="link-button primary" href="./teamsync-approval-center.html" target="_blank">開啟原型</a>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="block">
+            <h4>設計重點</h4>
+            <div class="list">
+              <div class="item">
+                <strong>以整頁工作台呈現，不綁定單一聊天室</strong>
+                <span>符合審核資料來源跨聊天室、跨表格的特性。</span>
+              </div>
+              <div class="item">
+                <strong>高權限與一般使用者採不同視角</strong>
+                <span>高權限可看待我簽核 / 我送出的；一般使用者只看我送出的。</span>
+              </div>
+              <div class="item">
+                <strong>詳細資訊依情境切換重點</strong>
+                <span>待我簽核看審核動作，我送出的看進度、退回原因與重送。</span>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h4>相較 Wireframe 的主要調整</h4>
+            <div class="list">
+              <div class="item">
+                <strong>新增子表格明細</strong>
+                <span>用途情境：差旅費申請一筆審核單內會有多項明細</span>
+              </div>
+              <div class="item">
+                <strong>新增右側資訊狀態</strong>
+                <span>讓列表狀態更一致，並依請假 / 報帳等不同單據顯示不同明細。</span>
+              </div>
+              <div class="item">
+                <strong>加入來源跳轉</strong>
+                <span>可前往來源聊天室或表格，方便追查上下文。</span>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h4>待優化</h4>
+            <div class="list">
+              <div class="item">
+                <strong>一般使用者精簡版</strong>
+                <span>可再做一版更單純的「我送出的」視角，作為低權限預設頁。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="card-title">
+            <h3>3. 新建表格 Step 3：權限與啟用審核</h3>
+            <p>把原本分散的權限與簽核設定合併成同一步，維持新建表格流程的簡潔度。</p>
+          </div>
+          <div class="card-actions">
+            <a class="link-button primary" href="./teamsync-table-approval-step.html" target="_blank">開啟原型</a>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="block">
+            <h4>設計重點</h4>
+            <div class="list">
+              <div class="item">
+                <strong>整合權限與審核</strong>
+                <span>避免五步驟過長，也減少畫面過擠。</span>
+              </div>
+              <div class="item">
+                <strong>審核設定可跳過</strong>
+                <span>若尚未建立流程模板，不會卡在新建表格流程中。</span>
+              </div>
+              <div class="item">
+                <strong>先選既有流程，不在此頁承擔完整建流程</strong>
+                <span>避免同一頁同時處理權限與流程編輯，負擔過重。</span>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h4>待優化</h4>
+            <div class="list">
+              <div class="item">
+                <strong>無流程時的引導文案</strong>
+                <span>可再確認是要導去流程設定頁，還是保留更明確的下一步提示。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="card-title">
+            <h3>4. 表格設定的審核 Tab</h3>
+            <p>讓已建立完成的表格，後續仍可在設定中獨立開關審核與更換流程。</p>
+          </div>
+          <div class="card-actions">
+            <a class="link-button primary" href="./teamsync-table-settings-approval.html" target="_blank">開啟原型</a>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="block">
+            <h4>設計重點</h4>
+            <div class="list">
+              <div class="item">
+                <strong>將審核獨立成設定頁籤</strong>
+                <span>方便後續維護，不需重新走一遍建立表格流程。</span>
+              </div>
+              <div class="item">
+                <strong>保留啟用開關與流程切換</strong>
+                <span>讓管理者可快速查看目前表格套用的是哪條流程。</span>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h4>待優化</h4>
+            <div class="list">
+              <div class="item">
+                <strong>與未來流程版本管理的銜接</strong>
+                <span>若流程已有資料執行中，表格設定頁的提示與限制還可再補強。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="card-title">
+            <h3>5. 系統管理：帳號與群組標籤</h3>
+            <p>整合帳號審核關係與群組標籤，集中管理直屬主管、職務代理人及可重複套用的人員群組。</p>
+          </div>
+          <div class="card-actions">
+            <a class="link-button primary" href="./teamsync-group-tags-settings.html" target="_blank">開啟原型</a>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="block">
+            <h4>設計重點</h4>
+            <div class="list">
+              <div class="item">
+                <strong>主畫面改為管理表格</strong>
+                <span>第一眼可看到成員數、已套用位置與狀態，不必逐一點入確認。</span>
+              </div>
+              <div class="item">
+                <strong>帳號管理整合審核關係</strong>
+                <span>在同一頁設定直屬主管與職務代理人，供動態審核角色直接帶入。</span>
+              </div>
+              <div class="item">
+                <strong>右側 Drawer 快速編輯成員</strong>
+                <span>保留 PM 版點開後直接新增/移除成員的操作優點。</span>
+              </div>
+              <div class="item">
+                <strong>新增群組流程保持簡單</strong>
+                <span>建立時只需先設定名稱與成員，降低管理者建立成本。</span>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h4>相較 Wireframe 的主要調整</h4>
+            <div class="list">
+              <div class="item">
+                <strong>補上套用位置與刪除防呆</strong>
+                <span>避免修改或刪除正在被簽核流程、權限或通知使用的群組。</span>
+              </div>
+              <div class="item">
+                <strong>降低左右雙列表的從屬混淆</strong>
+                <span>以表格作為總覽，Drawer 作為單一群組的詳情與編輯區。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="section-head">
+      <h2>整體觀察</h2>
+      <p>用較短篇幅說明這次調整的共同方向</p>
+    </div>
+
+    <section class="matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>調整方向</th>
+            <th>原因</th>
+            <th>目前做法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>降低工作流式操作門檻</td>
+            <td>原工作流模組較偏技術設定，對一般管理者不夠友善</td>
+            <td>改用固定線性流程、節點內直接設定、減少工具箱概念</td>
+          </tr>
+          <tr>
+            <td>補齊實際企業簽核情境</td>
+            <td>審核對象不只固定群組，也包含直屬主管、職務代理人等動態角色</td>
+            <td>在流程中支援動態帶入，並反推帳號管理需補設定欄位</td>
+          </tr>
+          <tr>
+            <td>減少設定來回跳轉</td>
+            <td>若流程建立完還要再回表格套用，容易漏設定也增加操作成本</td>
+            <td>在流程頁與表格頁都補上直接套用與查看套用位置的入口</td>
+          </tr>
+          <tr>
+            <td>保留後續擴充彈性</td>
+            <td>未來節點可能仍需與工作流共用，但當前審核情境不必做到同等複雜</td>
+            <td>先把審核流程收斂成簡化版本，之後再視需求擴張</td>
+          </tr>
+          <tr>
+            <td>讓群組標籤成為共用基礎資料</td>
+            <td>群組標籤未來不只服務簽核，也可能用於權限、通知與工作流</td>
+            <td>主位置放在系統管理，流程設定中只作為選用入口</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footer-note">
+      帳號管理與群組標籤已整合於同一個系統管理原型，後續可再串接實際組織資料與權限來源。
+    </div>
+  </div>
+</body>
+</html>

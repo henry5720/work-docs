@@ -1,0 +1,3028 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TeamSync 帳號管理與群組標籤設定</title>
+  <style>
+    :root {
+      --page: #f7f8fa;
+      --sunken: #ffffff;
+      --rail: #eef1f5;
+      --brand: #43bf8e;
+      --brand-strong: #2fa376;
+      --brand-subtle: #e9f8f1;
+      --text-primary: #141718;
+      --text-secondary: #363c41;
+      --text-tertiary: #6d7782;
+      --text-placeholder: #b5bec7;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --danger: #ef4444;
+      --danger-soft: #fff1f1;
+      --warning: #f59e0b;
+      --warning-soft: #fff7e8;
+      --blue: #3b7cc4;
+      --blue-soft: #edf5ff;
+      --shadow: 0 8px 24px rgba(20, 23, 24, 0.08);
+      --font-h4: 16px;
+      --line-h4: 20px;
+      --font-body1: 14px;
+      --line-body1: 24px;
+      --font-body2: 12px;
+      --line-body2: 18px;
+      --font-caption2: 12px;
+      --line-caption2: 16px;
+      --font-button: 14px;
+      --line-button: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #dfe3e8;
+      font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+      color: var(--text-primary);
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .canvas {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 64px 200px minmax(0, 1fr);
+      background: var(--page);
+      border: 1px solid var(--border-strong);
+    }
+
+    .rail {
+      background: var(--rail);
+      border-right: 1px solid var(--border);
+      padding: 18px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--brand-strong);
+      font-size: var(--font-button);
+      line-height: var(--line-button);
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      color: var(--text-tertiary);
+      display: grid;
+      place-items: center;
+      background: transparent;
+    }
+
+    .nav-icon.active {
+      background: #d9f4e8;
+      color: var(--brand-strong);
+      border-color: #c5ecd9;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .system-sidebar {
+      background: #f3f5f7;
+      border-right: 1px solid var(--border);
+      padding: 16px 12px;
+      min-height: 100vh;
+    }
+
+    .admin-title {
+      font-size: var(--font-h4);
+      line-height: var(--line-h4);
+      font-weight: 600;
+      margin: 4px 8px 14px;
+    }
+
+    .admin-menu {
+      display: grid;
+      gap: 4px;
+    }
+
+    .menu-item {
+      height: 36px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      color: var(--text-secondary);
+      background: transparent;
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      text-align: left;
+    }
+
+    .menu-item.active {
+      background: #78bd78;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .app {
+      min-width: 0;
+      height: 100vh;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 48px 1fr;
+    }
+
+    .topbar {
+      height: 48px;
+      background: var(--sunken);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .page-title {
+      font-size: var(--font-h4);
+      line-height: var(--line-h4);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .title-divider {
+      width: 1px;
+      height: 16px;
+      background: var(--border-strong);
+      flex: 0 0 auto;
+    }
+
+    .title-note {
+      color: var(--text-tertiary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-tertiary);
+    }
+
+    .avatar-user {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #cef5df;
+      color: var(--brand-strong);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      font-weight: 600;
+    }
+
+    .content {
+      padding: 12px 16px;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+      height: calc(100vh - 48px);
+      overflow: hidden;
+    }
+
+    .tab-panel {
+      min-height: 0;
+      overflow: hidden;
+      display: none;
+    }
+
+    .tab-panel.active {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .account-view {
+      min-height: 0;
+      display: none;
+    }
+
+    .account-view.active {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .account-edit-page {
+      min-height: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--sunken);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+
+    .edit-page-head {
+      min-height: 52px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    .edit-page-title {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .edit-page-title h2 {
+      margin: 0;
+      font-size: var(--font-h4);
+      line-height: var(--line-h4);
+      font-weight: 600;
+    }
+
+    .edit-page-title p {
+      margin: 0;
+      color: var(--text-tertiary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .edit-page-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px 16px 18px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      background: #fbfcfd;
+    }
+
+    .edit-page-footer {
+      min-height: 58px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+    }
+
+    .edit-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .generic-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: #d7f4e4;
+      color: var(--brand-strong);
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+
+    .generic-avatar svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 1.8;
+    }
+
+    .table-section {
+      min-height: 0;
+      overflow: hidden;
+      background: var(--sunken);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .table-section.account-list-section {
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .toolbar {
+      min-height: 40px;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .batch-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 40px;
+      padding: 0 10px;
+      border: 1px solid #b3e7c9;
+      border-radius: 8px;
+      background: var(--brand-subtle);
+      color: var(--text-secondary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .batch-bar.show {
+      display: flex;
+    }
+
+    .field-wrap {
+      position: relative;
+    }
+
+    .field-wrap svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-tertiary);
+      pointer-events: none;
+    }
+
+    .field,
+    .select,
+    .textarea {
+      height: 40px;
+      border: 1px solid #e8eaec;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text-primary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      outline: 0;
+    }
+
+    .field {
+      width: 260px;
+      padding: 0 12px;
+    }
+
+    .field.search {
+      padding-left: 34px;
+    }
+
+    .select {
+      min-width: 140px;
+      padding: 0 34px 0 12px;
+    }
+
+    .field:focus,
+    .select:focus,
+    .textarea:focus {
+      border-color: #2b9e75;
+      box-shadow: 0 0 0 3px rgba(43, 158, 117, 0.12);
+    }
+
+    .button {
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: var(--font-button);
+      line-height: var(--line-button);
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .button svg { width: 16px; height: 16px; }
+
+    .button.brand {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+
+    .button.ghost-brand {
+      border-color: #9be3c2;
+      color: var(--brand-strong);
+      background: #fff;
+    }
+
+    .button.danger {
+      color: var(--danger);
+      border-color: #ffc7c7;
+      background: #fff;
+    }
+
+    .button:disabled {
+      color: var(--text-placeholder);
+      background: #f1f3f5;
+      border-color: var(--border);
+    }
+
+    .panel {
+      min-height: 0;
+      overflow: hidden;
+      background: var(--sunken);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .bulk-col { width: 44px; }
+
+    .bulk-check {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--brand);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    thead th {
+      height: 40px;
+      background: #e3f4e6;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-align: left;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      height: 66px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--text-secondary);
+    }
+
+    tbody tr {
+      cursor: pointer;
+      background: #fff;
+    }
+
+    tbody tr:hover,
+    tbody tr.selected {
+      background: #f2fcf7;
+    }
+
+    tbody tr.selected td:first-child {
+      box-shadow: inset 3px 0 0 var(--brand);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      font-weight: 500;
+      border: 1px solid #bcebd3;
+      color: var(--brand-strong);
+      background: var(--brand-subtle);
+    }
+
+    .status.warning {
+      color: #b76500;
+      border-color: #ffd89b;
+      background: var(--warning-soft);
+    }
+
+    .status.neutral {
+      color: var(--text-tertiary);
+      border-color: var(--border);
+      background: #f3f5f7;
+    }
+
+    .status.danger {
+      color: #b42318;
+      border-color: #fecaca;
+      background: var(--danger-soft);
+    }
+
+    .tag-name {
+      display: grid;
+      gap: 3px;
+    }
+
+    .tag-name strong {
+      color: var(--text-primary);
+      font-size: var(--font-body1);
+      line-height: 20px;
+      font-weight: 600;
+    }
+
+    .tag-name span,
+    .muted {
+      color: var(--text-tertiary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .account-identity {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .account-identity strong {
+      color: var(--text-primary);
+      font-size: var(--font-body1);
+      line-height: 20px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .account-identity span,
+    .review-line,
+    .quota-sub {
+      color: var(--text-tertiary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      height: 24px;
+      border-radius: 999px;
+      padding: 0 8px;
+      border: 1px solid var(--border);
+      background: #f7f9fb;
+      color: var(--text-secondary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .review-stack {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .review-line strong {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .review-line.warning strong {
+      color: #b76500;
+    }
+
+    .review-line.none strong,
+    .review-line.empty strong {
+      color: var(--text-tertiary);
+      font-weight: 400;
+    }
+
+    .quota-cell {
+      display: grid;
+      gap: 2px;
+    }
+
+    .avatar-stack {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .avatars {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      margin-left: -8px;
+      display: grid;
+      place-items: center;
+      background: #c9f4dd;
+      color: var(--brand-strong);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      font-weight: 600;
+    }
+
+    .avatar:first-child { margin-left: 0; }
+
+    .usage-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .usage-pill {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      border-radius: 999px;
+      background: #f3f5f7;
+      border: 1px solid var(--border);
+      padding: 0 8px;
+      color: var(--text-secondary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .row-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .icon-button {
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-tertiary);
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-button:hover {
+      background: #f0f2f5;
+      color: var(--text-secondary);
+    }
+
+    .icon-button.danger:hover {
+      color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .icon-button:disabled {
+      color: var(--text-placeholder);
+      background: transparent;
+    }
+
+    .icon-button svg { width: 16px; height: 16px; }
+
+    .panel-footer {
+      height: 42px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      color: var(--text-tertiary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-chip {
+      min-width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+    }
+
+    .page-chip.active {
+      border-color: var(--brand);
+      color: var(--brand-strong);
+      background: var(--brand-subtle);
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 432px;
+      background: #fff;
+      border-left: 1px solid var(--border);
+      box-shadow: -12px 0 28px rgba(20, 23, 24, 0.08);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      transform: translateX(0);
+      transition: transform 0.18s ease;
+      z-index: 10;
+    }
+
+    .drawer.wide {
+      width: 560px;
+    }
+
+    .drawer.closed {
+      transform: translateX(100%);
+      box-shadow: none;
+    }
+
+    .drawer-head {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .drawer-title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .drawer-title h3 {
+      margin: 0;
+      font-size: var(--font-h4);
+      line-height: var(--line-h4);
+      font-weight: 600;
+    }
+
+    .drawer-title p {
+      margin: 0;
+      color: var(--text-tertiary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .drawer-body {
+      overflow: auto;
+      padding: 14px 16px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      background: #fbfcfd;
+    }
+
+    .section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: var(--font-body1);
+      line-height: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .form-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .form-row label {
+      color: var(--text-secondary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      font-weight: 500;
+    }
+
+    .required-mark {
+      color: var(--danger);
+      margin-left: 2px;
+      font-weight: 700;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .form-grid.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .drawer .field,
+    .drawer .select,
+    .drawer .textarea {
+      width: 100%;
+    }
+
+    .edit-page-body .section {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px;
+    }
+
+    .edit-page-body .field,
+    .edit-page-body .select,
+    .edit-page-body .textarea {
+      width: 100%;
+    }
+
+    .field:disabled,
+    .select:disabled {
+      color: var(--text-placeholder);
+      background: #f3f5f7;
+    }
+
+    .checkbox-line {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .checkbox-line input,
+    .choice-line input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--brand);
+    }
+
+    .choice-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .choice-line {
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      background: #fff;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .choice-line:has(input:checked) {
+      color: var(--brand-strong);
+      border-color: #bcebd3;
+      background: var(--brand-subtle);
+      font-weight: 600;
+    }
+
+    .person-select {
+      display: grid;
+      gap: 6px;
+    }
+
+    .person-card {
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .person-card.disabled {
+      background: #f3f5f7;
+      color: var(--text-tertiary);
+    }
+
+    .person-card .icon-button {
+      width: 26px;
+      height: 26px;
+    }
+
+    .helper-text {
+      color: var(--text-tertiary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .helper-text.warning {
+      color: #9a5b00;
+    }
+
+    .combo {
+      position: relative;
+      width: 100%;
+    }
+
+    .supervisor-select {
+      display: grid;
+      gap: 6px;
+    }
+
+    .supervisor-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .supervisor-chip {
+      min-height: 28px;
+      padding: 4px 6px 4px 8px;
+      border: 1px solid #bcebd3;
+      border-radius: 999px;
+      background: var(--brand-subtle);
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .supervisor-chip.empty {
+      border-color: var(--border);
+      background: #f3f5f7;
+      color: var(--text-tertiary);
+    }
+
+    .supervisor-chip button {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--text-tertiary);
+      display: grid;
+      place-items: center;
+    }
+
+    .supervisor-chip button:hover {
+      background: #fff;
+      color: var(--danger);
+    }
+
+    .supervisor-chip button svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .combo-input-wrap {
+      position: relative;
+    }
+
+    .combo-input-wrap .field {
+      padding-right: 34px;
+    }
+
+    .combo-input-wrap svg {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      pointer-events: none;
+    }
+
+    .combo-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: 100%;
+      z-index: 12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(20, 23, 24, 0.12);
+      overflow: hidden;
+    }
+
+    .combo.open .combo-menu {
+      display: block;
+    }
+
+    .combo-option {
+      min-height: 42px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 0;
+      background: #fff;
+      color: var(--text-secondary);
+      width: 100%;
+      text-align: left;
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .combo-option:hover,
+    .combo-option.active {
+      background: #f2f4f6;
+    }
+
+    .combo-option.disabled {
+      color: var(--text-placeholder);
+      background: #f7f8fa;
+      cursor: not-allowed;
+    }
+
+    .combo-option .avatar {
+      width: 24px;
+      height: 24px;
+      margin-left: 0;
+      flex: 0 0 auto;
+    }
+
+    .dirty-text {
+      color: #9a5b00;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+      opacity: 0;
+    }
+
+    .dirty-text.show {
+      opacity: 1;
+    }
+
+    .textarea {
+      min-height: 64px;
+      padding: 9px 12px;
+      resize: none;
+    }
+
+    .member-tools {
+      display: grid;
+      grid-template-columns: 1fr 132px;
+      gap: 8px;
+    }
+
+    .member-tools.with-button {
+      grid-template-columns: 1fr 116px 92px;
+    }
+
+    .member-list {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .member-row {
+      min-height: 54px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .member-row:last-child { border-bottom: 0; }
+
+    .member-meta {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .member-meta strong {
+      color: var(--text-primary);
+      font-size: var(--font-body1);
+      line-height: 18px;
+      font-weight: 500;
+    }
+
+    .member-meta span {
+      color: var(--text-tertiary);
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .mini-button {
+      min-width: 54px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .mini-button.add {
+      border-color: #bcebd3;
+      color: var(--brand-strong);
+      background: #fff;
+    }
+
+    .mini-button.added {
+      color: var(--text-tertiary);
+      background: #f3f5f7;
+    }
+
+    .empty-box,
+    .info-box,
+    .warning-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+      color: var(--text-tertiary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .warning-box {
+      border-color: #ffd89b;
+      color: #9a5b00;
+      background: var(--warning-soft);
+    }
+
+    .applied-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .applied-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .applied-item strong {
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .drawer-footer {
+      height: 64px;
+      padding: 0 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+    }
+
+    .footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translate(-50%, 16px);
+      min-width: 220px;
+      max-width: 600px;
+      min-height: 34px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: #effaf5;
+      border: 1px solid #b3e7c9;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--font-body1);
+      line-height: var(--line-body1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 20;
+    }
+
+    .toast-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      color: var(--brand-strong);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      flex: 0 0 auto;
+    }
+
+    .toast-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20, 23, 24, 0.48);
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .confirm-modal {
+      width: min(420px, calc(100vw - 32px));
+      border: 1px solid #e8eaec;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+      padding: 24px;
+      position: relative;
+      display: grid;
+      gap: 16px;
+    }
+
+    .confirm-modal h3 {
+      margin: 0 28px 0 0;
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 20px;
+      font-weight: 700;
+    }
+
+    .confirm-modal p {
+      margin: 8px 0 0;
+      color: var(--text-secondary);
+      font-size: var(--font-body2);
+      line-height: var(--line-body2);
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+    }
+
+    .modal-actions {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 16px;
+    }
+
+    @media (max-width: 1080px) {
+      .canvas {
+        grid-template-columns: 64px 200px minmax(0, 1fr);
+      }
+
+      .drawer {
+        width: 400px;
+      }
+
+      .title-note {
+        max-width: 420px;
+      }
+
+      .field {
+        width: 220px;
+      }
+    }
+    /* V3 borderless surface system */
+    body { background: var(--page); }
+
+    .canvas {
+      border: 0;
+      background: var(--page);
+    }
+
+    .topbar {
+      background: transparent;
+      border-bottom: 0.7px solid var(--border);
+    }
+
+    .content { padding: 12px 16px; }
+
+    .table-section {
+      border: 0;
+      box-shadow: none;
+      background: var(--sunken);
+    }
+
+    #groupsPanel .table-section {
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .panel {
+      border: 0;
+      box-shadow: none;
+    }
+
+    .edit-page-body {
+      background: var(--sunken);
+      padding: 0 16px 18px;
+      gap: 0;
+    }
+
+    .edit-page-body .section {
+      border: 0;
+      border-radius: 0;
+      padding: 16px 0;
+    }
+
+    .account-edit-page {
+      border: 0;
+      border-radius: 8px;
+      box-shadow: none;
+    }
+
+    .edit-page-head,
+    .edit-page-footer { border: 0; }
+
+    tbody tr.batch-selected,
+    tbody tr.selected {
+      background: var(--brand-subtle);
+      box-shadow: inset 3px 0 0 var(--brand);
+    }
+
+    .batch-bar {
+      border: 0;
+      border-radius: 6px;
+      background: var(--brand-subtle);
+    }
+
+    /* Shared Side Panel / Edit Drawer specification */
+    .drawer {
+      width: 432px;
+      border-left: 1px solid var(--border);
+      box-shadow: -8px 0 24px rgba(20, 23, 24, 0.08);
+      background: var(--sunken);
+    }
+
+    .drawer.wide { width: 520px; }
+
+    .drawer-head {
+      min-height: 56px;
+      padding: 12px 16px;
+      align-items: center;
+      background: var(--sunken);
+    }
+
+    .drawer-title { gap: 2px; }
+
+    .drawer-title h3 {
+      font-size: var(--font-h4);
+      line-height: 24px;
+      font-weight: 500;
+    }
+
+    .drawer-title p {
+      font-size: var(--font-caption2);
+      line-height: var(--line-caption2);
+    }
+
+    .drawer-head > .icon-button {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 auto;
+    }
+
+    .drawer-body {
+      padding: 0;
+      gap: 0;
+      background: var(--sunken);
+      overscroll-behavior: contain;
+    }
+
+    .drawer-body > .section {
+      padding: 14px 16px 16px;
+      gap: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .drawer-body > .section:first-child { border-top: 0; }
+
+    .section-title {
+      font-weight: 500;
+      line-height: 24px;
+    }
+
+    .member-list {
+      border: 0;
+      border-radius: 6px;
+      background: var(--page);
+    }
+
+    .member-row { background: transparent; }
+
+    .applied-item {
+      border: 0;
+      border-radius: 6px;
+      background: var(--page);
+    }
+
+    .empty-box,
+    .info-box {
+      border: 0;
+      border-radius: 6px;
+      background: var(--page);
+    }
+
+    .drawer-footer {
+      min-height: 58px;
+      height: auto;
+      padding: 10px 16px;
+      background: var(--sunken);
+    }
+
+    @media (max-width: 640px) {
+      .drawer,
+      .drawer.wide { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <aside class="rail" aria-label="TeamSync navigation">
+      <div class="logo">TS</div>
+      <button class="nav-icon" aria-label="成員">
+        <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+      <button class="nav-icon" aria-label="聊天">
+        <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+      </button>
+      <button class="nav-icon" aria-label="表格">
+        <svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z"/><path d="M3 10h18M9 5v14"/></svg>
+      </button>
+      <button class="nav-icon active" aria-label="系統管理">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7.1 4l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 1 1 19.9 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.7 1z"/></svg>
+      </button>
+    </aside>
+
+    <aside class="system-sidebar" aria-label="系統管理選單">
+      <div class="admin-title">系統管理</div>
+      <nav class="admin-menu">
+        <button class="menu-item" data-menu-section="accounts">帳號管理</button>
+        <button class="menu-item">審核管理</button>
+        <button class="menu-item">監控清單</button>
+        <button class="menu-item">流量管理</button>
+        <button class="menu-item">部門管理</button>
+        <button class="menu-item">模型管理</button>
+        <button class="menu-item active" data-menu-section="groups">群組標籤</button>
+      </nav>
+    </aside>
+
+    <main class="app">
+      <header class="topbar">
+        <div class="title-group">
+          <h1 class="page-title" id="pageTitle">群組標籤</h1>
+          <span class="title-divider" id="pageTitleDivider"></span>
+          <span class="title-note" id="pageNote">建立可重複套用的人員群組，用於簽核、通知、權限與工作流設定。</span>
+        </div>
+        <div class="top-actions">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <div class="avatar-user">Y</div>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="tab-panel" id="accountsPanel" role="tabpanel">
+          <div class="account-view active" id="accountListView">
+          <div class="table-section account-list-section">
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <div class="field-wrap">
+                  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input class="field search" id="accountSearch" placeholder="搜尋名稱、帳號、Email、部門" />
+                </div>
+                <select class="select" id="accountRoleFilter" aria-label="權限篩選">
+                  <option value="all">全部權限</option>
+                  <option value="一般員工">一般員工</option>
+                  <option value="中階管理者">中階管理者</option>
+                  <option value="虛擬部門管理者">虛擬部門管理者</option>
+                </select>
+                <select class="select" id="accountReviewFilter" aria-label="審核關係篩選">
+                  <option value="all">全部審核狀態</option>
+                  <option value="unset">主管尚未填寫</option>
+                  <option value="none">無直屬主管</option>
+                  <option value="assigned">已指定主管</option>
+                </select>
+              </div>
+              <div class="toolbar-right">
+                <button class="button" id="accountExportButton">
+                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                  匯出
+                </button>
+                <button class="button brand" id="newAccountButton">
+                  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  新增帳號
+                </button>
+              </div>
+            </div>
+
+            <div class="batch-bar" id="accountBatchBar">
+              <span id="batchSummary">已選取 0 個帳號</span>
+              <div class="footer-actions">
+                <button class="button" id="cancelBatchButton">清除選取</button>
+                <button class="button" id="batchSetSupervisorButton">批量設定主管</button>
+                <button class="button" id="batchSetRoleButton">批量調整權限</button>
+              </div>
+            </div>
+
+            <section class="panel" id="accountPanel" aria-label="帳號列表">
+              <table>
+                <colgroup>
+                  <col class="bulk-col" style="width: 44px" />
+                  <col style="width: 92px" />
+                  <col style="width: 23%" />
+                  <col style="width: 15%" />
+                  <col style="width: 13%" />
+                  <col style="width: 19%" />
+                  <col style="width: 110px" />
+                  <col style="width: 122px" />
+                  <col style="width: 86px" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="bulk-col"><input class="bulk-check" id="selectAllAccounts" type="checkbox" aria-label="全選帳號" /></th>
+                    <th>狀態</th>
+                    <th>使用者</th>
+                    <th>部門</th>
+                    <th>權限</th>
+                    <th>審核關係</th>
+                    <th>資源配額</th>
+                    <th>到期 / 異動</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="accountTable"></tbody>
+              </table>
+              <div></div>
+              <footer class="panel-footer">
+                <span id="accountTableSummary">顯示 0 個帳號</span>
+                <div class="pager">
+                  <span class="page-chip active">1</span>
+                  <span class="page-chip">2</span>
+                  <span class="page-chip">3</span>
+                </div>
+              </footer>
+            </section>
+          </div>
+          </div>
+
+          <section class="account-view" id="accountEditView" aria-label="編輯帳號">
+            <div class="account-edit-page">
+              <div class="edit-page-head">
+                <button class="button" id="backToAccountList">
+                  <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                  返回列表
+                </button>
+                <div class="edit-profile">
+                  <div class="generic-avatar" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <div class="edit-page-title">
+                    <h2 id="accountEditTitle">編輯帳號</h2>
+                    <p id="accountEditSubtitle">設定帳號、權限、審核關係與配額</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="edit-page-body">
+                <section class="section">
+                  <div class="section-title">基本資料</div>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="accountNickname">名稱<span class="required-mark">*</span></label>
+                      <input class="field" id="accountNickname" />
+                    </div>
+                    <div class="form-row">
+                      <label>啟用帳號</label>
+                      <label class="checkbox-line"><input type="checkbox" id="accountEnabled" /> 啟用</label>
+                    </div>
+                    <div class="form-row">
+                      <label for="accountCode">帳號</label>
+                      <input class="field" id="accountCode" disabled />
+                    </div>
+                    <div class="form-row">
+                      <label for="accountEmail">電子信箱</label>
+                      <input class="field" id="accountEmail" disabled />
+                    </div>
+                    <div class="form-row">
+                      <label for="accountPassword">密碼</label>
+                      <input class="field" id="accountPassword" type="password" placeholder="留空表示不更改密碼" />
+                    </div>
+                    <div class="form-row">
+                      <label for="accountExpire">帳號到期日</label>
+                      <input class="field" id="accountExpire" disabled />
+                    </div>
+                  </div>
+                </section>
+
+                <section class="section">
+                  <div class="section-title">組織與權限</div>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="accountDept">部門<span class="required-mark">*</span></label>
+                      <select class="select" id="accountDept">
+                        <option>0313預約測試用部門-2</option>
+                        <option>產品營運部</option>
+                        <option>wms_test2dept_4</option>
+                        <option>__DEFAULT__</option>
+                      </select>
+                    </div>
+                    <div class="form-row">
+                      <label for="accountRole">權限<span class="required-mark">*</span></label>
+                      <select class="select" id="accountRole">
+                        <option>一般員工</option>
+                        <option>中階管理者</option>
+                        <option>虛擬部門管理者</option>
+                        <option>系統管理者</option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="section">
+                  <div class="section-title">審核關係</div>
+                  <div class="form-row">
+                    <label for="supervisorSearch">直屬主管</label>
+                    <div class="supervisor-select">
+                      <div class="supervisor-chips" id="supervisorSelections" aria-live="polite"></div>
+                      <div class="combo" id="supervisorCombo">
+                        <div class="combo-input-wrap">
+                          <input class="field" id="supervisorSearch" placeholder="搜尋並新增主管" autocomplete="off" />
+                          <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                        <div class="combo-menu" id="supervisorMenu"></div>
+                      </div>
+                    </div>
+                    <div class="helper-text">可設定多位直屬主管；流程關卡再決定任一或所有主管核可。</div>
+                  </div>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="primaryDelegateSelect">主要職務代理人</label>
+                      <select class="select" id="primaryDelegateSelect">
+                        <option value="">未設定</option>
+                        <option value="陳小華">陳小華｜產品營運部</option>
+                        <option value="林小美">林小美｜AI 預算管理</option>
+                        <option value="黃柏仁">黃柏仁｜wms_test2dept_4</option>
+                      </select>
+                    </div>
+                    <div class="form-row">
+                      <label for="secondaryDelegateSelect">次要職務代理人（選填）</label>
+                      <select class="select" id="secondaryDelegateSelect">
+                        <option value="">未設定</option>
+                        <option value="陳小華">陳小華｜產品營運部</option>
+                        <option value="林小美">林小美｜AI 預算管理</option>
+                        <option value="黃柏仁">黃柏仁｜wms_test2dept_4</option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="section">
+                  <div class="section-title">資源配額</div>
+                  <div class="form-grid three">
+                    <div class="form-row">
+                      <label for="accountQuota">可擁有房間數<span class="required-mark">*</span></label>
+                      <input class="field" id="accountQuota" type="number" min="0" />
+                    </div>
+                    <div class="form-row">
+                      <label for="accountUnused">未使用房間數</label>
+                      <input class="field" id="accountUnused" disabled />
+                    </div>
+                    <div class="form-row">
+                      <label for="accountUsed">已創房間數</label>
+                      <input class="field" id="accountUsed" disabled />
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <footer class="edit-page-footer">
+                <span class="dirty-text" id="accountDirtyText">有尚未儲存的變更</span>
+                <div class="footer-actions">
+                  <button class="button" id="cancelAccountButton">取消</button>
+                  <button class="button brand" id="saveAccountButton">儲存</button>
+                </div>
+              </footer>
+            </div>
+          </section>
+        </div>
+
+        <div class="tab-panel active" id="groupsPanel" role="tabpanel">
+        <div class="table-section">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div class="field-wrap">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input class="field search" id="groupSearch" placeholder="搜尋標籤名稱或成員" />
+              </div>
+              <select class="select" id="usageFilter" aria-label="套用狀態">
+                <option value="all">全部狀態</option>
+                <option value="used">已套用</option>
+                <option value="unused">未套用</option>
+                <option value="empty">無成員</option>
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <button class="button" id="exportButton">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                匯出
+              </button>
+              <button class="button brand" id="newGroupButton">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                新增群組標籤
+              </button>
+            </div>
+          </div>
+
+          <div class="batch-bar" id="groupBatchBar">
+            <span id="groupBatchSummary">已選取 0 個群組標籤</span>
+            <div class="footer-actions">
+              <button class="button" id="clearGroupSelectionButton">清除選取</button>
+              <button class="button danger" id="batchDeleteGroupsButton">批次刪除</button>
+            </div>
+          </div>
+
+          <section class="panel" aria-label="群組標籤列表">
+            <table>
+              <colgroup>
+                <col class="bulk-col" style="width: 44px" />
+                <col style="width: 104px" />
+                <col style="width: 24%" />
+                <col style="width: 22%" />
+                <col style="width: 22%" />
+                <col style="width: 138px" />
+                <col style="width: 94px" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="bulk-col"><input class="bulk-check" id="selectAllGroups" type="checkbox" aria-label="全選群組標籤" /></th>
+                  <th>狀態</th>
+                  <th>標籤名稱</th>
+                  <th>成員</th>
+                  <th>已套用位置</th>
+                  <th>最後更新</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="groupTable"></tbody>
+            </table>
+            <div></div>
+            <footer class="panel-footer">
+              <span id="tableSummary">顯示 5 個群組標籤</span>
+              <div class="pager">
+                <span class="page-chip active">1</span>
+                <span class="page-chip">2</span>
+                <span class="page-chip">3</span>
+              </div>
+            </footer>
+          </section>
+        </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <aside class="drawer closed" id="drawer" aria-label="編輯群組標籤">
+    <div class="drawer-head">
+      <div class="drawer-title">
+        <h3 id="drawerTitle">人資審核</h3>
+        <p id="drawerSubtitle">已套用於 2 個位置</p>
+      </div>
+      <button class="icon-button" id="closeDrawer" aria-label="關閉">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <section class="section">
+        <div class="section-title">基本資訊</div>
+        <div class="form-row">
+          <label for="tagName">標籤名稱</label>
+          <input class="field" id="tagName" placeholder="請輸入群組標籤名稱" />
+        </div>
+        <div class="form-row">
+          <label for="tagDesc">描述</label>
+          <textarea class="textarea" id="tagDesc" placeholder="說明這個群組會用在哪些設定中"></textarea>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div class="section-title">新增成員</div>
+          <span class="muted" id="candidateCount">可加入 0 人</span>
+        </div>
+        <div class="member-tools with-button">
+          <div class="field-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input class="field search" id="memberSearch" placeholder="搜尋公司成員名稱" />
+          </div>
+          <select class="select" id="departmentFilter">
+            <option value="all">全部部門</option>
+            <option value="人事部">人事部</option>
+            <option value="財務部">財務部</option>
+            <option value="行政採購">行政採購</option>
+            <option value="客服部">客服部</option>
+            <option value="產品設計">產品設計</option>
+          </select>
+          <button class="button ghost-brand" id="addDepartmentButton">加入部門</button>
+        </div>
+        <div class="member-list" id="candidateList"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div class="section-title">已選成員</div>
+          <span class="muted" id="selectedCount">0 人</span>
+        </div>
+        <div class="member-list" id="selectedMemberList"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">已套用位置</div>
+        <div class="applied-list" id="appliedList"></div>
+      </section>
+    </div>
+
+    <footer class="drawer-footer">
+      <button class="button" id="cancelButton">取消</button>
+      <div class="footer-actions">
+        <button class="button danger" id="deleteGroupButton">刪除</button>
+        <button class="button brand" id="saveButton">儲存</button>
+      </div>
+    </footer>
+  </aside>
+
+  <div class="toast" id="toast">
+    <span class="toast-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+    </span>
+    <span id="toastText">已儲存群組標籤</span>
+  </div>
+
+  <div class="modal-backdrop" id="unsavedModal" role="dialog" aria-modal="true" aria-labelledby="unsavedTitle">
+    <div class="confirm-modal">
+      <button class="icon-button modal-close" id="closeUnsavedModal" aria-label="關閉">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div>
+        <h3 id="unsavedTitle">尚有未儲存的變更</h3>
+        <p>離開此頁後，剛剛調整的帳號資料、審核關係與配額將不會被保留。</p>
+      </div>
+      <div class="modal-actions">
+        <button class="button" id="continueEditingButton">繼續編輯</button>
+        <button class="button danger" id="discardChangesButton">離開不儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="groupBatchModal" role="dialog" aria-modal="true" aria-labelledby="groupBatchModalTitle">
+    <div class="confirm-modal">
+      <button class="icon-button modal-close" id="closeGroupBatchModal" aria-label="關閉">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div>
+        <h3 id="groupBatchModalTitle">確認批次刪除</h3>
+        <p id="groupBatchModalCopy">將刪除選取的群組標籤。已套用中的群組不會被刪除。</p>
+      </div>
+      <div class="modal-actions">
+        <button class="button" id="cancelGroupBatchDelete">取消</button>
+        <button class="button danger" id="confirmGroupBatchDelete">確認刪除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const accountUsers = [
+      {
+        id: 'a1',
+        status: 'enabled',
+        name: 'annala',
+        account: 'anna',
+        email: 'christyrv7@gmail.com',
+        dept: '0313預約測試用部門-2',
+        role: '中階管理者',
+        supervisorStatus: 'unset',
+        supervisor: '',
+        primaryDelegate: '陳小華',
+        secondaryDelegate: '',
+        quota: 8,
+        usedRooms: 0,
+        expire: '2217-11-21 10:23:17',
+        updatedAt: '2026/06/17',
+      },
+      {
+        id: 'a2',
+        status: 'enabled',
+        name: 'stsetsets',
+        account: 'stsetsets',
+        email: 'stsetsets@dev.com',
+        dept: '__DEFAULT__',
+        role: '一般員工',
+        supervisorStatus: 'unset',
+        supervisor: '',
+        primaryDelegate: '',
+        secondaryDelegate: '',
+        quota: 0,
+        usedRooms: 0,
+        expire: '無到期日',
+        updatedAt: '2026/06/11',
+      },
+      {
+        id: 'a3',
+        status: 'enabled',
+        name: 'testsets',
+        account: 'testsets',
+        email: 'testsets@dev.com',
+        dept: '__DEFAULT__',
+        role: '一般員工',
+        supervisorStatus: 'none',
+        supervisor: '',
+        primaryDelegate: '',
+        secondaryDelegate: '',
+        quota: 0,
+        usedRooms: 0,
+        expire: '無到期日',
+        updatedAt: '2026/06/09',
+      },
+      {
+        id: 'a4',
+        status: 'enabled',
+        name: 'Mina Chen',
+        account: '09259858c6',
+        email: '09259858c6@virtual.admin',
+        dept: '__DEFAULT__',
+        role: '一般員工',
+        supervisorStatus: 'assigned',
+        supervisor: '王小明',
+        supervisors: ['王小明', '林小美'],
+        primaryDelegate: '林小美',
+        secondaryDelegate: '陳小華',
+        quota: 1,
+        usedRooms: 1,
+        expire: '無到期日',
+        updatedAt: '2026/06/05',
+      },
+      {
+        id: 'a5',
+        status: 'enabled',
+        name: 'Virtual Admin',
+        account: '0decd858c6',
+        email: '0decd858c6@virtual.admin',
+        dept: 'wms_test2dept_4',
+        role: '虛擬部門管理者',
+        supervisorStatus: 'none',
+        supervisor: '',
+        primaryDelegate: '黃柏仁',
+        secondaryDelegate: '',
+        quota: 0,
+        usedRooms: 0,
+        expire: '無到期日',
+        updatedAt: '2026/05/22',
+      },
+      {
+        id: 'a6',
+        status: 'disabled',
+        name: 'dev test 02',
+        account: 'dev002',
+        email: 'dev002@dev.com',
+        dept: '產品營運部',
+        role: '一般員工',
+        supervisorStatus: 'unset',
+        supervisor: '',
+        primaryDelegate: '',
+        secondaryDelegate: '',
+        quota: 2,
+        usedRooms: 0,
+        expire: '2026-09-30 18:00:00',
+        updatedAt: '2026/04/18',
+      },
+    ];
+
+    let selectedAccountId = null;
+    let draftAccount = null;
+    let accountDirty = false;
+    let pendingLeaveAction = null;
+    const selectedBatchAccounts = new Set();
+
+    const accountPeople = [
+      { value: '__none', name: '無直屬主管', dept: '已確認不需要主管', initial: '-' },
+      { value: '王小明', name: '王小明', dept: '產品營運部', initial: '王' },
+      { value: '林小美', name: '林小美', dept: 'AI 預算管理', initial: '林' },
+      { value: '陳小華', name: '陳小華', dept: '產品營運部', initial: '陳' },
+      { value: '黃柏仁', name: '黃柏仁', dept: 'wms_test2dept_4', initial: '黃' },
+    ];
+
+    const members = [
+      { id: 'm1', name: 'Alex', dept: '行政部', initial: 'A' },
+      { id: 'm2', name: 'Liam', dept: '產品部', initial: 'L' },
+      { id: 'm3', name: 'Mia', dept: '人事部', initial: 'M' },
+      { id: 'm4', name: 'Noah', dept: '人事部', initial: 'N' },
+      { id: 'm5', name: 'Owen', dept: '人事部', initial: 'O' },
+      { id: 'm6', name: 'Ben', dept: '人事部', initial: 'B' },
+      { id: 'm7', name: 'Katy', dept: '人事部', initial: 'K' },
+      { id: 'm8', name: 'Cindy', dept: '財務部', initial: 'C' },
+      { id: 'm9', name: 'Judy', dept: '財務部', initial: 'J' },
+      { id: 'm10', name: 'Chieh', dept: '行政採購', initial: 'C' },
+      { id: 'm11', name: 'Coco', dept: '客服部', initial: 'C' },
+      { id: 'm12', name: 'Cort', dept: '客服部', initial: 'C' },
+      { id: 'm13', name: 'Hannah', dept: '產品設計', initial: 'H' },
+    ];
+
+    let groups = [
+      {
+        id: 'g1',
+        status: 'used',
+        name: '人資審核',
+        desc: '請假、出勤異常與人事資料審核',
+        memberIds: ['m3', 'm4', 'm5', 'm6'],
+        applied: ['請假簽核流程', '員工請假紀錄表'],
+        updatedAt: '2026/06/12',
+      },
+      {
+        id: 'g2',
+        status: 'used',
+        name: '財務審核',
+        desc: '報帳、採購與付款前複核',
+        memberIds: ['m8', 'm9'],
+        applied: ['報帳簽核流程', '報帳紀錄表', '採購申請表'],
+        updatedAt: '2026/06/10',
+      },
+      {
+        id: 'g3',
+        status: 'used',
+        name: '行政採購',
+        desc: '設備採購與辦公室資產審核',
+        memberIds: ['m10'],
+        applied: ['設備採購流程'],
+        updatedAt: '2026/06/08',
+      },
+      {
+        id: 'g4',
+        status: 'unused',
+        name: '客服主管',
+        desc: '客服回覆與客訴升級處理',
+        memberIds: ['m11', 'm12'],
+        applied: [],
+        updatedAt: '2026/05/30',
+      },
+      {
+        id: 'g5',
+        status: 'empty',
+        name: '專案臨時審核',
+        desc: '保留給臨時專案使用',
+        memberIds: [],
+        applied: [],
+        updatedAt: '2026/05/20',
+      },
+    ];
+
+    let selectedGroupId = null;
+    let draftGroup = null;
+    let isNewMode = false;
+    let toastTimer;
+    const selectedBatchGroups = new Set();
+
+    const table = document.getElementById('groupTable');
+    const drawer = document.getElementById('drawer');
+    const accountTable = document.getElementById('accountTable');
+    const accountListView = document.getElementById('accountListView');
+    const accountEditView = document.getElementById('accountEditView');
+    const accountSearch = document.getElementById('accountSearch');
+    const accountRoleFilter = document.getElementById('accountRoleFilter');
+    const accountReviewFilter = document.getElementById('accountReviewFilter');
+    const accountTableSummary = document.getElementById('accountTableSummary');
+    const accountDirtyText = document.getElementById('accountDirtyText');
+    const accountPanel = document.getElementById('accountPanel');
+    const accountBatchBar = document.getElementById('accountBatchBar');
+    const batchSummary = document.getElementById('batchSummary');
+    const selectAllAccounts = document.getElementById('selectAllAccounts');
+    const supervisorCombo = document.getElementById('supervisorCombo');
+    const supervisorSearch = document.getElementById('supervisorSearch');
+    const supervisorMenu = document.getElementById('supervisorMenu');
+    const supervisorSelections = document.getElementById('supervisorSelections');
+    const unsavedModal = document.getElementById('unsavedModal');
+    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerSubtitle = document.getElementById('drawerSubtitle');
+    const tagName = document.getElementById('tagName');
+    const tagDesc = document.getElementById('tagDesc');
+    const selectedMemberList = document.getElementById('selectedMemberList');
+    const candidateList = document.getElementById('candidateList');
+    const selectedCount = document.getElementById('selectedCount');
+    const candidateCount = document.getElementById('candidateCount');
+    const appliedList = document.getElementById('appliedList');
+    const memberSearch = document.getElementById('memberSearch');
+    const departmentFilter = document.getElementById('departmentFilter');
+    const groupSearch = document.getElementById('groupSearch');
+    const usageFilter = document.getElementById('usageFilter');
+    const tableSummary = document.getElementById('tableSummary');
+    const deleteGroupButton = document.getElementById('deleteGroupButton');
+    const groupBatchBar = document.getElementById('groupBatchBar');
+    const groupBatchSummary = document.getElementById('groupBatchSummary');
+    const selectAllGroups = document.getElementById('selectAllGroups');
+    const groupBatchModal = document.getElementById('groupBatchModal');
+
+    function getCurrentAccount() {
+      return draftAccount || accountUsers.find(account => account.id === selectedAccountId);
+    }
+
+    function getSupervisorValues(account) {
+      if (Array.isArray(account.supervisors)) return account.supervisors.filter(Boolean);
+      return account.supervisor ? [account.supervisor] : [];
+    }
+
+    function getSupervisorLabel(account) {
+      if (account.supervisorStatus === 'assigned') return getSupervisorValues(account).join('、') || '尚未選擇';
+      if (account.supervisorStatus === 'none') return '無直屬主管';
+      return '尚未填寫';
+    }
+
+    function getDelegateLabel(account) {
+      return [account.primaryDelegate, account.secondaryDelegate].filter(Boolean).join(' / ') || '未設定';
+    }
+
+    function renderAccounts() {
+      const keyword = accountSearch.value.trim().toLowerCase();
+      const roleFilter = accountRoleFilter.value;
+      const reviewFilter = accountReviewFilter.value;
+      const visibleAccounts = accountUsers.filter(account => {
+        const text = [account.name, account.account, account.email, account.dept, account.role, getSupervisorValues(account).join(' '), account.primaryDelegate, account.secondaryDelegate].join(' ').toLowerCase();
+        const matchKeyword = !keyword || text.includes(keyword);
+        const matchRole = roleFilter === 'all' || account.role === roleFilter;
+        const matchReview = reviewFilter === 'all' || account.supervisorStatus === reviewFilter;
+        return matchKeyword && matchRole && matchReview;
+      });
+
+      accountTable.innerHTML = visibleAccounts.map(account => {
+        const enabled = account.status === 'enabled';
+        const supervisorClass = account.supervisorStatus === 'unset' ? 'warning' : account.supervisorStatus === 'none' ? 'none' : '';
+        return `
+          <tr class="${selectedBatchAccounts.has(account.id) ? 'batch-selected' : ''}" data-account-id="${account.id}">
+            <td class="bulk-col"><input class="bulk-check account-row-check" type="checkbox" data-account-check="${account.id}" aria-label="選取 ${account.name}" ${selectedBatchAccounts.has(account.id) ? 'checked' : ''} /></td>
+            <td><span class="status ${enabled ? '' : 'neutral'}">${enabled ? '啟用' : '停用'}</span></td>
+            <td>
+              <div class="account-identity">
+                <strong>${account.name}</strong>
+                <span>${account.account} · ${account.email}</span>
+              </div>
+            </td>
+            <td>${account.dept}</td>
+            <td><span class="role-pill">${account.role}</span></td>
+            <td>
+              <div class="review-stack">
+                <div class="review-line ${supervisorClass}">主管：<strong>${getSupervisorLabel(account)}</strong></div>
+                <div class="review-line ${getDelegateLabel(account) === '未設定' ? 'empty' : ''}">代理：<strong>${getDelegateLabel(account)}</strong></div>
+              </div>
+            </td>
+            <td>
+              <div class="quota-cell">
+                <strong>${account.quota} / ${account.usedRooms}</strong>
+                <span class="quota-sub">可擁有 / 已使用</span>
+              </div>
+            </td>
+            <td>
+              <div>${account.expire === '無到期日' ? '無到期日' : account.expire.slice(0, 10)}</div>
+              <div class="quota-sub">${account.updatedAt}</div>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button class="icon-button" data-account-action="edit" data-account-id="${account.id}" aria-label="編輯 ${account.name}">
+                  <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                </button>
+                <button class="icon-button danger" data-account-action="disable" data-account-id="${account.id}" aria-label="停用 ${account.name}">
+                  <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      accountTableSummary.textContent = `顯示 ${visibleAccounts.length} 個帳號`;
+      updateBatchState(false);
+    }
+
+    function openAccount(id) {
+      const existing = accountUsers.find(account => account.id === id);
+      if (!existing) return;
+      selectedAccountId = id;
+      draftAccount = { ...existing };
+      accountDirty = false;
+      accountDirtyText.classList.remove('show');
+      renderAccounts();
+      renderAccountEditPage();
+      accountListView.classList.remove('active');
+      accountEditView.classList.add('active');
+      document.getElementById('pageTitle').textContent = '編輯帳號';
+      document.getElementById('pageNote').textContent = '';
+      document.getElementById('pageNote').classList.add('hidden');
+      document.getElementById('pageTitleDivider').classList.add('hidden');
+    }
+
+    function renderAccountEditPage() {
+      const account = getCurrentAccount();
+      if (!account) return;
+      document.getElementById('accountEditTitle').textContent = account.name;
+      document.getElementById('accountEditSubtitle').textContent = `${account.account} · ${account.email}`;
+      document.getElementById('accountNickname').value = account.name;
+      document.getElementById('accountEnabled').checked = account.status === 'enabled';
+      document.getElementById('accountCode').value = account.account;
+      document.getElementById('accountEmail').value = account.email;
+      document.getElementById('accountPassword').value = '';
+      document.getElementById('accountExpire').value = account.expire;
+      document.getElementById('accountDept').value = account.dept;
+      document.getElementById('accountRole').value = account.role;
+      setSupervisorSelection(account.supervisorStatus === 'none' ? ['__none'] : getSupervisorValues(account));
+      document.getElementById('primaryDelegateSelect').value = account.primaryDelegate || '';
+      document.getElementById('secondaryDelegateSelect').value = account.secondaryDelegate || '';
+      document.getElementById('accountQuota').value = account.quota;
+      document.getElementById('accountUnused').value = Math.max(account.quota - account.usedRooms, 0);
+      document.getElementById('accountUsed').value = account.usedRooms;
+      updateDelegateOptions();
+    }
+
+    function markAccountDirty() {
+      accountDirty = true;
+      accountDirtyText.classList.add('show');
+    }
+
+    function syncAccountDraft() {
+      const account = getCurrentAccount();
+      if (!account) return;
+      account.name = document.getElementById('accountNickname').value.trim() || account.account;
+      account.status = document.getElementById('accountEnabled').checked ? 'enabled' : 'disabled';
+      account.dept = document.getElementById('accountDept').value;
+      account.role = document.getElementById('accountRole').value;
+      const supervisorValues = getSelectedSupervisorValues();
+      account.supervisorStatus = supervisorValues.includes('__none') ? 'none' : supervisorValues.length ? 'assigned' : 'unset';
+      account.supervisors = supervisorValues.filter(value => value !== '__none');
+      account.supervisor = account.supervisors.join('、');
+      account.primaryDelegate = document.getElementById('primaryDelegateSelect').value;
+      account.secondaryDelegate = document.getElementById('secondaryDelegateSelect').value;
+      account.quota = Number(document.getElementById('accountQuota').value || 0);
+    }
+
+    function getSelectedSupervisorValues() {
+      try {
+        return JSON.parse(supervisorSearch.dataset.values || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function setSupervisorSelection(values) {
+      const nextValues = (Array.isArray(values) ? values : [values])
+        .filter(Boolean);
+      const normalised = nextValues.includes('__none') ? ['__none'] : [...new Set(nextValues)];
+      supervisorSearch.dataset.values = JSON.stringify(normalised);
+      supervisorSearch.value = '';
+      renderSupervisorSelections();
+      renderSupervisorMenu();
+    }
+
+    function renderSupervisorSelections() {
+      const values = getSelectedSupervisorValues();
+      supervisorSelections.innerHTML = values.map(value => {
+        const person = accountPeople.find(item => item.value === value);
+        const label = person?.name || value;
+        return `
+          <span class="supervisor-chip ${value === '__none' ? 'empty' : ''}">
+            ${label}
+            <button type="button" data-supervisor-remove="${value}" aria-label="移除 ${label}">
+              <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </span>
+        `;
+      }).join('');
+    }
+
+    function renderSupervisorMenu() {
+      const keyword = supervisorSearch.value.trim().toLowerCase();
+      const selectedValues = getSelectedSupervisorValues();
+      const visiblePeople = accountPeople.filter(person => {
+        const text = `${person.name} ${person.dept} ${person.value}`.toLowerCase();
+        return (!keyword || text.includes(keyword)) && !selectedValues.includes(person.value);
+      });
+      supervisorMenu.innerHTML = visiblePeople.map(person => `
+        <button class="combo-option" type="button" data-supervisor-value="${person.value}">
+          <span class="avatar">${person.initial}</span>
+          <span>
+            <strong>${person.name}</strong>
+            <span class="muted">${person.dept}</span>
+          </span>
+        </button>
+      `).join('') || '<div class="empty-box">查無符合人員</div>';
+    }
+
+    function updateDelegateOptions() {
+      const currentAccount = getCurrentAccount();
+      const primary = document.getElementById('primaryDelegateSelect').value;
+      const secondary = document.getElementById('secondaryDelegateSelect').value;
+      [...document.getElementById('primaryDelegateSelect').options].forEach(option => {
+        option.disabled = Boolean(option.value && (option.value === currentAccount?.name || option.value === secondary));
+      });
+      [...document.getElementById('secondaryDelegateSelect').options].forEach(option => {
+        option.disabled = Boolean(option.value && (option.value === currentAccount?.name || option.value === primary));
+      });
+    }
+
+    function saveAccount() {
+      syncAccountDraft();
+      const account = getCurrentAccount();
+      if (account.supervisorStatus === 'assigned' && !getSupervisorValues(account).length) {
+        showToast('請選擇直屬主管，或選擇無直屬主管');
+        return;
+      }
+      if (account.primaryDelegate && account.secondaryDelegate && account.primaryDelegate === account.secondaryDelegate) {
+        showToast('主要與次要代理人不可相同');
+        return;
+      }
+      const index = accountUsers.findIndex(item => item.id === account.id);
+      accountUsers[index] = { ...account };
+      draftAccount = { ...accountUsers[index] };
+      accountDirty = false;
+      accountDirtyText.classList.remove('show');
+      renderAccounts();
+      renderAccountEditPage();
+      showToast('已儲存帳號設定');
+    }
+
+    function updateBatchState(syncChecks = true) {
+      accountBatchBar.classList.toggle('show', selectedBatchAccounts.size > 0);
+      batchSummary.textContent = `已選取 ${selectedBatchAccounts.size} 個帳號`;
+      if (syncChecks) {
+        document.querySelectorAll('.account-row-check').forEach(input => {
+          input.checked = selectedBatchAccounts.has(input.dataset.accountCheck);
+        });
+      }
+      const visibleChecks = [...document.querySelectorAll('.account-row-check')];
+      selectAllAccounts.checked = visibleChecks.length > 0 && visibleChecks.every(input => input.checked);
+      selectAllAccounts.indeterminate = visibleChecks.some(input => input.checked) && !selectAllAccounts.checked;
+      document.querySelectorAll('tr[data-account-id]').forEach(row => {
+        row.classList.toggle('batch-selected', selectedBatchAccounts.has(row.dataset.accountId));
+      });
+    }
+
+    function exitBatchMode() {
+      selectedBatchAccounts.clear();
+      updateBatchState();
+    }
+
+    function requestLeave(action) {
+      if (!accountDirty) {
+        action();
+        return;
+      }
+      pendingLeaveAction = action;
+      unsavedModal.classList.add('show');
+    }
+
+    function closeUnsavedModal() {
+      pendingLeaveAction = null;
+      unsavedModal.classList.remove('show');
+    }
+
+    function confirmDiscardChanges() {
+      accountDirty = false;
+      accountDirtyText.classList.remove('show');
+      unsavedModal.classList.remove('show');
+      const action = pendingLeaveAction;
+      pendingLeaveAction = null;
+      if (action) action();
+    }
+
+    function showAccountList() {
+      draftAccount = null;
+      selectedAccountId = null;
+      accountDirty = false;
+      accountDirtyText.classList.remove('show');
+      accountEditView.classList.remove('active');
+      accountListView.classList.add('active');
+      renderAccounts();
+      document.getElementById('pageTitle').textContent = '帳號管理';
+      document.getElementById('pageNote').textContent = '管理帳號基本資料、權限、資源配額與後續審核流程會使用的人員關係。';
+      document.getElementById('pageNote').classList.remove('hidden');
+      document.getElementById('pageTitleDivider').classList.remove('hidden');
+    }
+
+    function switchSection(sectionName) {
+      if (accountDirty && accountEditView.classList.contains('active') && sectionName !== 'accounts') {
+        requestLeave(() => switchSection(sectionName));
+        return;
+      }
+      document.querySelectorAll('[data-menu-section]').forEach(item => {
+        item.classList.toggle('active', item.dataset.menuSection === sectionName);
+      });
+      document.getElementById('accountsPanel').classList.toggle('active', sectionName === 'accounts');
+      document.getElementById('groupsPanel').classList.toggle('active', sectionName === 'groups');
+      document.getElementById('pageTitle').textContent = sectionName === 'accounts' ? '帳號管理' : '群組標籤';
+      document.getElementById('pageNote').textContent = sectionName === 'accounts'
+        ? '管理帳號基本資料、權限、資源配額與後續審核流程會使用的人員關係。'
+        : '建立可重複套用的人員群組，用於簽核、通知、權限與工作流設定。';
+      document.getElementById('pageNote').classList.remove('hidden');
+      document.getElementById('pageTitleDivider').classList.remove('hidden');
+      if (sectionName === 'accounts') {
+        drawer.classList.add('closed');
+        showAccountList();
+      } else {
+        draftGroup = null;
+        isNewMode = false;
+        selectedGroupId = null;
+        drawer.classList.add('closed');
+        renderTable();
+      }
+    }
+
+    function getMember(id) {
+      return members.find(member => member.id === id);
+    }
+
+    function getCurrentGroup() {
+      return draftGroup || groups.find(group => group.id === selectedGroupId);
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastText').textContent = text;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function renderTable() {
+      const keyword = groupSearch.value.trim().toLowerCase();
+      const filter = usageFilter.value;
+      const visibleGroups = groups.filter(group => {
+        const groupMembers = group.memberIds.map(getMember).filter(Boolean);
+        const text = [group.name, group.desc, ...groupMembers.map(member => member.name)].join(' ').toLowerCase();
+        const matchKeyword = !keyword || text.includes(keyword);
+        const matchFilter = filter === 'all'
+          || (filter === 'used' && group.applied.length > 0)
+          || (filter === 'unused' && group.applied.length === 0 && group.memberIds.length > 0)
+          || (filter === 'empty' && group.memberIds.length === 0);
+        return matchKeyword && matchFilter;
+      });
+
+      table.innerHTML = visibleGroups.map(group => {
+        const groupMembers = group.memberIds.map(getMember).filter(Boolean);
+        const preview = groupMembers.slice(0, 4);
+        const statusText = group.memberIds.length === 0 ? '無成員' : group.applied.length > 0 ? '已套用' : '未套用';
+        const statusClass = group.memberIds.length === 0 ? 'warning' : '';
+        const applied = group.applied.length
+          ? group.applied.slice(0, 2).map(item => `<span class="usage-pill">${item}</span>`).join('')
+          : '<span class="muted">尚未套用</span>';
+        return `
+          <tr class="${selectedBatchGroups.has(group.id) ? 'batch-selected' : group.id === selectedGroupId ? 'selected' : ''}" data-group-id="${group.id}">
+            <td class="bulk-col"><input class="bulk-check group-row-check" type="checkbox" data-group-check="${group.id}" aria-label="選取 ${group.name}" ${selectedBatchGroups.has(group.id) ? 'checked' : ''} /></td>
+            <td><span class="status ${statusClass}">${statusText}</span></td>
+            <td>
+              <div class="tag-name">
+                <strong>${group.name}</strong>
+                <span>${group.desc}</span>
+              </div>
+            </td>
+            <td>
+              <div class="avatar-stack">
+                <div class="avatars">
+                  ${preview.map(member => `<span class="avatar">${member.initial}</span>`).join('')}
+                </div>
+                <span class="muted">${group.memberIds.length} 位成員</span>
+              </div>
+            </td>
+            <td><div class="usage-list">${applied}</div></td>
+            <td>${group.updatedAt}</td>
+            <td>
+              <div class="row-actions">
+                <button class="icon-button" data-action="edit" data-group-id="${group.id}" aria-label="編輯 ${group.name}">
+                  <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                </button>
+                <button class="icon-button danger" data-action="delete" data-group-id="${group.id}" aria-label="刪除 ${group.name}" ${group.applied.length ? 'disabled' : ''}>
+                  <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      tableSummary.textContent = `顯示 ${visibleGroups.length} 個群組標籤`;
+      updateGroupBatchState(false);
+    }
+
+    function updateGroupBatchState(syncChecks = true) {
+      groupBatchBar.classList.toggle('show', selectedBatchGroups.size > 0);
+      groupBatchSummary.textContent = `已選取 ${selectedBatchGroups.size} 個群組標籤`;
+      if (syncChecks) {
+        document.querySelectorAll('.group-row-check').forEach(input => {
+          input.checked = selectedBatchGroups.has(input.dataset.groupCheck);
+        });
+      }
+      const visibleChecks = [...document.querySelectorAll('.group-row-check')];
+      selectAllGroups.checked = visibleChecks.length > 0 && visibleChecks.every(input => input.checked);
+      selectAllGroups.indeterminate = visibleChecks.some(input => input.checked) && !selectAllGroups.checked;
+      document.querySelectorAll('tr[data-group-id]').forEach(row => {
+        row.classList.toggle('batch-selected', selectedBatchGroups.has(row.dataset.groupId));
+      });
+    }
+
+    function clearGroupSelection() {
+      selectedBatchGroups.clear();
+      updateGroupBatchState();
+    }
+
+    function openGroupBatchModal() {
+      if (!selectedBatchGroups.size) return;
+      const removable = [...selectedBatchGroups].filter(id => !groups.find(group => group.id === id)?.applied.length);
+      const protectedCount = selectedBatchGroups.size - removable.length;
+      document.getElementById('groupBatchModalCopy').textContent = protectedCount
+        ? `可刪除 ${removable.length} 個群組；另有 ${protectedCount} 個群組仍在套用中，將保留不刪除。`
+        : `將刪除已選取的 ${removable.length} 個群組標籤，此動作無法復原。`;
+      document.getElementById('confirmGroupBatchDelete').disabled = removable.length === 0;
+      groupBatchModal.classList.add('show');
+    }
+
+    function closeGroupBatchModal() {
+      groupBatchModal.classList.remove('show');
+    }
+
+    function confirmGroupBatchDelete() {
+      const removable = [...selectedBatchGroups].filter(id => !groups.find(group => group.id === id)?.applied.length);
+      groups = groups.filter(group => !removable.includes(group.id));
+      closeGroupBatchModal();
+      clearGroupSelection();
+      renderTable();
+      showToast(`已刪除 ${removable.length} 個群組標籤`);
+    }
+
+    function renderDrawer() {
+      const group = getCurrentGroup();
+      if (!group) return;
+      drawerTitle.textContent = isNewMode ? '新增群組標籤' : group.name;
+      drawerSubtitle.textContent = group.applied.length ? `已套用於 ${group.applied.length} 個位置` : '尚未套用';
+      tagName.value = group.name;
+      tagDesc.value = group.desc;
+      deleteGroupButton.disabled = isNewMode || group.applied.length > 0;
+      renderSelectedMembers();
+      renderCandidates();
+      renderApplied();
+      drawer.classList.remove('closed');
+    }
+
+    function renderSelectedMembers() {
+      const group = getCurrentGroup();
+      const selectedMembers = group.memberIds.map(getMember).filter(Boolean);
+      selectedCount.textContent = `${selectedMembers.length} 人`;
+      if (!selectedMembers.length) {
+        selectedMemberList.innerHTML = '<div class="empty-box">尚未加入成員。請從上方搜尋或選擇部門加入。</div>';
+        return;
+      }
+      selectedMemberList.innerHTML = selectedMembers.map(member => `
+        <div class="member-row">
+          <span class="avatar">${member.initial}</span>
+          <div class="member-meta">
+            <strong>${member.name}</strong>
+            <span>${member.dept}</span>
+          </div>
+          <button class="icon-button danger" data-remove-member="${member.id}" aria-label="移除 ${member.name}">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderCandidates() {
+      const group = getCurrentGroup();
+      const keyword = memberSearch.value.trim().toLowerCase();
+      const department = departmentFilter.value;
+      const candidates = members.filter(member => {
+        const matchKeyword = !keyword || member.name.toLowerCase().includes(keyword) || member.dept.toLowerCase().includes(keyword);
+        const matchDepartment = department === 'all' || member.dept === department;
+        return matchKeyword && matchDepartment;
+      }).slice(0, 6);
+      candidateCount.textContent = `可加入 ${candidates.length} 人`;
+      candidateList.innerHTML = candidates.map(member => {
+        const added = group.memberIds.includes(member.id);
+        return `
+          <div class="member-row">
+            <span class="avatar">${member.initial}</span>
+            <div class="member-meta">
+              <strong>${member.name}</strong>
+              <span>${member.dept}</span>
+            </div>
+            <button class="mini-button ${added ? 'added' : 'add'}" data-add-member="${member.id}" ${added ? 'disabled' : ''}>
+              ${added ? '已加入' : '+ 加入'}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderApplied() {
+      const group = getCurrentGroup();
+      if (!group.applied.length) {
+        appliedList.innerHTML = '<div class="info-box">尚未套用到任何簽核流程、表格或通知設定。</div>';
+        return;
+      }
+      appliedList.innerHTML = group.applied.map(item => `
+        <div class="applied-item">
+          <strong>${item}</strong>
+          <button class="icon-button" aria-label="前往 ${item}">
+            <svg viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function openGroup(id) {
+      const existing = groups.find(group => group.id === id);
+      selectedGroupId = id;
+      isNewMode = false;
+      draftGroup = { ...existing, memberIds: [...existing.memberIds], applied: [...existing.applied] };
+      renderTable();
+      renderDrawer();
+    }
+
+    function openNewGroup() {
+      isNewMode = true;
+      selectedGroupId = null;
+      draftGroup = {
+        id: `g${Date.now()}`,
+        status: 'unused',
+        name: '',
+        desc: '',
+        memberIds: [],
+        applied: [],
+        updatedAt: '2026/06/17',
+      };
+      renderTable();
+      renderDrawer();
+      setTimeout(() => tagName.focus(), 80);
+    }
+
+    function closeDrawer() {
+      drawer.classList.add('closed');
+      draftGroup = null;
+      isNewMode = false;
+      selectedGroupId = null;
+      renderTable();
+    }
+
+    function syncDraftFromInputs() {
+      const group = getCurrentGroup();
+      group.name = tagName.value.trim();
+      group.desc = tagDesc.value.trim();
+    }
+
+    function saveGroup() {
+      syncDraftFromInputs();
+      const group = getCurrentGroup();
+      if (!group.name) {
+        showToast('請先輸入群組標籤名稱');
+        tagName.focus();
+        return;
+      }
+      if (isNewMode) {
+        groups.unshift({ ...group, memberIds: [...group.memberIds], applied: [...group.applied] });
+        selectedGroupId = group.id;
+        showToast('已新增群組標籤');
+      } else {
+        const index = groups.findIndex(item => item.id === group.id);
+        groups[index] = { ...group, memberIds: [...group.memberIds], applied: [...group.applied] };
+        selectedGroupId = group.id;
+        showToast('已儲存群組標籤');
+      }
+      isNewMode = false;
+      draftGroup = { ...groups.find(item => item.id === selectedGroupId), memberIds: [...group.memberIds], applied: [...group.applied] };
+      renderTable();
+      renderDrawer();
+    }
+
+    function deleteGroup(id) {
+      const group = groups.find(item => item.id === id);
+      if (!group) return;
+      if (group.applied.length > 0) {
+        showToast('此群組已套用，暫不可刪除');
+        return;
+      }
+      groups = groups.filter(item => item.id !== id);
+      selectedGroupId = null;
+      draftGroup = null;
+      drawer.classList.add('closed');
+      renderTable();
+      showToast('已刪除群組標籤');
+    }
+
+    table.addEventListener('click', event => {
+      const checkbox = event.target.closest('[data-group-check]');
+      if (checkbox) {
+        event.stopPropagation();
+        if (checkbox.checked) selectedBatchGroups.add(checkbox.dataset.groupCheck);
+        else selectedBatchGroups.delete(checkbox.dataset.groupCheck);
+        updateGroupBatchState();
+        return;
+      }
+      const actionButton = event.target.closest('[data-action]');
+      if (actionButton) {
+        event.stopPropagation();
+        const id = actionButton.dataset.groupId;
+        if (actionButton.dataset.action === 'edit') openGroup(id);
+        if (actionButton.dataset.action === 'delete') deleteGroup(id);
+        return;
+      }
+      const row = event.target.closest('tr[data-group-id]');
+      if (row) openGroup(row.dataset.groupId);
+    });
+
+    accountTable.addEventListener('click', event => {
+      const checkbox = event.target.closest('[data-account-check]');
+      if (checkbox) {
+        event.stopPropagation();
+        if (checkbox.checked) selectedBatchAccounts.add(checkbox.dataset.accountCheck);
+        else selectedBatchAccounts.delete(checkbox.dataset.accountCheck);
+        updateBatchState();
+        return;
+      }
+      const actionButton = event.target.closest('[data-account-action]');
+      if (actionButton) {
+        event.stopPropagation();
+        const id = actionButton.dataset.accountId;
+        if (actionButton.dataset.accountAction === 'edit') openAccount(id);
+        if (actionButton.dataset.accountAction === 'disable') {
+          const account = accountUsers.find(item => item.id === id);
+          if (account) {
+            account.status = account.status === 'enabled' ? 'disabled' : 'enabled';
+            selectedAccountId = id;
+            renderAccounts();
+            showToast(account.status === 'enabled' ? '已啟用帳號' : '已停用帳號');
+          }
+        }
+        return;
+      }
+      const row = event.target.closest('tr[data-account-id]');
+      if (row) openAccount(row.dataset.accountId);
+    });
+
+    document.querySelectorAll('[data-menu-section]').forEach(item => {
+      item.addEventListener('click', () => switchSection(item.dataset.menuSection));
+    });
+
+    accountSearch.addEventListener('input', renderAccounts);
+    accountRoleFilter.addEventListener('change', renderAccounts);
+    accountReviewFilter.addEventListener('change', renderAccounts);
+    document.getElementById('accountExportButton').addEventListener('click', () => showToast('已匯出帳號清單'));
+    document.getElementById('cancelBatchButton').addEventListener('click', exitBatchMode);
+    document.getElementById('batchSetSupervisorButton').addEventListener('click', () => showToast(`將為 ${selectedBatchAccounts.size} 個帳號批量設定主管`));
+    document.getElementById('batchSetRoleButton').addEventListener('click', () => showToast(`將為 ${selectedBatchAccounts.size} 個帳號批量調整權限`));
+    selectAllAccounts.addEventListener('change', () => {
+      document.querySelectorAll('.account-row-check').forEach(input => {
+        input.checked = selectAllAccounts.checked;
+        if (input.checked) selectedBatchAccounts.add(input.dataset.accountCheck);
+        else selectedBatchAccounts.delete(input.dataset.accountCheck);
+      });
+      updateBatchState();
+    });
+    document.getElementById('newAccountButton').addEventListener('click', () => showToast('新增帳號流程可接既有建立表單'));
+    document.getElementById('backToAccountList').addEventListener('click', () => requestLeave(showAccountList));
+    document.getElementById('cancelAccountButton').addEventListener('click', () => requestLeave(showAccountList));
+    document.getElementById('saveAccountButton').addEventListener('click', saveAccount);
+    document.querySelectorAll('#accountEditView input, #accountEditView select').forEach(control => {
+      control.addEventListener('change', () => {
+        if (control.id === 'primaryDelegateSelect' || control.id === 'secondaryDelegateSelect') {
+          updateDelegateOptions();
+        }
+        markAccountDirty();
+      });
+      control.addEventListener('input', markAccountDirty);
+    });
+
+    supervisorSearch.addEventListener('focus', () => {
+      supervisorCombo.classList.add('open');
+      renderSupervisorMenu();
+    });
+    supervisorSearch.addEventListener('input', () => {
+      supervisorCombo.classList.add('open');
+      renderSupervisorMenu();
+    });
+    supervisorMenu.addEventListener('click', event => {
+      const option = event.target.closest('[data-supervisor-value]');
+      if (!option) return;
+      const value = option.dataset.supervisorValue;
+      const selectedValues = getSelectedSupervisorValues();
+      setSupervisorSelection(value === '__none'
+        ? ['__none']
+        : [...selectedValues.filter(item => item !== '__none'), value]);
+      supervisorCombo.classList.add('open');
+      markAccountDirty();
+    });
+    supervisorSelections.addEventListener('click', event => {
+      const removeButton = event.target.closest('[data-supervisor-remove]');
+      if (!removeButton) return;
+      setSupervisorSelection(getSelectedSupervisorValues().filter(value => value !== removeButton.dataset.supervisorRemove));
+      markAccountDirty();
+    });
+    document.addEventListener('click', event => {
+      if (!event.target.closest('#supervisorCombo')) supervisorCombo.classList.remove('open');
+      const clickedGroupTrigger = event.target.closest('tr[data-group-id], #newGroupButton');
+      const clickedDrawer = event.target.closest('#drawer');
+      const clickedModal = event.target.closest('.modal-backdrop');
+      if (!drawer.classList.contains('closed') && !clickedGroupTrigger && !clickedDrawer && !clickedModal) closeDrawer();
+    });
+    document.getElementById('closeUnsavedModal').addEventListener('click', closeUnsavedModal);
+    document.getElementById('continueEditingButton').addEventListener('click', closeUnsavedModal);
+    document.getElementById('discardChangesButton').addEventListener('click', confirmDiscardChanges);
+
+    document.getElementById('newGroupButton').addEventListener('click', openNewGroup);
+    selectAllGroups.addEventListener('change', () => {
+      document.querySelectorAll('.group-row-check').forEach(input => {
+        if (selectAllGroups.checked) selectedBatchGroups.add(input.dataset.groupCheck);
+        else selectedBatchGroups.delete(input.dataset.groupCheck);
+      });
+      updateGroupBatchState();
+    });
+    document.getElementById('clearGroupSelectionButton').addEventListener('click', clearGroupSelection);
+    document.getElementById('batchDeleteGroupsButton').addEventListener('click', openGroupBatchModal);
+    document.getElementById('closeGroupBatchModal').addEventListener('click', closeGroupBatchModal);
+    document.getElementById('cancelGroupBatchDelete').addEventListener('click', closeGroupBatchModal);
+    document.getElementById('confirmGroupBatchDelete').addEventListener('click', confirmGroupBatchDelete);
+    groupBatchModal.addEventListener('click', event => {
+      if (event.target === groupBatchModal) closeGroupBatchModal();
+    });
+    document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+    document.getElementById('cancelButton').addEventListener('click', closeDrawer);
+    document.getElementById('saveButton').addEventListener('click', saveGroup);
+    document.getElementById('exportButton').addEventListener('click', () => showToast('已匯出群組標籤清單'));
+    deleteGroupButton.addEventListener('click', () => {
+      const group = getCurrentGroup();
+      if (group) deleteGroup(group.id);
+    });
+
+    tagName.addEventListener('input', () => {
+      const group = getCurrentGroup();
+      if (!group) return;
+      group.name = tagName.value;
+      drawerTitle.textContent = group.name || '新增群組標籤';
+    });
+    tagDesc.addEventListener('input', () => {
+      const group = getCurrentGroup();
+      if (group) group.desc = tagDesc.value;
+    });
+
+    memberSearch.addEventListener('input', renderCandidates);
+    departmentFilter.addEventListener('change', renderCandidates);
+    groupSearch.addEventListener('input', renderTable);
+    usageFilter.addEventListener('change', renderTable);
+
+    candidateList.addEventListener('click', event => {
+      const button = event.target.closest('[data-add-member]');
+      if (!button) return;
+      const group = getCurrentGroup();
+      const memberId = button.dataset.addMember;
+      if (!group.memberIds.includes(memberId)) {
+        group.memberIds.push(memberId);
+        renderSelectedMembers();
+        renderCandidates();
+      }
+    });
+
+    selectedMemberList.addEventListener('click', event => {
+      const button = event.target.closest('[data-remove-member]');
+      if (!button) return;
+      const group = getCurrentGroup();
+      group.memberIds = group.memberIds.filter(id => id !== button.dataset.removeMember);
+      renderSelectedMembers();
+      renderCandidates();
+    });
+
+    document.getElementById('addDepartmentButton').addEventListener('click', () => {
+      const department = departmentFilter.value;
+      if (department === 'all') {
+        showToast('請先選擇部門');
+        return;
+      }
+      const group = getCurrentGroup();
+      members
+        .filter(member => member.dept === department)
+        .forEach(member => {
+          if (!group.memberIds.includes(member.id)) group.memberIds.push(member.id);
+        });
+      renderSelectedMembers();
+      renderCandidates();
+      showToast(`已加入${department}`);
+    });
+
+    renderAccounts();
+    renderTable();
+    drawer.classList.add('closed');
+  </script>
+</body>
+</html>
