@@ -89,8 +89,19 @@ pre {
 code { font-family: "Noto Sans Mono CJK TC", monospace; }
 :not(pre) > code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 9pt; }
 
-/* ── mermaid 圖與圖片:置中、不超寬 ── */
-img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
+/* ── mermaid 圖與圖片:置中、限制在單頁內(避免過高的圖 overflow 產生空白頁)── */
+img {
+  max-width: 100%;
+  max-height: 235mm;   /* A4 內容高約 259mm,留邊界保守值,過高的圖等比縮小 */
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 10px auto;
+  break-inside: avoid;      /* 整張圖不跨頁 */
+}
+/* 圖片外層段落也不跨頁,確保圖與其容器一起搬到下一頁 */
+p:has(> img) { break-inside: avoid; text-align: center; }
 
 blockquote {
   border-left: 4px solid #ccc;
