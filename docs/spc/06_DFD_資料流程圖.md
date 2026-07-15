@@ -9,15 +9,15 @@ graph TD
     A[外部系統 Payload] --> B{Bearer Token 認證}
     B -->|認證通過| C[FastAPI POST /all-in-one]
 
-    subgraph Phase1 [階段一：提交 (同步)]
+    subgraph Phase1 ["階段一：提交 (同步)"]
         C --> P[建立任務 pending 寫入 Redis]
         P --> R202[立即回應 202 + task_id]
     end
 
     C -. 排程背景任務 .-> E
 
-    subgraph Phase2 [階段二：背景處理 (FastAPI BackgroundTasks，進程內)]
-        E[Data Validator] --> F{資料庫檢核 (Upsert)}
+    subgraph Phase2 ["階段二：背景處理 (FastAPI BackgroundTasks，進程內)"]
+        E[Data Validator] --> F{"資料庫檢核 (Upsert)"}
         F -->|依 name+station+tenant+department 匹配/建立| G[(MySQL: quant_ccms)]
         F -->|Entity 匹配/建立| H[(MySQL: quant_ccm_entities)]
 
@@ -30,7 +30,7 @@ graph TD
         M --> N[(Redis: 任務狀態，TTL 1 小時)]
     end
 
-    subgraph Phase3 [階段三：查詢結果 (輪詢)]
+    subgraph Phase3 ["階段三：查詢結果 (輪詢)"]
         Q[外部系統輪詢 GET /all-in-one/task_id] --> N
     end
 ```
