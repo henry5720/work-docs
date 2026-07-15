@@ -6,9 +6,9 @@
 
 ---
 
-# 第一部分：批量匯入接口負載
+## 第一部分：批量匯入接口負載
 
-## 1.1 單一項目 (AllInOnePayload)
+### 1.1 單一項目 (AllInOnePayload)
 
 用於 `POST /all-in-one` 的 `items[]`。
 
@@ -24,7 +24,7 @@
 | `cl` | Number \| null | 否 | 規格中心值 |
 | `lcl` | Number \| null | 否 | 規格下限 |
 
-## 1.2 層別資訊單項 (CategoryInfo)
+### 1.2 層別資訊單項 (CategoryInfo)
 
 | 欄位 | 型別 | 必填 | 說明 / 限制 |
 | :--- | :--- | :--- | :--- |
@@ -37,14 +37,14 @@
 > **強制層級不同**：`station` 於 API 層驗證（超過回 `422`）；其餘欄位在 **All-in-One 路徑不做前置驗證**，超過 128 會在**寫入資料庫時失敗**（回 `500` 或依 DB 設定截斷），而非乾淨的 `422`。逐步建立（§2）API 多數欄位於 API 層即驗證 128。
 > 層別 `category_information` 的 `key`／`value` 存於 **JSON 欄位，無長度上限**。
 
-## 1.3 批量匯入根物件 (BulkAllInOnePayload)
+### 1.3 批量匯入根物件 (BulkAllInOnePayload)
 
 | 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
 | `items` | Array&lt;AllInOnePayload&gt; | 是 | 批量匯入項目，1–10,000 筆 |
 | `preset_id` | String \| null | 否 | 匯入預設 ID；提供時套用該預設命名鍵，否則走 `naming=true` 邏輯 |
 
-## 1.4 任務執行結果 (TaskStatusResult)
+### 1.4 任務執行結果 (TaskStatusResult)
 
 `GET /all-in-one/{task_id}` 的回傳。
 
@@ -58,7 +58,7 @@
 | `created_ccm_ids` | Array&lt;String&gt; | 建立的計畫 ID |
 | `created_entity_ids` | Array&lt;String&gt; | 建立的管制項目 ID |
 
-## 1.5 比對預覽 (CompareAllInOnePayload / CompareResponse)
+### 1.5 比對預覽 (CompareAllInOnePayload / CompareResponse)
 
 `POST /all-in-one/compare`（無狀態預覽，不寫入）。
 
@@ -76,9 +76,9 @@
 
 ---
 
-# 第二部分：各資源 Payload（按 08 順序）
+## 第二部分：各資源 Payload（按 08 順序）
 
-## 2.1 Control Plans 管制計畫
+### 2.1 Control Plans 管制計畫
 
 **建立 (CreateQuantitativeCCMPayload)**
 
@@ -97,7 +97,7 @@
 
 **回傳 (QuantitativeCCMInfo)**：`id`、上述欄位、`created_at`、`updated_at`、`entities[]`。清單版 `QuantitativeCCMBasicInfo` 不含 `entities`。
 
-## 2.2 Entities 管制項目
+### 2.2 Entities 管制項目
 
 **建立（基本，CreateQuantitativeCCMEntityPayload）**
 
@@ -115,7 +115,7 @@
 
 **回傳 (QuantitativeCCMEntityInfo)**：`id`、`order`、`characteristic_name`、`measurement_unit`、`manufacturing_information`，彙總統計 `total_samples_count`、`samples_mean_avg`、`samples_overall_mean`、`samples_overall_std_dev`、`samples_range_avg`、`samples_std_dev_avg`、`samples_mr_avg`，及 `chart_settings[]`/`sampling_settings[]`/`alert_settings[]`。
 
-## 2.3 Chart Settings 管制圖設定
+### 2.3 Chart Settings 管制圖設定
 
 **建立 (CreateQuantitativeCCMChartSettingPayload)**
 
@@ -142,7 +142,7 @@
 
 **回傳 (QuantitativeCCMChartLimitInfo)**：上述界限欄位 + `sigma_within` + 能力指標 `cp`/`ca`/`cpu`/`cpl`/`cpk`/`pp`/`ppu`/`ppl`/`ppk`（不適用時 `null`）。
 
-## 2.4 Sampling Settings 抽樣設定
+### 2.4 Sampling Settings 抽樣設定
 
 **建立 (CreateQuantitativeCCMSamplingSettingPayload)**
 
@@ -155,12 +155,12 @@
 
 **更新**：以上皆選填。**回傳 (SamplingSettingInfo)**：+ `id`。
 
-## 2.5 Alert Settings 警示設定
+### 2.5 Alert Settings 警示設定
 
 **建立 (CreateQuantitativeCCMAlertSettingPayload)**：`ca_upper_limit`、`cp_upper_limit`、`cpk_lower_limit`、`alert_upper_limit`、`alert_lower_limit`（皆為 Number，建立時必填）。
 **更新**：以上皆選填。**回傳**：+ `id`。
 
-## 2.6 Samples 抽樣資料
+### 2.6 Samples 抽樣資料
 
 **建立單一 (CreateQuantitativeCCMEntitySamplePayload)**
 
@@ -190,7 +190,7 @@
 
 **層別唯一值 (CategoryUniqueValuesResponse)**：`{ "values": { "<key>": ["v1","v2"] } }`。
 
-## 2.7 Capability 能力分析
+### 2.7 Capability 能力分析
 
 **CapabilityIndicesInfo**：`total_samples_count`、`samples_mean_avg`、`samples_overall_mean`、`samples_overall_std_dev`、`samples_range_avg`、`samples_std_dev_avg`、`samples_mr_avg`、`chart_limits[]`。
 
@@ -200,7 +200,7 @@
 
 **RecommendedLimitsResponse**：`target_index`(cp/cpk/pp/ppk)、`target_value`、`total_samples_count`、`samples_overall_mean`、`samples_overall_std_dev`、`recommendations[]`（每 chart setting 的 `recommended_ucl`/`recommended_lcl`/`recommended_cl`、`sigma_within`）。
 
-## 2.8 Nelson Rules Settings 尼爾森法則
+### 2.8 Nelson Rules Settings 尼爾森法則
 
 **建立 (CreateQuantNelsonRulesSettingPayload)** — 各法則為**結構化物件**（不支援舊版 `N(x):S(y)` 字串格式），未提供或 `null` = 停用。
 
@@ -219,7 +219,7 @@
 > **更新 (UpdateQuantNelsonRulesSettingPayload)**：部分更新；設 `null` 停用該法則。
 > **回傳 (QuantNelsonRulesSettingInfo)**：`id`、`quant_ccm_id`、`created_at`、`updated_at` + 各法則 Info 物件（含實際參數）。
 
-## 2.9 Sample Alerts 樣本警報紀錄
+### 2.9 Sample Alerts 樣本警報紀錄
 
 **回傳 (QuantitativeCCMSampleAlertInfo)**
 
@@ -238,9 +238,9 @@
 
 ---
 
-# 第三部分：Import Presets 與 Permissions
+## 第三部分：Import Presets 與 Permissions
 
-## 3.1 匯入預設 (ImportPresetCreate / ImportPresetResponse)
+### 3.1 匯入預設 (ImportPresetCreate / ImportPresetResponse)
 
 | 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -255,7 +255,7 @@
 
 回傳額外含：`id`、`tenant_id`、`created_at`、`updated_at`。
 
-## 3.2 權限 (SPCPermission*)
+### 3.2 權限 (SPCPermission*)
 
 **設定 (SPCPermissionUpsert)**：`{ "role": "<SPCPermissionRole>" }`。
 
@@ -265,16 +265,16 @@
 
 ---
 
-# 附錄：常見類型枚舉值
+## 附錄：常見類型枚舉值
 
-## Control Chart Type (`chart_type`)
+### Control Chart Type (`chart_type`)
 | 值 | 說明 |
 | :--- | :--- |
 | `x_bar_mr` | X̄-MR（n=1） |
 | `x_bar_r` | X̄-R（2≤n≤10） |
 | `x_bar_s` | X̄-S（n>10） |
 
-## Chart Limit Entity Name (`entity_name`)
+### Chart Limit Entity Name (`entity_name`)
 | 值 | 說明 |
 | :--- | :--- |
 | `x_bar` | 平均值/個別值圖 |
@@ -282,23 +282,23 @@
 | `moving_range` | 移動全距圖（x_bar_mr） |
 | `std_dev` | 標準差圖（x_bar_s） |
 
-## Source (`source`)
+### Source (`source`)
 | 值 | 說明 |
 | :--- | :--- |
 | `api` | API 匯入 |
 | `mqtt` | MQTT 串流 |
 | `manual` | 手動建立 |
 
-## Alert Type (`alert_type`)
+### Alert Type (`alert_type`)
 | 值 | 說明 |
 | :--- | :--- |
 | `nelson_rule` | 尼爾森法則觸發 |
 | `alarm_limit` | 界限超標觸發 |
 
-## Nelson Rule Side (`side`)
+### Nelson Rule Side (`side`)
 `both` / `upper` / `lower`
 
-## SPC Permission Role (`role`)
+### SPC Permission Role (`role`)
 | 值 | 寫入 | 說明 |
 | :--- | :--- | :--- |
 | `system_admin` | ✓ | 系統管理者 |

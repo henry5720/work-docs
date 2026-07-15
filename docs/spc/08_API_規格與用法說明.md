@@ -7,9 +7,9 @@
 
 ---
 
-# 第一部分：API 目錄 (API Index)
+## 第一部分：API 目錄 (API Index)
 
-## 1.1 資源列表
+### 1.1 資源列表
 
 | # | Resource（資源）| 功能說明 |
 | :--- | :--- | :--- |
@@ -27,7 +27,7 @@
 | 12 | **Import Presets 匯入預設** | 匯入預設設定（命名鍵、綁定站別、預設界限等） |
 | 13 | **Permissions 權限** | SPC 角色權限查詢與管理 |
 
-## 1.2 資源層級
+### 1.2 資源層級
 
 ```
 Quantitative CCM（管制計畫）
@@ -41,7 +41,7 @@ Quantitative CCM（管制計畫）
 └── QuantNelsonRulesSetting（尼爾森法則）
 ```
 
-## 1.3 批量匯入方式
+### 1.3 批量匯入方式
 
 | 方式 | 說明 | 適用場景 |
 | :--- | :--- | :--- |
@@ -52,11 +52,11 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第二部分：存取控制與權限模型
+## 第二部分：存取控制與權限模型
 
 所有 `/private` 端點皆需帶 Bearer Token（取得方式見 [11](./11_對接快速指南.md)）。除認證外，Quantitative CCM 另有 **SPC 角色** 與 **部門級資料隔離**。
 
-## 2.0.1 SPC 角色
+### 2.0.1 SPC 角色
 
 | 角色 (`role`) | 說明 | 寫入權限 |
 | :--- | :--- | :--- |
@@ -69,7 +69,7 @@ Quantitative CCM（管制計畫）
 - **匯入預設 (Import Presets)** 寫入僅限 `system_admin`、`quality_staff`。
 - 權限不足時回傳 `403 Forbidden`。
 
-## 2.0.2 部門級資料隔離
+### 2.0.2 部門級資料隔離
 
 - 每筆計畫（CCM）與管制項目（Entity）綁定建立者的 `department_id`；**匯入預設（Import Presets）為租戶層級，不分部門**。
 - 一般使用者**只能存取自己部門**的資料；跨部門資料不會出現在清單，存取會被拒。
@@ -80,9 +80,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第三部分：API 詳細規格
+## 第三部分：API 詳細規格
 
-## 3.1 Control Plans 管制計畫
+### 3.1 Control Plans 管制計畫
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -123,7 +123,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.2 Entities 管制項目
+### 3.2 Entities 管制項目
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -183,7 +183,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.3 Chart Settings 管制圖設定
+### 3.3 Chart Settings 管制圖設定
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -223,7 +223,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.4 Sampling Settings 抽樣設定
+### 3.4 Sampling Settings 抽樣設定
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -240,7 +240,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.5 Alert Settings 警示設定
+### 3.5 Alert Settings 警示設定
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -259,7 +259,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.6 Samples 抽樣資料
+### 3.6 Samples 抽樣資料
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -302,7 +302,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.7 Capability 能力分析
+### 3.7 Capability 能力分析
 
 依「篩選後的樣本集」計算製程能力指標。
 
@@ -345,7 +345,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.8 Sample Alerts 樣本警報紀錄
+### 3.8 Sample Alerts 樣本警報紀錄
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -356,7 +356,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.9 Nelson Rules Settings 尼爾森法則
+### 3.9 Nelson Rules Settings 尼爾森法則
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -397,7 +397,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.10 All-in-One 批量匯入
+### 3.10 All-in-One 批量匯入
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -444,7 +444,7 @@ Quantitative CCM（管制計畫）
 
 > 同一 `characteristic_name` 單次呼叫內的 `samples` 長度須一致，否則回 `Inconsistent sample sizes`。
 
-### 精度自動推斷 (Precision Inference) {#precision-inference}
+#### 精度自動推斷 (Precision Inference) {#precision-inference}
 
 匯入時系統會掃描該次全部 `samples` 字串，取小數點後**有效位數（去除尾端 0）的最大值**作為該計畫的小數位數（`num_of_digits`），後續統計計算與顯示皆以此精度為準。
 
@@ -471,7 +471,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.11 Export 匯出
+### 3.11 Export 匯出
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -486,7 +486,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.12 Import Presets 匯入預設
+### 3.12 Import Presets 匯入預設
 
 匯入 UI 使用的預設設定（命名鍵、綁定站別/聊天室/表格、預設界限）。**為租戶層級（不分部門）**。**讀取**需 `system_admin` / `quality_staff` / `line_operator`（viewer 讀取會回 `403`）；**寫入**僅限 `system_admin`、`quality_staff`。
 
@@ -516,7 +516,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.13 Permissions 權限
+### 3.13 Permissions 權限
 
 管理 SPC 角色（見第二部分權限模型）。管理端點需具權限管理資格。
 
@@ -544,9 +544,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第四部分：調用情境指南
+## 第四部分：調用情境指南
 
-## 4.1 情境 A：逐步建立並匯入（Method 1）
+### 4.1 情境 A：逐步建立並匯入（Method 1）
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -554,7 +554,7 @@ Quantitative CCM（管制計畫）
 | 2 | `POST /{ccm_id}/entities/with-settings` | 一次建立 Entity + 所有設定 |
 | 3 | `POST /{ccm_id}/entities/{entity_id}/samples/bulk` | 批量建立樣本 |
 
-## 4.2 情境 B：一鍵匯入（Method 2）
+### 4.2 情境 B：一鍵匯入（Method 2）
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -563,7 +563,7 @@ Quantitative CCM（管制計畫）
 
 > 可執行程式碼範例見 [11 對接快速指南](./11_對接快速指南.md)。
 
-## 4.3 情境 C：修正量測值
+### 4.3 情境 C：修正量測值
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -572,7 +572,7 @@ Quantitative CCM（管制計畫）
 
 > **實務建議**：多數客戶採「刪除後重新匯入」（`DELETE` → `POST`），而非直接修改。
 
-## 4.4 情境 D：能力分析與建議界限
+### 4.4 情境 D：能力分析與建議界限
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -581,9 +581,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 附錄：認證與錯誤處理
+## 附錄：認證與錯誤處理
 
-## HTTP 狀態碼
+### HTTP 狀態碼
 
 | 狀態碼 | 說明 | 建議操作 |
 | :--- | :--- | :--- |
@@ -599,7 +599,7 @@ Quantitative CCM（管制計畫）
 | `422` | 參數格式錯誤 | 檢查必填欄位與型別 |
 | `500` | 系統內部異常 | 記錄錯誤並回報 |
 
-## 常見錯誤訊息
+### 常見錯誤訊息
 
 | 錯誤訊息 | 說明 |
 | :--- | :--- |

@@ -1294,9 +1294,9 @@ erDiagram
 
 ---
 
-# 第一部分：API 目錄 (API Index)
+## 第一部分：API 目錄 (API Index)
 
-## 1.1 資源列表
+### 1.1 資源列表
 
 | # | Resource（資源）| 功能說明 |
 | :--- | :--- | :--- |
@@ -1314,7 +1314,7 @@ erDiagram
 | 12 | **Import Presets 匯入預設** | 匯入預設設定（命名鍵、綁定站別、預設界限等） |
 | 13 | **Permissions 權限** | SPC 角色權限查詢與管理 |
 
-## 1.2 資源層級
+### 1.2 資源層級
 
 ```
 Quantitative CCM（管制計畫）
@@ -1328,7 +1328,7 @@ Quantitative CCM（管制計畫）
 └── QuantNelsonRulesSetting（尼爾森法則）
 ```
 
-## 1.3 批量匯入方式
+### 1.3 批量匯入方式
 
 | 方式 | 說明 | 適用場景 |
 | :--- | :--- | :--- |
@@ -1339,11 +1339,11 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第二部分：存取控制與權限模型
+## 第二部分：存取控制與權限模型
 
 所有 `/private` 端點皆需帶 Bearer Token（取得方式見 [11](#doc-11)）。除認證外，Quantitative CCM 另有 **SPC 角色** 與 **部門級資料隔離**。
 
-## 2.0.1 SPC 角色
+### 2.0.1 SPC 角色
 
 | 角色 (`role`) | 說明 | 寫入權限 |
 | :--- | :--- | :--- |
@@ -1356,7 +1356,7 @@ Quantitative CCM（管制計畫）
 - **匯入預設 (Import Presets)** 寫入僅限 `system_admin`、`quality_staff`。
 - 權限不足時回傳 `403 Forbidden`。
 
-## 2.0.2 部門級資料隔離
+### 2.0.2 部門級資料隔離
 
 - 每筆計畫（CCM）與管制項目（Entity）綁定建立者的 `department_id`；**匯入預設（Import Presets）為租戶層級，不分部門**。
 - 一般使用者**只能存取自己部門**的資料；跨部門資料不會出現在清單，存取會被拒。
@@ -1367,9 +1367,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第三部分：API 詳細規格
+## 第三部分：API 詳細規格
 
-## 3.1 Control Plans 管制計畫
+### 3.1 Control Plans 管制計畫
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1410,7 +1410,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.2 Entities 管制項目
+### 3.2 Entities 管制項目
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1470,7 +1470,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.3 Chart Settings 管制圖設定
+### 3.3 Chart Settings 管制圖設定
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1510,7 +1510,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.4 Sampling Settings 抽樣設定
+### 3.4 Sampling Settings 抽樣設定
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1527,7 +1527,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.5 Alert Settings 警示設定
+### 3.5 Alert Settings 警示設定
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1546,7 +1546,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.6 Samples 抽樣資料
+### 3.6 Samples 抽樣資料
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1589,7 +1589,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.7 Capability 能力分析
+### 3.7 Capability 能力分析
 
 依「篩選後的樣本集」計算製程能力指標。
 
@@ -1632,7 +1632,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.8 Sample Alerts 樣本警報紀錄
+### 3.8 Sample Alerts 樣本警報紀錄
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1643,7 +1643,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.9 Nelson Rules Settings 尼爾森法則
+### 3.9 Nelson Rules Settings 尼爾森法則
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1684,7 +1684,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.10 All-in-One 批量匯入
+### 3.10 All-in-One 批量匯入
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1731,7 +1731,7 @@ Quantitative CCM（管制計畫）
 
 > 同一 `characteristic_name` 單次呼叫內的 `samples` 長度須一致，否則回 `Inconsistent sample sizes`。
 
-### 精度自動推斷 (Precision Inference) {#precision-inference}
+#### 精度自動推斷 (Precision Inference) {#precision-inference}
 
 匯入時系統會掃描該次全部 `samples` 字串，取小數點後**有效位數（去除尾端 0）的最大值**作為該計畫的小數位數（`num_of_digits`），後續統計計算與顯示皆以此精度為準。
 
@@ -1758,7 +1758,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.11 Export 匯出
+### 3.11 Export 匯出
 
 | # | Method | Path | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -1773,7 +1773,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.12 Import Presets 匯入預設
+### 3.12 Import Presets 匯入預設
 
 匯入 UI 使用的預設設定（命名鍵、綁定站別/聊天室/表格、預設界限）。**為租戶層級（不分部門）**。**讀取**需 `system_admin` / `quality_staff` / `line_operator`（viewer 讀取會回 `403`）；**寫入**僅限 `system_admin`、`quality_staff`。
 
@@ -1803,7 +1803,7 @@ Quantitative CCM（管制計畫）
 
 ---
 
-## 3.13 Permissions 權限
+### 3.13 Permissions 權限
 
 管理 SPC 角色（見第二部分權限模型）。管理端點需具權限管理資格。
 
@@ -1831,9 +1831,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第四部分：調用情境指南
+## 第四部分：調用情境指南
 
-## 4.1 情境 A：逐步建立並匯入（Method 1）
+### 4.1 情境 A：逐步建立並匯入（Method 1）
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -1841,7 +1841,7 @@ Quantitative CCM（管制計畫）
 | 2 | `POST /{ccm_id}/entities/with-settings` | 一次建立 Entity + 所有設定 |
 | 3 | `POST /{ccm_id}/entities/{entity_id}/samples/bulk` | 批量建立樣本 |
 
-## 4.2 情境 B：一鍵匯入（Method 2）
+### 4.2 情境 B：一鍵匯入（Method 2）
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -1850,7 +1850,7 @@ Quantitative CCM（管制計畫）
 
 > 可執行程式碼範例見 [11 對接快速指南](#doc-11)。
 
-## 4.3 情境 C：修正量測值
+### 4.3 情境 C：修正量測值
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -1859,7 +1859,7 @@ Quantitative CCM（管制計畫）
 
 > **實務建議**：多數客戶採「刪除後重新匯入」（`DELETE` → `POST`），而非直接修改。
 
-## 4.4 情境 D：能力分析與建議界限
+### 4.4 情境 D：能力分析與建議界限
 
 | 順序 | API | 說明 |
 | :--- | :--- | :--- |
@@ -1868,9 +1868,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 附錄：認證與錯誤處理
+## 附錄：認證與錯誤處理
 
-## HTTP 狀態碼
+### HTTP 狀態碼
 
 | 狀態碼 | 說明 | 建議操作 |
 | :--- | :--- | :--- |
@@ -1886,7 +1886,7 @@ Quantitative CCM（管制計畫）
 | `422` | 參數格式錯誤 | 檢查必填欄位與型別 |
 | `500` | 系統內部異常 | 記錄錯誤並回報 |
 
-## 常見錯誤訊息
+### 常見錯誤訊息
 
 | 錯誤訊息 | 說明 |
 | :--- | :--- |
@@ -1907,9 +1907,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第一部分：批量匯入接口負載
+## 第一部分：批量匯入接口負載
 
-## 1.1 單一項目 (AllInOnePayload)
+### 1.1 單一項目 (AllInOnePayload)
 
 用於 `POST /all-in-one` 的 `items[]`。
 
@@ -1925,7 +1925,7 @@ Quantitative CCM（管制計畫）
 | `cl` | Number \| null | 否 | 規格中心值 |
 | `lcl` | Number \| null | 否 | 規格下限 |
 
-## 1.2 層別資訊單項 (CategoryInfo)
+### 1.2 層別資訊單項 (CategoryInfo)
 
 | 欄位 | 型別 | 必填 | 說明 / 限制 |
 | :--- | :--- | :--- | :--- |
@@ -1938,14 +1938,14 @@ Quantitative CCM（管制計畫）
 > **強制層級不同**：`station` 於 API 層驗證（超過回 `422`）；其餘欄位在 **All-in-One 路徑不做前置驗證**，超過 128 會在**寫入資料庫時失敗**（回 `500` 或依 DB 設定截斷），而非乾淨的 `422`。逐步建立（§2）API 多數欄位於 API 層即驗證 128。
 > 層別 `category_information` 的 `key`／`value` 存於 **JSON 欄位，無長度上限**。
 
-## 1.3 批量匯入根物件 (BulkAllInOnePayload)
+### 1.3 批量匯入根物件 (BulkAllInOnePayload)
 
 | 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
 | `items` | Array&lt;AllInOnePayload&gt; | 是 | 批量匯入項目，1–10,000 筆 |
 | `preset_id` | String \| null | 否 | 匯入預設 ID；提供時套用該預設命名鍵，否則走 `naming=true` 邏輯 |
 
-## 1.4 任務執行結果 (TaskStatusResult)
+### 1.4 任務執行結果 (TaskStatusResult)
 
 `GET /all-in-one/{task_id}` 的回傳。
 
@@ -1959,7 +1959,7 @@ Quantitative CCM（管制計畫）
 | `created_ccm_ids` | Array&lt;String&gt; | 建立的計畫 ID |
 | `created_entity_ids` | Array&lt;String&gt; | 建立的管制項目 ID |
 
-## 1.5 比對預覽 (CompareAllInOnePayload / CompareResponse)
+### 1.5 比對預覽 (CompareAllInOnePayload / CompareResponse)
 
 `POST /all-in-one/compare`（無狀態預覽，不寫入）。
 
@@ -1977,9 +1977,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第二部分：各資源 Payload（按 08 順序）
+## 第二部分：各資源 Payload（按 08 順序）
 
-## 2.1 Control Plans 管制計畫
+### 2.1 Control Plans 管制計畫
 
 **建立 (CreateQuantitativeCCMPayload)**
 
@@ -1998,7 +1998,7 @@ Quantitative CCM（管制計畫）
 
 **回傳 (QuantitativeCCMInfo)**：`id`、上述欄位、`created_at`、`updated_at`、`entities[]`。清單版 `QuantitativeCCMBasicInfo` 不含 `entities`。
 
-## 2.2 Entities 管制項目
+### 2.2 Entities 管制項目
 
 **建立（基本，CreateQuantitativeCCMEntityPayload）**
 
@@ -2016,7 +2016,7 @@ Quantitative CCM（管制計畫）
 
 **回傳 (QuantitativeCCMEntityInfo)**：`id`、`order`、`characteristic_name`、`measurement_unit`、`manufacturing_information`，彙總統計 `total_samples_count`、`samples_mean_avg`、`samples_overall_mean`、`samples_overall_std_dev`、`samples_range_avg`、`samples_std_dev_avg`、`samples_mr_avg`，及 `chart_settings[]`/`sampling_settings[]`/`alert_settings[]`。
 
-## 2.3 Chart Settings 管制圖設定
+### 2.3 Chart Settings 管制圖設定
 
 **建立 (CreateQuantitativeCCMChartSettingPayload)**
 
@@ -2043,7 +2043,7 @@ Quantitative CCM（管制計畫）
 
 **回傳 (QuantitativeCCMChartLimitInfo)**：上述界限欄位 + `sigma_within` + 能力指標 `cp`/`ca`/`cpu`/`cpl`/`cpk`/`pp`/`ppu`/`ppl`/`ppk`（不適用時 `null`）。
 
-## 2.4 Sampling Settings 抽樣設定
+### 2.4 Sampling Settings 抽樣設定
 
 **建立 (CreateQuantitativeCCMSamplingSettingPayload)**
 
@@ -2056,12 +2056,12 @@ Quantitative CCM（管制計畫）
 
 **更新**：以上皆選填。**回傳 (SamplingSettingInfo)**：+ `id`。
 
-## 2.5 Alert Settings 警示設定
+### 2.5 Alert Settings 警示設定
 
 **建立 (CreateQuantitativeCCMAlertSettingPayload)**：`ca_upper_limit`、`cp_upper_limit`、`cpk_lower_limit`、`alert_upper_limit`、`alert_lower_limit`（皆為 Number，建立時必填）。
 **更新**：以上皆選填。**回傳**：+ `id`。
 
-## 2.6 Samples 抽樣資料
+### 2.6 Samples 抽樣資料
 
 **建立單一 (CreateQuantitativeCCMEntitySamplePayload)**
 
@@ -2091,7 +2091,7 @@ Quantitative CCM（管制計畫）
 
 **層別唯一值 (CategoryUniqueValuesResponse)**：`{ "values": { "<key>": ["v1","v2"] } }`。
 
-## 2.7 Capability 能力分析
+### 2.7 Capability 能力分析
 
 **CapabilityIndicesInfo**：`total_samples_count`、`samples_mean_avg`、`samples_overall_mean`、`samples_overall_std_dev`、`samples_range_avg`、`samples_std_dev_avg`、`samples_mr_avg`、`chart_limits[]`。
 
@@ -2101,7 +2101,7 @@ Quantitative CCM（管制計畫）
 
 **RecommendedLimitsResponse**：`target_index`(cp/cpk/pp/ppk)、`target_value`、`total_samples_count`、`samples_overall_mean`、`samples_overall_std_dev`、`recommendations[]`（每 chart setting 的 `recommended_ucl`/`recommended_lcl`/`recommended_cl`、`sigma_within`）。
 
-## 2.8 Nelson Rules Settings 尼爾森法則
+### 2.8 Nelson Rules Settings 尼爾森法則
 
 **建立 (CreateQuantNelsonRulesSettingPayload)** — 各法則為**結構化物件**（不支援舊版 `N(x):S(y)` 字串格式），未提供或 `null` = 停用。
 
@@ -2120,7 +2120,7 @@ Quantitative CCM（管制計畫）
 > **更新 (UpdateQuantNelsonRulesSettingPayload)**：部分更新；設 `null` 停用該法則。
 > **回傳 (QuantNelsonRulesSettingInfo)**：`id`、`quant_ccm_id`、`created_at`、`updated_at` + 各法則 Info 物件（含實際參數）。
 
-## 2.9 Sample Alerts 樣本警報紀錄
+### 2.9 Sample Alerts 樣本警報紀錄
 
 **回傳 (QuantitativeCCMSampleAlertInfo)**
 
@@ -2139,9 +2139,9 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 第三部分：Import Presets 與 Permissions
+## 第三部分：Import Presets 與 Permissions
 
-## 3.1 匯入預設 (ImportPresetCreate / ImportPresetResponse)
+### 3.1 匯入預設 (ImportPresetCreate / ImportPresetResponse)
 
 | 欄位 | 型別 | 必填 | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -2156,7 +2156,7 @@ Quantitative CCM（管制計畫）
 
 回傳額外含：`id`、`tenant_id`、`created_at`、`updated_at`。
 
-## 3.2 權限 (SPCPermission*)
+### 3.2 權限 (SPCPermission*)
 
 **設定 (SPCPermissionUpsert)**：`{ "role": "<SPCPermissionRole>" }`。
 
@@ -2166,16 +2166,16 @@ Quantitative CCM（管制計畫）
 
 ---
 
-# 附錄：常見類型枚舉值
+## 附錄：常見類型枚舉值
 
-## Control Chart Type (`chart_type`)
+### Control Chart Type (`chart_type`)
 | 值 | 說明 |
 | :--- | :--- |
 | `x_bar_mr` | X̄-MR（n=1） |
 | `x_bar_r` | X̄-R（2≤n≤10） |
 | `x_bar_s` | X̄-S（n>10） |
 
-## Chart Limit Entity Name (`entity_name`)
+### Chart Limit Entity Name (`entity_name`)
 | 值 | 說明 |
 | :--- | :--- |
 | `x_bar` | 平均值/個別值圖 |
@@ -2183,23 +2183,23 @@ Quantitative CCM（管制計畫）
 | `moving_range` | 移動全距圖（x_bar_mr） |
 | `std_dev` | 標準差圖（x_bar_s） |
 
-## Source (`source`)
+### Source (`source`)
 | 值 | 說明 |
 | :--- | :--- |
 | `api` | API 匯入 |
 | `mqtt` | MQTT 串流 |
 | `manual` | 手動建立 |
 
-## Alert Type (`alert_type`)
+### Alert Type (`alert_type`)
 | 值 | 說明 |
 | :--- | :--- |
 | `nelson_rule` | 尼爾森法則觸發 |
 | `alarm_limit` | 界限超標觸發 |
 
-## Nelson Rule Side (`side`)
+### Nelson Rule Side (`side`)
 `both` / `upper` / `lower`
 
-## SPC Permission Role (`role`)
+### SPC Permission Role (`role`)
 | 值 | 寫入 | 說明 |
 | :--- | :--- | :--- |
 | `system_admin` | ✓ | 系統管理者 |
