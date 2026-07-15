@@ -69,6 +69,10 @@ pandoc "${TMP_MD}" \
   -c "${CSS}" \
   -o "${HTML}"
 
+# 3b. 修正 mermaid SVG 尺寸:改用原生 viewBox px,避免小圖被 width="100%" 灌大到整頁
+echo "▶ (3b/4) 修正 SVG 原生尺寸"
+node fix-svg-size.js "${HTML}"
+
 # 4. Paged.js 分頁 → PDF(target-counter 解析目錄頁碼)
 echo "▶ (4/4) pagedjs-cli → PDF"
 pagedjs-cli "${HTML}" -o "${OUT}" --browserArgs="--no-sandbox,--disable-gpu"
