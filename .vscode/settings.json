@@ -1,0 +1,21 @@
+{
+  // === Markdown PDF (yzane.markdown-pdf) 匯出設定 ===
+  // 頁碼於「轉檔當下」由 Chromium 自動生成,永不過期;不要手寫頁碼進 .md
+  "markdown-pdf.displayHeaderFooter": true,
+
+  // 頁首:自動帶入該文件標題(<span class='title'>),故整個 repo 各文件通用,不寫死 SPC
+  "markdown-pdf.headerTemplate": "<div style=\"font-size:8px; width:100%; text-align:center; color:#888;\"><span class='title'></span></div>",
+
+  // 頁尾:置中顯示「第 X / Y 頁」
+  "markdown-pdf.footerTemplate": "<div style=\"font-size:9px; width:100%; text-align:center; color:#555;\">第 <span class='pageNumber'></span> / <span class='totalPages'></span> 頁</div>",
+
+  // A4、留邊給頁首頁尾
+  "markdown-pdf.format": "A4",
+  "markdown-pdf.margin.top": "1.5cm",
+  "markdown-pdf.margin.bottom": "1.5cm",
+  "markdown-pdf.margin.left": "1.5cm",
+  "markdown-pdf.margin.right": "1.5cm",
+
+  // 讓每章從新頁開始(選用):對含 page-break 樣式的文件較整齊
+  "markdown-pdf.printBackground": true
+}
