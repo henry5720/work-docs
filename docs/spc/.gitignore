@@ -1,0 +1,3 @@
+# PDF 產物由 build_pdf.sh 重生,不進版控
+*.pdf
+.pdf_build_tmp.md

@@ -42,8 +42,13 @@ for bin in python3 pandoc xelatex fc-list; do
   fi
 done
 
-# 判斷某字型 family 是否已被 fontconfig 索引到
-font_available() { fc-list -f '%{family}\n' 2>/dev/null | grep -qiF -- "$1"; }
+# 先把所有字型 family 抓進變數(只呼叫一次 fc-list)。
+# 注意:不可寫成 `fc-list | grep -q`,因 grep -q 提早關閉 pipe 會讓 fc-list 收到
+# SIGPIPE,在 `set -o pipefail` 下整條 pipeline 被判失敗 → 有字型也誤判為沒有。
+FONT_FAMILIES="$(fc-list -f '%{family}\n' 2>/dev/null || true)"
+
+# 判斷某字型 family 是否存在(用 here-string 比對,不經 pipe)
+font_available() { grep -qiF -- "$1" <<<"$FONT_FAMILIES"; }
 
 # 自動挑字型:CJK_FONT(若有指定)優先,其後依 FONT_CANDIDATES 順序 fallback
 RESOLVED_FONT=""
@@ -64,18 +69,29 @@ if [ -n "${CJK_FONT:-}" ] && [ "$RESOLVED_FONT" != "$CJK_FONT" ]; then
 fi
 
 # 1. 重新合併(確保 PDF 反映最新的 01–12 內容與索引)
-echo "▶ (1/2) 重新產生合併檔 ${SRC} ..."
+echo "▶ (1/3) 重新產生合併檔 ${SRC} ..."
 python3 build_hackmd.py
 
+# 1b. 預處理:移除「沒有字型覆蓋的圖形 emoji」與隱形變異選擇符(U+FE0F)。
+#     ⚠ ✓ ✗ 等有字型的符號會保留;只動暫存檔,來源 .md 不變(HackMD/GitHub 仍保有 emoji)。
+echo "▶ (2/3) 預處理:清掉無字型的 emoji(來源檔不動)..."
+TMP_SRC=".pdf_build_tmp.md"
+trap 'rm -f "${TMP_SRC}"' EXIT
+perl -CSDA -pe 's/[\x{FE0F}\x{1F000}-\x{1FAFF}]//g' "${SRC}" > "${TMP_SRC}"
+
 # 2. 轉 PDF
-echo "▶ (2/2) 以 xelatex 轉出 PDF(字型:${RESOLVED_FONT})..."
-pandoc "${SRC}" -o "${OUT}" \
+echo "▶ (3/3) 以 xelatex 轉出 PDF(字型:${RESOLVED_FONT})..."
+pandoc "${TMP_SRC}" -o "${OUT}" \
+  --from=markdown-yaml_metadata_block \
   --pdf-engine=xelatex \
   --toc --toc-depth=2 \
   --top-level-division=chapter \
+  --include-in-header=pdf-header.tex \
   -V documentclass=report \
   -V CJKmainfont="${RESOLVED_FONT}" \
   -V mainfont="${RESOLVED_FONT}" \
+  -V CJKmonofont="Noto Sans Mono CJK TC" \
+  -V monofont="Noto Sans Mono CJK TC" \
   -V geometry:a4paper \
   -V geometry:margin=2cm \
   -V colorlinks=true \
