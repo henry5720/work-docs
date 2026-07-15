@@ -84,7 +84,7 @@ pre {
   font-size: 8.5pt;
   white-space: pre-wrap;
   word-break: break-word;
-  break-inside: avoid;
+  /* 允許長程式碼(JSON/JS/Python 範例)跨頁,消除上頁底部大留白 */
 }
 code { font-family: "Noto Sans Mono CJK TC", monospace; }
 :not(pre) > code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 9pt; }
