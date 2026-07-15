@@ -1,3 +1,8 @@
 # PDF 產物由 build_pdf.sh 重生,不進版控
 *.pdf
+# Paged.js pipeline 的中間產物 / 工具暫存
+SPC_對接規範_完整版.html
 .pdf_build_tmp.md
+.puppeteer.json
+mermaid-filter.err
+mermaid-images/

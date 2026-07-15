@@ -1,0 +1,102 @@
+/* pdf-print.css —— Paged.js 分頁列印樣式(build_pdf_pagedjs.sh 專用)
+   重點:
+   - @page 設定 A4/邊界/頁尾頁碼
+   - 目錄(nav#TOC)用 target-counter 自動帶出章節頁碼
+   - 表格自動換行、寬表縮字(解決 LaTeX 跑版問題)
+   - CJK 字型 Noto Sans CJK TC */
+
+@page {
+  size: A4;
+  margin: 20mm 16mm 18mm 16mm;
+  @bottom-center {
+    content: "第 " counter(page) " 頁";
+    font-size: 9pt;
+    color: #666;
+  }
+}
+
+html {
+  font-family: "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: #222;
+}
+
+/* 每個章節(H1)從新頁開始;第一個標題與目錄不強制 */
+h1 { break-before: page; font-size: 17pt; border-bottom: 2px solid #333; padding-bottom: 4px; }
+h1:first-of-type { break-before: avoid; }
+h2 { font-size: 13.5pt; margin-top: 1.1em; }
+h3 { font-size: 11.5pt; }
+h1, h2, h3, h4 { break-after: avoid; }
+
+/* ── 目錄:頁碼由 Paged.js target-counter 自動生成 ── */
+nav#TOC { break-after: page; }
+nav#TOC::before {
+  content: "目錄";
+  display: block;
+  font-size: 16pt;
+  font-weight: bold;
+  margin-bottom: 0.6em;
+}
+nav#TOC ul { list-style: none; padding-left: 0; margin: 0; }
+nav#TOC ul ul { padding-left: 1.4em; }
+nav#TOC li { margin: 3px 0; }
+/* 目錄項目:標題靠左、頁碼靠右(target-counter 必須放在有 href 的 <a> 上)。
+   Paged.js 對 leader() 支援不佳,故不用點線,改用 flex + margin-left:auto。 */
+nav#TOC a {
+  display: flex;
+  align-items: baseline;
+  text-decoration: none;
+  color: #000;
+}
+nav#TOC a::after {
+  content: target-counter(attr(href), page);
+  margin-left: auto;
+  padding-left: 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 表格:自動換行、寬表縮字(取代 LaTeX 固定寬度跑版) ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+  margin: 10px 0;
+}
+th, td {
+  border: 1px solid #bbb;
+  padding: 3px 5px;
+  vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+th { background: #eee; text-align: left; }
+tr { break-inside: avoid; }          /* 單列不跨頁,但整張表可跨頁 */
+thead { display: table-header-group; } /* 跨頁時表頭重複 */
+
+/* ── 程式碼區塊:自動換行避免超寬 ── */
+pre {
+  background: #f6f6f6;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-size: 8.5pt;
+  white-space: pre-wrap;
+  word-break: break-word;
+  break-inside: avoid;
+}
+code { font-family: "Noto Sans Mono CJK TC", monospace; }
+:not(pre) > code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 9pt; }
+
+/* ── mermaid 圖與圖片:置中、不超寬 ── */
+img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
+
+blockquote {
+  border-left: 4px solid #ccc;
+  margin: 10px 0;
+  padding: 2px 12px;
+  color: #444;
+  background: #fafafa;
+}
+a { color: #1a5fb4; }
