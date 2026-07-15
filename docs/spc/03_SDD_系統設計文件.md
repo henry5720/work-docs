@@ -49,7 +49,7 @@ graph LR
 ### 2.1 辭庫管理實體 (Master Data)
 - **`products`**: 儲存產品料號、名稱。與 `quant_ccms` 1:N 關聯。
 - **`stations`**: 儲存站台層級 (id, parent_id)。與 `quant_ccms` 1:N 關聯。
-- **`spc_entities` & `spc_entity_groups`**: 實���層別標籤字典。
+- **`spc_entities` & `spc_entity_groups`**: 實體層別標籤字典。
 - **`ranks`**: 儲存等級判定閾值 (Value, Color)。
 
 ### 2.2 核心業務實體

@@ -124,19 +124,19 @@ $$C_p = \frac{USL - LSL}{6\sigma_{within}}$$
 - σ_within 根據圖表類型計算
 
 #### Ca (Capability Accuracy)
-$$C_a = \frac{X̄ - M}{(USL - LSL) / 2}$$
+$$C_a = \frac{\bar{X} - M}{(USL - LSL) / 2}$$
 其中 $M = (USL + LSL) / 2$ (規格中心)
 
 - 正值表示製程偏向上限
 - 負值表示製程偏向下限
 
 #### CPU (Upper Process Capability Index)
-$$C_{PU} = \frac{USL - X̄}{3\sigma_{within}}$$
+$$C_{PU} = \frac{USL - \bar{X}}{3\sigma_{within}}$$
 
 - 用於單邊上限公差 (USL only)
 
 #### CPL (Lower Process Capability Index)
-$$C_{PL} = \frac{X̄ - LSL}{3\sigma_{within}}$$
+$$C_{PL} = \frac{\bar{X} - LSL}{3\sigma_{within}}$$
 
 - 用於單邊下限公差 (LSL only)
 
