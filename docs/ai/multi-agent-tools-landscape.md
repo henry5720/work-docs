@@ -3,6 +3,7 @@
 > 「AI coding agent 的多 agent 協作/編排工具」清單。**這是一份給 AI 讀的登記簿**——記錄有哪些工具、大概能幹嘛、repo 與來源在哪,**不替你決定該用哪個**。
 > 資料為研究當下抓取(2026-07),星數/狀態會變,**每筆都附 repo,選型前請讓 AI 或你自己複查最新狀態**。
 > 上游來源池:[andyrewlee/awesome-agent-orchestrators](https://github.com/andyrewlee/awesome-agent-orchestrators)、[bradAGI/awesome-cli-coding-agents](https://github.com/bradAGI/awesome-cli-coding-agents)(策展清單,定期掃這裡補新品)。
+> 想看這些零件實際被組成 fleet 的樣子 → [實作案例:herdr 上的 1→1→N Agent Fleet](./agent-fleet-case-study.md)。
 
 ---
 
