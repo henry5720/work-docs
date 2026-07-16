@@ -2,7 +2,7 @@
 
 > 一個真實世界的多 agent coding fleet 實作案例,說明「別人怎麼把一堆 agent 組成一套能自己跑的工作流」。
 > 改寫自一篇 2026-07 的公開分享,已抽掉個人/公司細節,只留可複用的實作模式。
-> 想知道文中每個工具是什麼、還有哪些選擇 → 見[多 Agent 工具登記簿](./multi-agent-tools-landscape.md)。
+> 想知道怎麼判斷/比較文中的工具 → 見[多 Agent 工具:怎麼看、怎麼比](./multi-agent-tools-landscape.md);我自己的實測戰報 → [我的實測 + 工作流](./my-agent-workflow.md)。
 
 ---
 
@@ -83,4 +83,4 @@ search(找資料/查證) → executor(執行) → reviewer(審查)
 
 ---
 
-> ⚠️ 這是**單一案例**,不是最佳實務。它靠大量手工組裝(herdr + 自搭 agent),換成登記簿裡的完整編排器(如 CAO)可以少很多手工、多一層可觀測,代價是綁框架 + 架 server。要不要照抄取決於你的需求——先讀[登記簿](./multi-agent-tools-landscape.md)再決定。
+> ⚠️ 這是**單一案例**,不是最佳實務。它靠大量手工組裝(herdr + 自搭 agent),換成登記簿裡的完整編排器(如 CAO)可以少很多手工、多一層可觀測,代價是綁框架 + 架 server。要不要照抄取決於你的需求——先讀[怎麼看、怎麼比](./multi-agent-tools-landscape.md)再決定。
