@@ -31,7 +31,7 @@ node / git / claude / npm / vite dev server 都在 WSL 裡。Windows 不參與�
 | 能力 | 實作 | 用途 |
 |---|---|---|
 | 內建瀏覽器 | Electron `WebContentsView` = Windows Chromium | 預覽 dev server、Design Mode、DevTools、GPU 加速 |
-| Computer Use | `orca-computer-use-windows (win32, protocol 1)` | 操作 Windows 原生 app:screenshot / click / typeText / hotkey |
+| Computer Use | `orca-computer-use-windows (win32, protocol 1)` | 操作 Windows 原生 app:screenshot / click / typeText / hotkey<br>⚠️ 無 menus / dialogs / OCR,見 [skills](./skills.md#本機-provider-能力實測) |
 
 兩者都在 Windows 端,靠 `networkingMode=mirrored` 直通 WSL 的 localhost。
 **這是這套架構的核心價值**:WSL 的開發體驗 + Windows 的 GPU / 瀏覽器 / 桌面自動化。
@@ -71,6 +71,7 @@ node / git / claude / npm / vite dev server 都在 WSL 裡。Windows 不參與�
 | [setup.md](./setup.md) | **配置一台新機器** |
 | [decisions.md](./decisions.md) | 想改某個設定,先確認理由是否仍成立 |
 | [troubleshooting.md](./troubleshooting.md) | **出問題了** / 要查 CLI |
+| [skills.md](./skills.md) | 要用 **orca-cli / orchestration / computer-use** 派工、控桌面 |
 
 ## 變數約定
 

@@ -42,6 +42,8 @@ if (isWslUncPath(workspaceRoot) || isWslUncPath(repo.path)) {
 
 ## skill 裝了但 Orca 看不到
 
+> skill 本身怎麼用(orca-cli / orchestration / computer-use)見 [skills.md](./skills.md)。本節只談「掃不到」。
+
 幾乎都不是安裝失敗,是 **Orca 掃錯邊**。掃描目標由**當下 context 的 project runtime** 決定:
 
 ```js
@@ -94,6 +96,19 @@ orca worktree create --name dev --base-branch dev
 ---
 
 ## 常用 CLI
+
+> ### ⚠️ 先決定執行檔名 —— 兩側不一樣
+>
+> | 在哪 | 打什麼 |
+> |---|---|
+> | **PowerShell / cmd**(Windows 側) | `orca` |
+> | **WSL 內**(含 Orca 開的 terminal、agent session) | **`orca-ide`**(即 `$ORCA_CLI_COMMAND`) |
+>
+> **WSL 內 `which orca` = not found。** 更糟的是在一般 Linux 上 bare `orca` 通常解析到
+> **GNOME 螢幕報讀器**(`/usr/bin/orca`)並開始朗讀 —— Orca 官方 skill guide 三份都特別警告這點。
+>
+> **以下區塊是 PowerShell 語法。在 WSL 照抄會 `command not found`,把 `orca` 換成 `orca-ide`。**
+> 完整解析優先序見 [skills.md](./skills.md#執行檔wsl-內一律-orca-ide)。
 
 ```powershell
 orca status                    # runtime 是否可達
