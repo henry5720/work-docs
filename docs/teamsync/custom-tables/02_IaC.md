@@ -75,9 +75,11 @@ POST 設定 grants
 
 ### plan → apply 的防呆
 
-`iac.plan` 會回一個 `plan_hash`。`iac.apply` 必須送**逐位元組相同**的文件 + 那個 hash。
+`iac.plan` 會回一個 `plan_hash`。`iac.apply` 要把**同一份文件**連同那個 hash 一起送回去,對不上就擋下來。
 
-這防的是「你 review 過的計畫」和「實際執行的計畫」不一致 —— 有人在中間偷改文件就會被擋下來。
+這防的是「你 review 過的計畫」和「實際執行的計畫」不一致 —— 有人在中間偷改文件就會被發現。
+
+> 官方文件的措辭是「逐位元組相同」;實作上 `plan_hash` 是把解析後的 fingerprint 折疊進去（`custom_table_iac/refs.py`）,不是單純對原始 bytes 取雜湊。要精確判斷什麼算「改過」→ [reference/iac](https://docs.customtable.teamsync.com.tw/zh-TW/reference/iac)。
 
 ---
 
