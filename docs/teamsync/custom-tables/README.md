@@ -20,6 +20,27 @@
 | [01_心智模型.md](01_心智模型.md) | Custom Tables 是什麼、名詞跟你平常寫的 code 怎麼對照、它的代價 |
 | [02_IaC.md](02_IaC.md) | IaC 是什麼、為什麼一定要用它、plan/apply 怎麼跑 |
 | [03_關鍵約束.md](03_關鍵約束.md) | 設計 schema 之前必須知道的硬約束與地雷 |
+| [04_Scope.md](04_Scope.md) | chatroom / department / company 差在哪、為什麼 scope 選錯改不回來 |
+
+---
+
+## 這份跟官方文件站的關係
+
+官方 API 文件站在 **<https://docs.customtable.teamsync.com.tw/zh-TW/>**（本機 repo：`/home/henry/code/custom-tables-docs`）。
+
+**兩邊視角刻意不同,不要互相複製：**
+
+| | 官方文件站 | 這份 work-docs |
+| :--- | :--- | :--- |
+| 讀者 | 已決定要用、正在接 API 的人 | 還在問「這什麼?我該不該用?」的人 |
+| 內容 | endpoint、參數、錯誤碼、逐項契約 | 心智模型、名詞對照、決策判斷、跨頁推導出的隱含約束 |
+| 組織方式 | 依 **API 分組**（tables / columns / rules…） | 依 **你腦中的問題**（這是什麼 → 怎麼宣告 → 有哪些坑） |
+| 正確性保證 | CI 拿 OpenAPI snapshot 比對測試環境,**路由沒文件會讓 CI 失敗** | 人工註記版本,**會靜默過期** |
+| 不可替代的價值 | 唯一的契約真相來源 | 把散在 20+ 頁的約束收斂成一句話結論;記錄「讀 code 才知道、文件沒寫」的落差 |
+
+**一句話:官方文件回答「怎麼呼叫」,這份回答「為什麼這樣設計、我該怎麼選」。**
+
+所以這裡**刻意不放** endpoint 清單與參數表 —— 那會過期又沒人維護,而且官方站的 Playground 與程式碼產生器讀的是同一份端點目錄,永遠比手抄準。
 
 ---
 
@@ -87,9 +108,14 @@
 
 | 資源 | 位置 |
 | :--- | :--- |
-| API 文件站（含 Playground、IaC 工作台、精靈） | `/home/henry/code/custom-tables-docs` |
-| 給 AI 讀的全文 | 文件站的 `/llms.txt`、`/llms-full.txt`,任何頁面加 `.md` |
-| 實戰案例（一個領域一篇完整 schema 設計） | 文件站 `use-cases/`：`booking`、`crm`、`ecommerce`、`hr`、`pms`、`qa`、`support`、`wms` |
+| **官方 API 文件站** | <https://docs.customtable.teamsync.com.tw/zh-TW/> |
+| ↳ 本機 repo（含 Playground、IaC 工作台、設定精靈的原始碼） | `/home/henry/code/custom-tables-docs` |
+| ↳ API Playground（選 scope,看實際展開的 URL 與 auth） | [/zh-TW/tools/playground](https://docs.customtable.teamsync.com.tw/zh-TW/tools/playground) |
+| ↳ IaC 工作台（貼 JSONL 直接 plan） | [/zh-TW/tools/iac-workbench](https://docs.customtable.teamsync.com.tw/zh-TW/tools/iac-workbench) |
+| ↳ 設定精靈（審批設定、建立系統) | [/zh-TW/tools/wizards](https://docs.customtable.teamsync.com.tw/zh-TW/tools/wizards) |
+| ↳ 程式碼產生器（跟 Playground 讀同一份端點目錄） | [/zh-TW/tools/codegen](https://docs.customtable.teamsync.com.tw/zh-TW/tools/codegen) |
+| 給 AI 讀的全文 | [/llms.txt](https://docs.customtable.teamsync.com.tw/llms.txt)、`/llms-full.txt`,任何頁面加 `.md` |
+| 實戰案例（一個領域一篇完整 schema 設計） | [/zh-TW/use-cases](https://docs.customtable.teamsync.com.tw/zh-TW/use-cases)：`booking`、`crm`、`ecommerce`、`hr`、`pms`、`qa`、`support`、`wms` |
 | 後端實作 | `teamsync-backend`：`src/crud/custom_table*`、`src/routers/private/modules/custom_tables/` |
 | 前端現成 UI | `teamsync-frontend`：`frontend/src/app/chatV2/components/forms/` |
 | 「bespoke 模組坐在 Custom Tables 上」的先例 | `teamsync-frontend`：`frontend/src/app/modules/spc/hooks/useTeamSyncSpecTable.js` |
