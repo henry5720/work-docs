@@ -21,6 +21,7 @@
 | [02_IaC.md](02_IaC.md) | IaC 是什麼、為什麼一定要用它、plan/apply 怎麼跑 |
 | [03_關鍵約束.md](03_關鍵約束.md) | 設計 schema 之前必須知道的硬約束與地雷 |
 | [04_Scope.md](04_Scope.md) | chatroom / department / company 差在哪、為什麼 scope 選錯改不回來 |
+| [05_AI存取的四層.md](05_AI存取的四層.md) | 「AI 查不到我的表」的四個獨立原因與診斷流程 |
 
 ---
 
@@ -61,7 +62,8 @@
 | 情況 | 建議 |
 | :--- | :--- |
 | 表單、主檔、案件管理、CRM、預約排班、庫存 | ✅ 用它,後端可省 80~90% |
-| 需要條件分支演算法（輪班分配、相似度比對、推薦） | ⚠️ 那部分寫 Python,其餘照用 |
+| 需要條件、迴圈、JOIN、彙總的業務邏輯 | ✅ command v2 做得到（`$case`／`when`／`for_each`／`joins`／`group_by`） |
+| 需要 while／遞迴／模糊比對／呼叫外部服務 | ⚠️ 那部分寫 Python,其餘照用 |
 | 重運算、重外部整合（OCR、報表引擎、第三方 API） | ⚠️ 同上,Custom Tables 只當資料層 |
 | 高頻寫入、要自己調 index 與 SQL | ❌ 不適合 |
 
@@ -97,10 +99,20 @@
 
 | 落差 | 影響 |
 | :--- | :--- |
-| Insight system 開關（`GET/PUT /private/chatrooms/setting/custom-table-tags/{chatroom_id}`）在前端 **只有 service 層,0 個 UI consumer** | 要讓 AI 讀得到部門表,目前只能用 API 開,沒有畫面 |
+| 後端 `ChatroomJobType` 有 **`custom_tables_department`** 與 **`custom_table_commands`**,但前端兩份 job 選單（`app/chat/components/chatSettings/basic/JobsSelector.jsx`、`app/chatV2/components/settings/basic/jobOptions.ts`）**都只有 8 個選項,這兩個不在裡面** | **AI 讀不到部門表**,也不能把 command 當工具 —— 除非直接打 API 設 jobs。這是 department scope 目前最大的前端缺口 |
+| Insight system 開關（`GET/PUT /private/chatrooms/setting/custom-table-tags/{chatroom_id}`）**只有 service 層,0 個 UI consumer** | 就算 job 開了,要挑哪些部門表載入仍然沒有畫面 |
 | `src/components/tools/custom/` 下的 `dentist_booking.py`、`salon_booking.py`、`wms.py`、`panco.py`、`booking/` 是**舊做法**（硬刻垂直 agent toolkit,`booking/backend.py` 完全沒有 `custom_table` 字樣） | 新模組不要照抄那套,官方 use-cases 就是要取代它們 |
 | Custom Tables **沒有** MCP server 對外暴露。`src/routers/private/user/mcp.py` 是 Google OAuth 憑證管理,方向相反 | AI 存取一律走 agent toolkit 或 command 的 `agent_enabled`,不是 MCP |
-| 前端 UI 名稱是「**表單管理**」(`locales/zh-TW/layout.json:32` `formManagement`),不是「智慧表格」 | 跟客戶／PM 溝通時要對齊名詞 |
+
+### 名詞對齊
+
+| 場合 | 正確名稱 | 位置 |
+| :--- | :--- | :--- |
+| 側邊欄／模組名 | **表單管理** | `locales/zh-TW/layout.json:32` `formManagement` |
+| 模組內部領域名 | **表格模組 (Chat Forms)** | `app/chat/components/forms/README.md` |
+| 開啟 AI 查詢表格的 job | **任務：智慧資料表** | `EnableSmartTableModal.tsx`：「偵測到您尚未開啟任務：智慧資料表,開啟後即可在AI聊天室查詢內容」 |
+
+> 三個名字指三件不同的事,不要混用。「智慧資料表」不是表格功能本身,是 **AI 能不能查它**（往 chatroom `jobs` 加 `custom_tables`）。
 
 ---
 
