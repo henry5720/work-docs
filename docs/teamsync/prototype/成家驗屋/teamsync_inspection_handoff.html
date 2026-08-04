@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>成家驗屋案件模組｜PM / UI / RD Handoff</title>
+  <style>
+    :root { --page:#f7f8fa; --panel:#fff; --text:#141718; --text2:#363c41; --muted:#6d7782; --border:#e8eaec; --brand:#43bf8e; --brand2:#2fa376; --soft:#effaf5; --warn:#fff7e6; --info:#eef5fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--page); color:var(--text); font:14px/1.65 Inter,"Noto Sans TC","PingFang TC",sans-serif; }
+    main { width:min(1080px,calc(100% - 40px)); margin:40px auto 72px; }
+    header { display:flex; justify-content:space-between; gap:24px; align-items:flex-end; margin-bottom:22px; }
+    h1 { margin:0; font-size:28px; line-height:1.3; font-weight:600; }
+    h2 { margin:0 0 12px; font-size:18px; font-weight:600; }
+    h3 { margin:0 0 6px; color:var(--text2); font-size:14px; font-weight:600; }
+    p { margin:4px 0; color:var(--muted); }
+    .meta { color:var(--muted); font-size:12px; text-align:right; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px; }
+    .wide { grid-column:1/-1; }
+    .page-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .page-item { padding:14px; border:1px solid var(--border); border-radius:8px; background:#fff; }
+    .page-item p { font-size:12px; line-height:1.55; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+    th { background:#e8f5ea; color:var(--text2); font-size:12px; font-weight:600; }
+    tr:last-child td { border-bottom:0; }
+    .tag { display:inline-flex; min-height:24px; align-items:center; border-radius:999px; padding:0 9px; background:var(--soft); color:var(--brand2); font-size:12px; font-weight:600; }
+    .note { margin-top:12px; padding:10px 12px; border-radius:7px; background:var(--warn); color:#845500; }
+    .info { margin-top:12px; padding:10px 12px; border-radius:7px; background:var(--info); color:#315f8b; }
+    .flow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:10px; }
+    .flow div { padding:12px; border:1px solid var(--border); border-radius:8px; }
+    .flow strong,.flow span { display:block; }
+    .flow span { margin-top:3px; color:var(--muted); font-size:12px; }
+    ul { margin:8px 0 0; padding-left:20px; }
+    a { color:var(--brand2); }
+    @media (max-width:760px) { .grid,.page-list,.flow { grid-template-columns:1fr; } .wide { grid-column:auto; } header { align-items:flex-start; flex-direction:column; } .meta { text-align:left; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><span class="tag">Hi-fi delivery</span><h1>成家驗屋案件模組</h1><p>案件管理、案件班表、排班容量、認領／分派與後台設定的交付基準。</p></div>
+      <div class="meta">版本：2026-07-29<br>視覺基準：TeamSync Design System／庫存管理模組</div>
+    </header>
+
+    <div class="grid">
+      <section class="card wide"><h2>模組資訊架構</h2><div class="page-list">
+        <div class="page-item"><h3>案件中心</h3><p>顯示所有案件，包含尚未安排時間的案件；支援搜尋、篩選、欄位設定與列表內直接操作。</p></div>
+        <div class="page-item"><h3>案件班表</h3><p>只顯示已安排驗屋時間的案件與可排容量；提供日／週／月及「依業務／全部案件」兩種視角。</p></div>
+        <div class="page-item"><h3>設定中心</h3><p>集中管理人員與建案、業務班表、案源分配、驗屋小組，以及聊天室資料與使用者功能權限。</p></div>
+      </div></section>
+
+      <section class="card"><h2>核心 UX 決策</h2><ul>
+        <li>案件中心與案件班表為平行入口，不再將班表視為列表的視角切換。</li>
+        <li>列表、Detail Panel 與班表摘要共用直接編輯邏輯：預約時間、負責業務、驗屋師與案件狀態。</li>
+        <li>修改時間採輕量浮層；套用後預設清除原驗屋師並回到待認領。</li>
+        <li>班表空白格代表可排容量；點擊空白處建立案件排班，未排班日不顯示為已滿。</li>
+        <li>複驗由新增案件入口建立，搜尋並關聯原初驗案件。</li>
+      </ul></section>
+      <section class="card"><h2>視覺與元件基準</h2><ul>
+        <li>Header、module tabs、表格、篩選、字重與色彩對齊庫存管理模組及 TeamSync token。</li>
+        <li>列表採緊湊內縮；固定欄位需以完整底色遮罩橫向捲動內容。</li>
+        <li>Detail Panel 作為快速詳情與操作入口，不強制另開完整詳情頁。</li>
+        <li>新增／編輯案件使用寬版 Modal；人員選擇採可搜尋下拉與 Design System Avatar。</li>
+        <li>Radio、Select、Popover 與狀態元件以 TeamSync 元件優先，缺少時參考 Ant Design。</li>
+      </ul></section>
+
+      <section class="card wide"><h2>角色與主要操作</h2><table><thead><tr><th>角色</th><th>高頻直接操作</th><th>進階操作</th></tr></thead><tbody>
+        <tr><td>業務</td><td>修改時間、變更負責業務、分派／更換驗屋師、調整案件狀態</td><td>新增／編輯案件、完整分派、上傳文件、安排班表空班</td></tr>
+        <tr><td>組長</td><td>依權限修改時間、分派／更換驗屋師與案件狀態</td><td>完整分派、驗屋小組與班表相關設定</td></tr>
+        <tr><td>驗屋師</td><td>查看權限範圍內案件、認領尚未分派案件</td><td>查看案件、上傳文件與驗屋報告</td></tr>
+        <tr><td>唯讀</td><td>無寫入操作</td><td>僅查看案件、文件與紀錄</td></tr>
+      </tbody></table></section>
+
+      <section class="card wide"><h2>班表與案件排程</h2><table><thead><tr><th>範圍</th><th>交付行為</th><th>資料意義</th></tr></thead><tbody>
+        <tr><td>依業務</td><td>日期下再依業務分欄，日／週視圖區分上午與下午；月視圖顯示各業務剩餘空班。</td><td>同時呈現業務班表容量與該業務負責案件。</td></tr>
+        <tr><td>全部案件</td><td>拿掉業務分層，以日期與上午／下午彙整所有已排案件；新增排班時仍需選擇有班表容量的業務。</td><td>適合快速掌握整體驗屋量與案件分布。</td></tr>
+        <tr><td>空班操作</td><td>點擊可排空白格，選擇該業務負責且尚未設定時間的案件，再填寫實際驗屋時段。</td><td>容量來自業務班表，不把上午兩班／下午兩班寫死為系統規則。</td></tr>
+      </tbody></table></section>
+
+      <section class="card wide"><h2>浮層與彈窗層級規則</h2><div class="flow">
+        <div><strong>1. 同層互斥</strong><span>案件摘要、列操作、人員下拉與設定說明等浮層一次只開一個。</span></div>
+        <div><strong>2. 父子可並存</strong><span>案件摘要可開自己的欄位下拉；Escape 先關子層，再關案件摘要。</span></div>
+        <div><strong>3. 彈窗先清場</strong><span>開啟 Modal 前關閉背景浮層；只有新增案件 → 可約時段等明確流程保留父彈窗。</span></div>
+      </div><div class="info">關閉父彈窗時同步關閉其子彈窗；一般 Modal 彼此互斥，避免背景摘要或欄位選單疊在流程彈窗上。</div></section>
+
+      <section class="card"><h2>資料與功能邊界</h2><ul>
+        <li>文件與驗屋報告直接上傳並儲存於 TeamSync。</li>
+        <li>驗屋完成不以報告是否上傳作為阻擋條件。</li>
+        <li>報價、收款與發票暫不納入此版本，留待 CRM／報價管理模組。</li>
+        <li>不串接 Ragic 報價資料與 Google Drive。</li>
+        <li>第一版綁定單一聊天室，資料結構預留分公司、區域、團隊與跨聊天室範圍。</li>
+      </ul></section>
+      <section class="card"><h2>不可直接改動欄位</h2><ul>
+        <li>案件編號與內部 ID</li>
+        <li>案件類型（案件建立後）</li>
+        <li>複驗的關聯初驗案件（建立後）</li>
+        <li>案件來源、建立者與建立時間</li>
+      </ul><div class="note">系統欄位可於欄位設定控制顯示與順序，但不可刪除；自訂欄位可新增、排序與設定 AI 欄位說明。</div></section>
+
+      <section class="card wide"><h2>設定中心交付範圍</h2><table><thead><tr><th>分類</th><th>內容</th><th>主要規則</th></tr></thead><tbody>
+        <tr><td>人員與建案</td><td>業務人員、驗屋師、建案資料</td><td>從聊天室成員授予身份；建案與固定業務關係不在主資料重複維護。</td></tr>
+        <tr><td>作業設定</td><td>業務班表、案源分配、驗屋小組</td><td>案源分配同時支援依建案與依業務檢視；固定建案優先，未命中才進輪班。</td></tr>
+        <tr><td>權限與資料</td><td>聊天室資料權限、使用者功能權限</td><td>功能權限與案件資料範圍分開管理；使用者以可編輯／可視／無權限設定各功能。</td></tr>
+      </tbody></table></section>
+
+      <section class="card"><h2>待產品／技術確認</h2><ul>
+        <li>AI 查找空班與推送屋主選擇時段所需 API、鎖位及逾時規則。</li>
+        <li>業務、驗屋師或預約時間異動後的通知對象與訊息格式。</li>
+        <li>驗屋師衝堂、服務地區與資格限制的實際資料來源。</li>
+        <li>TeamSync 職級與使用者功能權限的繼承、覆寫優先序。</li>
+        <li>跨聊天室、分公司與區域資料範圍的正式綁定規則。</li>
+      </ul></section>
+      <section class="card"><h2>目前原型限制</h2><ul>
+        <li>案件、人員、班表容量與權限資料皆為前端展示資料。</li>
+        <li>上傳、匯出、通知與 AI 推薦以互動示意為主，尚未串接服務。</li>
+        <li>建案必要欄位及報價文件結構仍待客戶確認。</li>
+        <li>認領名稱暫用「認領」，最終專有名詞需與客戶確認。</li>
+      </ul></section>
+
+      <section class="card wide"><h2>交付檔案</h2><p>互動原型：<a href="./teamsync_inspection_prototype.html">teamsync_inspection_prototype.html</a></p><p>Handoff：<a href="./teamsync_inspection_handoff.html">teamsync_inspection_handoff.html</a></p><p>此文件作為 PM、UI 與前端對齊資訊架構、操作邊界、彈窗層級與待確認項目的基準。</p></section>
+    </div>
+  </main>
+</body>
+</html>
