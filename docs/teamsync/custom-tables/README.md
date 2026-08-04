@@ -82,14 +82,18 @@
         │  表 / 欄位 / 關聯 / 計算 / 規則 /        │
         │  觸發器 / 權限 / 稽核 / 匯入 / 附件      │
         └──────────────────┬──────────────────────┘
-                           │ 產生三種對外介面
+                           │
+                    同一份資料，三種殼
           ┌────────────────┼────────────────┐
           ▼                ▼                ▼
-     REST API         AI agent 工具      內建表單 UI
-    （你的前端吃）   （聊天室 AI 自己查）（使用者直接用）
+     ① 表格模組        ② AI 聊天室    ③ 自己刻的模組頁面
+    （通用，已有）     （開 job 即可）  （by case 自己做）
+     使用者自己建表      用嘴問         客戶要的專屬流程
 ```
 
-你只負責 **最上面那一層**,加上 **左下角的前端**。中間跟其他兩個出口是免費的。
+**不是三份資料,是一份資料三個入口。** 從自己刻的頁面改一筆,使用者從表格模組看也是改過的,AI 問也是新的 —— 不存在同步問題。
+
+你只負責 **最上面那一層**,加上 **殼 ③**。殼 ① 和 ② 是免費的。
 
 ---
 
@@ -129,5 +133,6 @@
 | 給 AI 讀的全文 | [/llms.txt](https://docs.customtable.teamsync.com.tw/llms.txt)、`/llms-full.txt`,任何頁面加 `.md` |
 | 實戰案例（一個領域一篇完整 schema 設計） | [/zh-TW/use-cases](https://docs.customtable.teamsync.com.tw/zh-TW/use-cases)：`booking`、`crm`、`ecommerce`、`hr`、`pms`、`qa`、`support`、`wms` |
 | 後端實作 | `teamsync-backend`：`src/crud/custom_table*`、`src/routers/private/modules/custom_tables/` |
-| 前端現成 UI | `teamsync-frontend`：`frontend/src/app/chatV2/components/forms/` |
+| 前端現成 UI（表格模組,**主力版本**） | `teamsync-frontend`：`frontend/src/app/chat/components/forms/`<br>入口 `app/chat/interfaces/FormsInterface.tsx`<br>先讀模組自己的 `README.md`（導覽地圖）與 `CONTEXT.md`（領域詞彙） |
+| ↳ 舊版（`chatV2`,檔案較少、無 README/CONTEXT） | `frontend/src/app/chatV2/components/forms/` —— 參考時以 `chat/` 那份為準 |
 | 「bespoke 模組坐在 Custom Tables 上」的先例 | `teamsync-frontend`：`frontend/src/app/modules/spc/hooks/useTeamSyncSpecTable.js` |
