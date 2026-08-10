@@ -1,0 +1,56 @@
+{
+  "module": "和椿科技 CRM",
+  "source": "../和椿科技CRM_0804_UI修正版.html",
+  "viewport": { "width": 1440, "height": 1000 },
+  "states": [
+    { "id": "CRM-PAGE-001", "group": "總覽", "name": "CRM 總覽", "kind": "page", "reviewState": "dashboard", "entry": "CRM → 總覽" },
+    { "id": "CRM-PAGE-002", "group": "客戶管理", "name": "客戶列表", "kind": "page", "reviewState": "customer-list", "entry": "CRM → 客戶管理" },
+    { "id": "CRM-PAGE-003", "group": "客戶管理", "name": "客戶 360 詳情", "kind": "page", "reviewState": "customer-detail", "entry": "客戶列表 → 點擊客戶名稱" },
+    { "id": "CRM-PAGE-004", "group": "Lead Center", "name": "Lead 管理中心", "kind": "page", "reviewState": "lead-center", "entry": "CRM → Lead Center" },
+    { "id": "CRM-PAGE-005", "group": "商機管理", "name": "Pipeline 看板", "kind": "page", "reviewState": "opportunity-board", "entry": "CRM → 商機管理 → Pipeline 看板" },
+    { "id": "CRM-PAGE-006", "group": "商機管理", "name": "商機列表", "kind": "state", "reviewState": "opportunity-list", "entry": "商機管理 → 列表檢視" },
+    { "id": "CRM-PAGE-007", "group": "案件報備", "name": "案件報備列表", "kind": "page", "reviewState": "registration-list", "entry": "CRM → 案件報備" },
+    { "id": "CRM-PAGE-008", "group": "報價管理", "name": "報價單列表", "kind": "page", "reviewState": "quote-list", "entry": "CRM → 報價管理" },
+    { "id": "CRM-PAGE-009", "group": "任務管理", "name": "任務列表", "kind": "page", "reviewState": "task-list", "entry": "CRM → 任務管理" },
+
+    { "id": "CRM-SET-001", "group": "設定中心", "name": "CRM 資料權限", "kind": "page", "reviewState": "settings-chat", "entry": "設定中心 → CRM 資料權限", "spec": "specs/core-flows.md" },
+    { "id": "CRM-SET-002", "group": "設定中心", "name": "設定管理權限", "kind": "page", "reviewState": "settings-admin", "entry": "設定中心 → 設定管理權限" },
+    { "id": "CRM-SET-003", "group": "設定中心", "name": "報價產品主檔", "kind": "page", "reviewState": "settings-products", "entry": "設定中心 → 報價產品主檔" },
+    { "id": "CRM-SET-004", "group": "設定中心", "name": "簽核流程設定", "kind": "page", "reviewState": "settings-approval", "entry": "設定中心 → 簽核流程設定" },
+
+    { "id": "CRM-CUS-001", "group": "客戶管理", "name": "新增客戶", "kind": "modal", "reviewState": "modal-customer-create", "entry": "客戶管理 → 新增客戶" },
+    { "id": "CRM-CUS-002", "group": "客戶管理", "name": "新增拜訪紀錄", "kind": "modal", "reviewState": "modal-call-report", "entry": "客戶 360 詳情 → 新增拜訪紀錄" },
+
+    { "id": "CRM-LEAD-001", "group": "Lead Center", "name": "Lead 來源一覽", "kind": "modal", "reviewState": "modal-lead-sources", "entry": "Lead Center → 來源一覽" },
+    { "id": "CRM-LEAD-002", "group": "Lead Center", "name": "LINE OA 串接列表", "kind": "nested-modal", "reviewState": "nested-line-channels", "entry": "Lead 來源一覽 → LINE OA → 串接列表" },
+    { "id": "CRM-LEAD-003", "group": "Lead Center", "name": "Excel 匯入：上傳檔案", "kind": "modal", "reviewState": "modal-lead-excel-upload", "entry": "新建 Lead → Excel 匯入", "spec": "specs/core-flows.md" },
+    { "id": "CRM-LEAD-004", "group": "Lead Center", "name": "Excel 匯入：欄位對應", "kind": "modal", "reviewState": "modal-lead-excel-mapping", "entry": "Excel 匯入 → 載入檔案", "spec": "specs/core-flows.md" },
+    { "id": "CRM-LEAD-005", "group": "Lead Center", "name": "名片辨識：上傳", "kind": "modal", "reviewState": "modal-business-card-upload", "entry": "新建 Lead → 掃描名片", "spec": "specs/core-flows.md" },
+    { "id": "CRM-LEAD-006", "group": "Lead Center", "name": "名片辨識：辨識結果", "kind": "state", "reviewState": "modal-business-card-recognized", "entry": "掃描名片 → 辨識完成", "spec": "specs/core-flows.md" },
+    { "id": "CRM-LEAD-007", "group": "Lead Center", "name": "名片影像預覽", "kind": "modal", "reviewState": "modal-lead-card-preview", "entry": "Lead 列表 → 名片辨識資料 → 查看縮圖" },
+    { "id": "CRM-LEAD-008", "group": "Lead Center", "name": "手動建立 Lead", "kind": "modal", "reviewState": "modal-lead-create", "entry": "新建 Lead → 手動建立" },
+    { "id": "CRM-LEAD-009", "group": "Lead Center", "name": "展覽 QR Code", "kind": "modal", "reviewState": "modal-qrcode", "entry": "來源一覽 → 展覽 QR Code" },
+    { "id": "CRM-LEAD-010", "group": "Lead Center", "name": "官網表單設定", "kind": "modal", "reviewState": "modal-form-setting", "entry": "來源一覽 → 官網／Google 表單" },
+    { "id": "CRM-LEAD-011", "group": "Lead Center", "name": "活動報名頁設定", "kind": "modal", "reviewState": "modal-event-page", "entry": "來源一覽 → 活動報名" },
+
+    { "id": "CRM-OPP-001", "group": "商機管理", "name": "商機分派原則", "kind": "modal", "reviewState": "modal-opportunity-sop", "entry": "商機管理 → 商機分派原則" },
+    { "id": "CRM-OPP-002", "group": "商機管理", "name": "流失分析", "kind": "modal", "reviewState": "modal-opportunity-lost", "entry": "商機管理 → 流失分析" },
+    { "id": "CRM-OPP-003", "group": "商機管理", "name": "新增商機", "kind": "modal", "reviewState": "modal-opportunity-create", "entry": "商機管理 → 新增商機", "spec": "specs/core-flows.md" },
+
+    { "id": "CRM-REG-001", "group": "案件報備", "name": "新增案件報備", "kind": "modal", "reviewState": "modal-registration-create", "entry": "案件報備 → 新增報備", "spec": "specs/core-flows.md" },
+
+    { "id": "CRM-QTE-001", "group": "報價管理", "name": "建立報價單", "kind": "modal", "reviewState": "modal-quote-create", "entry": "報價管理 → 建立報價單", "spec": "specs/core-flows.md" },
+    { "id": "CRM-QTE-002", "group": "報價管理", "name": "報價簽核：可操作", "kind": "modal", "reviewState": "modal-quote-approval-action", "entry": "報價列表 → 待簽核 → 查看／核可", "spec": "specs/core-flows.md" },
+    { "id": "CRM-QTE-003", "group": "報價管理", "name": "報價簽核：唯讀", "kind": "modal", "reviewState": "modal-quote-approval-readonly", "entry": "報價列表 → 簽核中 → 查看進度", "spec": "specs/core-flows.md" },
+    { "id": "CRM-QTE-004", "group": "報價管理", "name": "報價 PDF 預覽", "kind": "modal", "reviewState": "modal-quote-pdf", "entry": "報價列表 → 產生／預覽 PDF" },
+
+    { "id": "CRM-SET-005", "group": "設定中心", "name": "設定 CRM 聊天室", "kind": "modal", "reviewState": "modal-chat-permission", "entry": "CRM 資料權限 → 設定聊天室", "spec": "specs/core-flows.md" },
+    { "id": "CRM-SET-006", "group": "設定中心", "name": "新增設定管理者", "kind": "modal", "reviewState": "modal-settings-admin", "entry": "設定管理權限 → 新增使用者" },
+    { "id": "CRM-SET-007", "group": "設定中心", "name": "管理報價產品主檔", "kind": "modal", "reviewState": "modal-product-master", "entry": "報價產品主檔 → 管理產品" },
+
+    { "id": "CRM-COL-001", "group": "欄位與資料", "name": "欄位顯示與順序", "kind": "modal", "reviewState": "modal-column-order", "entry": "列表 → 欄位設定" },
+    { "id": "CRM-COL-002", "group": "欄位與資料", "name": "新增自訂欄位", "kind": "modal", "reviewState": "modal-custom-field", "entry": "欄位設定 → 自訂欄位" },
+    { "id": "CRM-TSK-001", "group": "任務管理", "name": "新增任務", "kind": "modal", "reviewState": "modal-task-create", "entry": "任務管理 → 新增任務" },
+    { "id": "CRM-AI-001", "group": "AI 輔助", "name": "AI 助理 Drawer", "kind": "drawer", "reviewState": "ai-assistant-drawer", "entry": "全域 AI 浮動按鈕" }
+  ]
+}

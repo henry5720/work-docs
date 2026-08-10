@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: Hechun CRM API Contract Draft
+  version: 0.1.0
+  description: >
+    前後端對焦草案，不代表正式服務路徑。所有 mutation 應支援權限驗證、
+    optimistic locking、idempotency 與 audit log。
+servers:
+  - url: /api
+security:
+  - sessionAuth: []
+paths:
+  /crm/leads:
+    get:
+      summary: 查詢 Lead
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: source, in: query, schema: { type: string } }
+        - { name: conversionStatus, in: query, schema: { type: string } }
+        - { name: ownerId, in: query, schema: { type: string } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        "200": { description: Cursor-paginated Lead list }
+    post:
+      summary: 手動建立 Lead
+      responses:
+        "201": { description: Created }
+        "409": { description: Possible duplicate }
+  /crm/leads/{leadId}:
+    get: { summary: Lead 詳情, responses: { "200": { description: OK } } }
+    patch:
+      summary: 更新 Lead
+      parameters:
+        - { name: If-Match, in: header, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Updated }
+        "409": { description: Version conflict }
+  /crm/leads/{leadId}/convert:
+    post:
+      summary: 將 Lead 轉為客戶或商機
+      responses:
+        "201": { description: Converted with bidirectional relations }
+        "409": { description: Duplicate or already converted }
+  /crm/customers:
+    get: { summary: 查詢客戶, responses: { "200": { description: Cursor-paginated customer list } } }
+    post: { summary: 建立客戶, responses: { "201": { description: Created } } }
+  /crm/opportunities:
+    get: { summary: 查詢商機, responses: { "200": { description: List or kanban data } } }
+    post: { summary: 建立商機與來源關聯, responses: { "201": { description: Created } } }
+  /crm/opportunities/{opportunityId}/stage:
+    post:
+      summary: 移動商機階段
+      responses:
+        "200": { description: Stage changed }
+        "422": { description: Invalid stage transition }
+  /crm/pipeline-definitions:
+    get:
+      summary: 取得大型直客、經銷商、SI 的階段定義
+      responses:
+        "200": { description: Pipeline definitions }
+  /crm/registrations:
+    get: { summary: 查詢案件報備, responses: { "200": { description: List } } }
+    post: { summary: 建立案件報備, responses: { "201": { description: Created } } }
+  /crm/registration-types:
+    get:
+      summary: 取得報備類型、動態欄位與驗證 schema
+      responses:
+        "200": { description: Registration schemas }
+  /crm/quotes:
+    get: { summary: 查詢報價, responses: { "200": { description: List } } }
+    post:
+      summary: 建立報價
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
+      responses:
+        "201": { description: Created with server-calculated totals }
+  /crm/quotes/{quoteId}/submit:
+    post:
+      summary: 送出報價並啟動簽核
+      responses:
+        "202": { description: Approval flow started }
+        "422": { description: Quote validation failed }
+  /crm/quotes/{quoteId}/pdf:
+    post: { summary: 產生核准版本 PDF, responses: { "202": { description: PDF generation queued } } }
+  /approval/tasks/{approvalTaskId}/decision:
+    post:
+      summary: 核可或退回當前節點
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
+        - { name: If-Match, in: header, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Decision accepted }
+        "403": { description: Not current reviewer }
+        "409": { description: Task already resolved or stale }
+  /crm/tasks:
+    get: { summary: 查詢任務, responses: { "200": { description: List } } }
+    post: { summary: 建立任務, responses: { "201": { description: Created } } }
+  /crm/imports/leads:
+    post: { summary: 上傳 Excel 並解析, responses: { "202": { description: Import job created } } }
+  /crm/imports/leads/{jobId}/confirm:
+    post: { summary: 送出欄位對應並開始匯入, responses: { "202": { description: Import started } } }
+  /crm/ocr/business-cards:
+    post: { summary: 上傳名片並啟動 OCR, responses: { "202": { description: OCR job created } } }
+  /crm/settings/chat-bindings:
+    get: { summary: 取得 CRM 聊天室綁定, responses: { "200": { description: Bindings } } }
+    put:
+      summary: 覆寫 CRM 聊天室綁定
+      parameters:
+        - { name: If-Match, in: header, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Bindings updated }
+        "403": { description: Missing settings permission }
+  /crm/settings/products:
+    get: { summary: 查詢報價產品主檔, responses: { "200": { description: Products } } }
+    post: { summary: 建立報價產品, responses: { "201": { description: Created } } }
+  /crm/settings/approval-flow:
+    get: { summary: 取得 CRM 套用的簽核流程, responses: { "200": { description: Selected flow } } }
+    put: { summary: 選擇既有 TeamSync 審核流程, responses: { "200": { description: Saved } } }
+  /crm/field-definitions:
+    get: { summary: 取得欄位顯示順序與自訂欄位, responses: { "200": { description: Field definitions } } }
+    post: { summary: 新增自訂欄位, responses: { "201": { description: Created } } }
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: teamsync_session
+  schemas:
+    ApiError:
+      type: object
+      required: [code, message, traceId]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        fieldErrors: { type: array, items: { type: object } }
+        traceId: { type: string }

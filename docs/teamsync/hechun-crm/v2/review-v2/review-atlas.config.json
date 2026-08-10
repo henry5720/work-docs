@@ -1,0 +1,119 @@
+{
+  "title": "和椿科技 CRM",
+  "subtitle": "UI Review Atlas V1",
+  "prototype": "../和椿科技CRM_0804_UI修正版.html",
+  "manifest": "./ui_states.json",
+  "output": "review_atlas.html",
+  "storageKey": "review-atlas.hechun-crm.v1",
+  "stateQueryParameter": "reviewState",
+  "viewports": [
+    { "id": "desktop", "label": "Desktop", "width": 1440, "height": 1000 },
+    { "id": "mobile", "label": "Mobile", "width": 390, "height": 844 }
+  ],
+  "flows": [
+    {
+      "id": "flow-business-card",
+      "title": "名片建立 Lead",
+      "scenario": "業務在活動或拜訪後拍攝名片，系統辨識資料，使用者確認後建立 Lead。",
+      "entry": "Lead Center → 新建 Lead → 掃描名片",
+      "owner": "PM / UI / RD 共用核對",
+      "happyPath": "上傳名片 → OCR 辨識 → 人工確認欄位 → 建立 Lead。",
+      "nodes": [
+        { "id": "upload", "type": "state", "stateId": "CRM-LEAD-005", "label": "上傳名片", "stage": "輸入", "position": { "x": 32, "y": 142 }, "action": "選擇 JPG 或 PNG，顯示縮圖與重新上傳／移除入口。", "check": "檔案格式、大小、方向與反光提示。" },
+        { "id": "recognized", "type": "state", "stateId": "CRM-LEAD-006", "label": "確認辨識結果", "stage": "確認", "position": { "x": 292, "y": 142 }, "action": "校正公司、姓名、職稱、電話、Email 等欄位。", "check": "低信心欄位需標示並允許人工覆寫。" },
+        { "id": "success", "type": "message", "label": "Lead 已建立", "stage": "成功", "messageType": "Success／小", "title": "Lead 已建立", "position": { "x": 582, "y": 62 }, "action": "關閉 modal 並更新列表。", "check": "保留原始名片影像與 OCR 結果的關聯。" },
+        { "id": "error", "type": "validation", "label": "欄位或辨識錯誤", "stage": "例外", "messageType": "Inline error", "title": "必填欄位缺漏／重複資料", "position": { "x": 582, "y": 194 }, "action": "定位錯誤欄位並提供重複資料查看入口。", "check": "不要直接覆蓋既有 Lead。" }
+      ],
+      "edges": [
+        { "from": "upload", "to": "recognized", "label": "辨識完成" },
+        { "from": "recognized", "to": "success", "label": "確認建立" },
+        { "from": "recognized", "to": "error", "label": "驗證未通過" }
+      ],
+      "openQuestions": [
+        "OCR 服務、檔案大小上限與保存期限由哪個服務負責？",
+        "重複判斷使用 Email、電話、公司名稱，還是加權規則？"
+      ]
+    },
+    {
+      "id": "flow-opportunity-quote",
+      "title": "商機建立報價與簽核",
+      "scenario": "業務從既有商機建立報價，送出後依金額與毛利條件進入 TeamSync 簽核流程。",
+      "entry": "商機管理／報價管理 → 建立報價單",
+      "owner": "PM / UI / RD 共用核對",
+      "happyPath": "選擇商機與產品 → 送出報價 → 指定審核人核可 → 產生正式 PDF。",
+      "nodes": [
+        { "id": "opportunity", "type": "state", "stateId": "CRM-OPP-003", "label": "建立或補登商機", "stage": "商機", "position": { "x": 32, "y": 142 }, "action": "建立商機時可選擇 Lead／客戶／案件報備來源。", "check": "關聯來源需雙向可追溯。" },
+        { "id": "quote", "type": "state", "stateId": "CRM-QTE-001", "label": "建立報價單", "stage": "報價", "position": { "x": 292, "y": 142 }, "action": "帶入報價單號、填單業務與關聯商機，選取產品主檔品項。", "check": "金額計算、版本、稅額、產品狀態與必填欄位。" },
+        { "id": "approval", "type": "state", "stateId": "CRM-QTE-002", "label": "審核人核可", "stage": "簽核", "position": { "x": 552, "y": 142 }, "action": "輪到目前使用者時可核可或退回。", "check": "審核權限、節點條件、退回原因與操作稽核。" },
+        { "id": "readonly", "type": "state", "stateId": "CRM-QTE-003", "label": "其他人查看進度", "stage": "唯讀", "position": { "x": 812, "y": 142 }, "action": "非目前審核人僅可查看節點進度。", "check": "不得由前端直接改寫簽核狀態。" },
+        { "id": "success", "type": "message", "label": "報價已核准", "stage": "成功", "messageType": "Success／小", "title": "報價已核准", "position": { "x": 1072, "y": 62 }, "action": "更新列表狀態並開放正式 PDF。", "check": "核准版本應鎖定；改版需建立新版本。" },
+        { "id": "return", "type": "message", "label": "報價退回", "stage": "例外", "messageType": "Warning／大", "title": "報價已退回修改", "position": { "x": 1072, "y": 194 }, "action": "保留退回原因並回到填單業務。", "check": "重新送簽後需產生新的稽核事件。" }
+      ],
+      "edges": [
+        { "from": "opportunity", "to": "quote", "label": "建立報價" },
+        { "from": "quote", "to": "approval", "label": "送出簽核" },
+        { "from": "approval", "to": "readonly", "label": "節點進行中" },
+        { "from": "readonly", "to": "success", "label": "全數核可" },
+        { "from": "approval", "to": "return", "label": "退回" }
+      ],
+      "openQuestions": [
+        "未達加簽條件時是否直接略過該節點？",
+        "報價送出後哪些欄位鎖定，哪些異動必須升版？"
+      ]
+    },
+    {
+      "id": "flow-registration",
+      "title": "經銷商／SI 案件報備",
+      "scenario": "經銷商或 SI 建立案件報備，依報備類型填寫共同與專屬欄位，送出後等待審核。",
+      "entry": "案件報備 → 新增案件報備",
+      "owner": "PM / UI / RD 共用核對",
+      "happyPath": "選擇報備類型 → 填寫客戶與產品需求 → 上傳附件 → 送出審核。",
+      "nodes": [
+        { "id": "form", "type": "state", "stateId": "CRM-REG-001", "label": "填寫案件報備", "stage": "輸入", "position": { "x": 32, "y": 142 }, "action": "選擇類型後顯示共用欄位與類型專屬欄位。", "check": "條件欄位、產品複選、需求數量與附件狀態。" },
+        { "id": "success", "type": "message", "label": "報備已送出", "stage": "成功", "messageType": "Success／小", "title": "案件報備已送出", "position": { "x": 322, "y": 62 }, "action": "列表新增一筆待審核案件。", "check": "案件編號由後端建立並避免重複。" },
+        { "id": "error", "type": "validation", "label": "條件欄位缺漏", "stage": "例外", "messageType": "Inline error", "title": "請完成此報備類型的必要資訊", "position": { "x": 322, "y": 194 }, "action": "展開錯誤所在區段並聚焦第一個欄位。", "check": "隱藏欄位不可阻擋送出。" }
+      ],
+      "edges": [
+        { "from": "form", "to": "success", "label": "送出成功" },
+        { "from": "form", "to": "error", "label": "驗證失敗" }
+      ],
+      "openQuestions": [
+        "六種報備類型的完整條件欄位與必填規則需由 PM 確認。",
+        "報備審核是否沿用既有審核流程設定模組？"
+      ]
+    },
+    {
+      "id": "flow-permissions",
+      "title": "CRM 聊天室資料權限",
+      "scenario": "設定管理者將 TeamSync 聊天室綁定 CRM，聊天室成員因此取得整個 CRM 模組的查看與操作權限。",
+      "entry": "設定中心 → CRM 資料權限 → 設定聊天室",
+      "owner": "PM / UI / RD 共用核對",
+      "happyPath": "進入權限頁 → 選擇聊天室 → 儲存綁定 → 成員可進入 CRM。",
+      "nodes": [
+        { "id": "settings", "type": "state", "stateId": "CRM-SET-001", "label": "查看已綁定聊天室", "stage": "入口", "position": { "x": 32, "y": 142 }, "action": "顯示已綁定聊天室與成員數。", "check": "只有具設定管理權限的使用者可編輯。" },
+        { "id": "binding", "type": "state", "stateId": "CRM-SET-005", "label": "設定聊天室", "stage": "設定", "position": { "x": 292, "y": 142 }, "action": "勾選可使用 CRM 的聊天室。", "check": "移除綁定前提示影響範圍。" },
+        { "id": "success", "type": "message", "label": "權限已更新", "stage": "成功", "messageType": "Success／小", "title": "CRM 聊天室權限已更新", "position": { "x": 582, "y": 62 }, "action": "重新整理綁定列表與權限快取。", "check": "變更應留下操作者、時間與前後值。" },
+        { "id": "denied", "type": "message", "label": "無設定權限", "stage": "例外", "messageType": "Error／大", "title": "你沒有修改 CRM 聊天室權限的權限", "position": { "x": 582, "y": 194 }, "action": "阻擋寫入並保留唯讀畫面。", "check": "後端仍需再次驗證權限。" }
+      ],
+      "edges": [
+        { "from": "settings", "to": "binding", "label": "設定聊天室" },
+        { "from": "binding", "to": "success", "label": "儲存成功" },
+        { "from": "binding", "to": "denied", "label": "權限不足" }
+      ],
+      "openQuestions": [
+        "權限異動立即生效或需重新登入？",
+        "使用者同時存在多個聊天室時是否採聯集權限？目前假設為聯集。"
+      ]
+    }
+  ],
+  "specSections": ["概覽與情境", "需求與規則", "互動與狀態", "資料與系統", "驗收與決策"],
+  "aiChecklist": [
+    { "id": "ai-source", "label": "AI／OCR 資料來源與告知" },
+    { "id": "ai-processing", "label": "處理中、取消與逾時" },
+    { "id": "ai-confidence", "label": "低信心與人工確認" },
+    { "id": "ai-failure", "label": "辨識失敗與重試" },
+    { "id": "ai-override", "label": "人工修改與覆寫" },
+    { "id": "ai-governance", "label": "個資、權限與稽核" },
+    { "id": "ai-history", "label": "原始檔與辨識版本" }
+  ]
+}

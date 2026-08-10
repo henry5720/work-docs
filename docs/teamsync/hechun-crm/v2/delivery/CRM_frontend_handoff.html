@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="和椿科技 CRM 前端交付說明，供 PM、RD 與 RD AI agent 共同檢視。">
+  <title>和椿科技 CRM｜前端交付說明</title>
+  <style>
+    /* TeamSync semantic tokens */
+    :root{
+      --color-bg-page:#f7f8fa;
+      --color-bg-raised:#eceef2;
+      --color-bg-panel:#fff;
+      --color-bg-brand-soft:#effaf5;
+      --color-bg-info-soft:#eef5fc;
+      --color-bg-warning-soft:#fff8ea;
+      --color-text-primary:#141718;
+      --color-text-secondary:#363c41;
+      --color-text-tertiary:#6d7782;
+      --color-text-placeholder:#b5bec7;
+      --color-text-brand:#2b9e75;
+      --color-border:#e8eaec;
+      --color-border-strong:#d1d5d9;
+      --color-brand:#43bf8e;
+      --color-brand-hover:#2b9e75;
+      --color-info:#3374ba;
+      --color-warning:#9a6400;
+      --color-error:#c53b3b;
+      --shadow-panel:0 4px 12px -4px rgba(20,23,24,.08);
+      --radius-sm:6px;
+      --radius-md:8px;
+      --sidebar-width:232px;
+      --content-width:1240px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:var(--color-bg-page);
+      color:var(--color-text-primary);
+      font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+      font-size:14px;
+      line-height:1.7;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit;text-decoration:none}
+    button,input,select,textarea{font:inherit}
+    :focus-visible{outline:2px solid var(--color-brand);outline-offset:2px}
+
+    .app{display:grid;grid-template-columns:var(--sidebar-width) minmax(0,1fr);min-height:100vh}
+    .sidebar{
+      position:sticky;
+      top:0;
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+      padding:22px 16px 16px;
+      border-right:1px solid var(--color-border);
+      background:var(--color-bg-panel);
+    }
+    .brand{display:flex;align-items:center;gap:10px;padding:0 8px 20px;border-bottom:1px solid var(--color-border)}
+    .brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--color-brand);color:#fff;font-size:12px;font-weight:700}
+    .brand-copy strong{display:block;font-size:14px;line-height:20px}
+    .brand-copy span{display:block;color:var(--color-text-tertiary);font-size:10px;line-height:16px}
+    .nav{margin-top:18px}
+    .nav-label{padding:0 10px 7px;color:var(--color-text-placeholder);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+    .nav a{display:flex;align-items:center;gap:9px;min-height:34px;padding:7px 10px;border-radius:var(--radius-sm);color:var(--color-text-tertiary);font-size:12px}
+    .nav a:hover{background:var(--color-bg-brand-soft);color:var(--color-text-brand)}
+    .nav-dot{width:6px;height:6px;border-radius:50%;background:#c4cbd1}
+    .nav a:hover .nav-dot{background:var(--color-brand)}
+    .sidebar-note{margin-top:auto;padding:12px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-bg-page);color:var(--color-text-tertiary);font-size:10px;line-height:17px}
+    .sidebar-note strong{display:block;margin-bottom:3px;color:var(--color-text-secondary);font-size:11px}
+
+    .main{min-width:0}
+    .topbar{border-bottom:1px solid var(--color-border);background:rgba(255,255,255,.96)}
+    .topbar-inner{width:min(var(--content-width),calc(100% - 48px));margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:56px}
+    .document-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}
+    .document-title span{color:var(--color-text-tertiary);font-size:11px;font-weight:400}
+    .topbar-meta{display:flex;align-items:center;gap:8px;color:var(--color-text-tertiary);font-size:10px}
+    .status-chip{display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:3px 8px;border-radius:5px;background:var(--color-bg-warning-soft);color:var(--color-warning);font-weight:600}
+    .status-chip:before{content:"";width:6px;height:6px;border-radius:50%;background:#f59e0b}
+
+    .content{width:min(var(--content-width),calc(100% - 48px));margin:0 auto;padding:32px 0 72px}
+    .hero{display:block;margin-bottom:20px}
+    .hero-main{border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-bg-panel);box-shadow:var(--shadow-panel)}
+    .hero-main{padding:28px 30px}
+    .eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:11px;color:var(--color-text-brand);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+    .eyebrow:before{content:"";width:18px;height:2px;background:var(--color-brand)}
+    h1{max-width:760px;margin:0;font-size:32px;line-height:40px;letter-spacing:-.02em}
+    .hero-summary{max-width:800px;margin:12px 0 0;color:var(--color-text-tertiary);font-size:14px;line-height:24px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:8px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;color:var(--color-text-secondary);font-size:12px;font-weight:600}
+    .btn:hover{border-color:var(--color-brand);color:var(--color-text-brand)}
+    .btn-primary{border-color:var(--color-brand);background:var(--color-brand);color:#fff}
+    .btn-primary:hover{border-color:var(--color-brand-hover);background:var(--color-brand-hover);color:#fff}
+    .summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:28px}
+    .metric{padding:15px 16px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:#fff}
+    .metric-label{display:block;color:var(--color-text-tertiary);font-size:10px}
+    .metric-value{display:block;margin-top:2px;font-size:22px;font-weight:600;line-height:30px}
+    .metric-note{display:block;margin-top:2px;color:var(--color-text-brand);font-size:9px;line-height:14px}
+
+    .section{scroll-margin-top:16px;margin-top:28px}
+    .section-header{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:12px}
+    .section-index{display:block;color:var(--color-text-brand);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+    .section h2{margin:2px 0 0;font-size:20px;line-height:30px}
+    .section-description{max-width:580px;margin:0;color:var(--color-text-tertiary);font-size:11px;line-height:18px}
+    .panel{border:1px solid var(--color-border);border-radius:var(--radius-md);background:#fff;box-shadow:0 1px 2px rgba(20,23,24,.025)}
+    .panel-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-bottom:1px solid var(--color-border)}
+    .panel-header h3{margin:0;font-size:13px;line-height:20px}
+    .panel-header p{margin:2px 0 0;color:var(--color-text-tertiary);font-size:10px;line-height:16px}
+    .panel-body{padding:16px}
+    .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .brief-card{padding:16px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:#fff}
+    .brief-card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}
+    .brief-card h3{margin:0;font-size:13px;line-height:20px}
+    .brief-card p{margin:0;color:var(--color-text-tertiary);font-size:11px;line-height:18px}
+    .brief-card ul{margin:9px 0 0;padding-left:17px;color:var(--color-text-secondary);font-size:11px;line-height:19px}
+    .brief-card li+li{margin-top:2px}
+    .tag{display:inline-flex;align-items:center;min-height:22px;padding:2px 7px;border-radius:5px;background:var(--color-bg-raised);color:var(--color-text-tertiary);font-size:9px;font-weight:600;white-space:nowrap}
+    .tag-ready{background:var(--color-bg-brand-soft);color:var(--color-text-brand)}
+    .tag-draft{background:var(--color-bg-info-soft);color:var(--color-info)}
+    .tag-confirm{background:var(--color-bg-warning-soft);color:var(--color-warning)}
+
+    .callout{display:grid;grid-template-columns:4px 1fr;gap:12px;margin-top:10px;padding:13px 14px;border:1px solid #cee9dd;border-radius:var(--radius-md);background:var(--color-bg-brand-soft);color:#285f4b;font-size:11px;line-height:18px}
+    .callout:before{content:"";border-radius:2px;background:var(--color-brand)}
+    .callout strong{color:#194d39}
+    .callout-warning{border-color:#f0dfb9;background:var(--color-bg-warning-soft);color:#75520e}
+    .callout-warning:before{background:#f59e0b}
+    .callout-warning strong{color:#65440a}
+
+    .table-wrap{overflow:auto;border:1px solid var(--color-border);border-radius:var(--radius-md);background:#fff}
+    table{width:100%;min-width:820px;border-collapse:collapse}
+    th,td{padding:11px 13px;border-bottom:1px solid var(--color-border);text-align:left;vertical-align:top;font-size:11px;line-height:18px}
+    th{background:#eaf7ef;color:var(--color-text-secondary);font-size:10px;font-weight:600;white-space:nowrap}
+    tr:last-child td{border-bottom:0}
+    td:first-child{font-weight:600}
+    .cell-secondary{color:var(--color-text-tertiary)}
+    .code{font-family:"SFMono-Regular",Consolas,monospace;font-size:10px}
+
+    .flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px}
+    .flow-step{position:relative;padding:15px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:#fff}
+    .flow-step:not(:last-child):after{content:"→";position:absolute;right:-19px;top:50%;transform:translateY(-50%);color:#aab3ba;font-weight:700}
+    .flow-number{display:grid;place-items:center;width:22px;height:22px;margin-bottom:7px;border-radius:50%;background:var(--color-bg-brand-soft);color:var(--color-text-brand);font-size:10px;font-weight:700}
+    .flow-step strong{display:block;font-size:11px;line-height:18px}
+    .flow-step span{display:block;margin-top:3px;color:var(--color-text-tertiary);font-size:9px;line-height:15px}
+
+    .file-list{display:grid;gap:7px}
+    .file-link{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 14px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:#fff}
+    .file-link:hover{border-color:var(--color-brand)}
+    .file-link-main{min-width:0}
+    .file-link strong{display:block;font-size:11px;line-height:18px}
+    .file-link span{display:block;overflow:hidden;color:var(--color-text-tertiary);font-family:"SFMono-Regular",Consolas,monospace;font-size:9px;line-height:15px;text-overflow:ellipsis;white-space:nowrap}
+    .file-link em{flex:none;color:var(--color-text-brand);font-size:10px;font-style:normal;font-weight:600}
+
+    .footer{margin-top:34px;padding:18px 0 0;border-top:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;gap:18px;color:var(--color-text-tertiary);font-size:9px}
+
+    @media(max-width:1080px){
+      .app{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+      .grid-3{grid-template-columns:1fr 1fr}
+      .flow{grid-template-columns:1fr 1fr}
+      .flow-step:nth-child(2):after{display:none}
+    }
+    @media(max-width:700px){
+      .topbar-inner,.content{width:min(100% - 28px,var(--content-width))}
+      .topbar-inner{align-items:flex-start;flex-direction:column;padding:11px 0}
+      .hero-main{padding:22px 20px}
+      h1{font-size:26px;line-height:34px}
+      .summary-grid,.grid-2,.grid-3,.flow{grid-template-columns:1fr}
+      .flow-step:after{display:none}
+      .section-header{align-items:flex-start;flex-direction:column;gap:5px}
+      .footer{align-items:flex-start;flex-direction:column}
+      .btn{width:100%}
+    }
+    @media print{
+      @page{size:A4;margin:14mm}
+      body{background:#fff;font-size:10pt}
+      .app{display:block}.sidebar,.topbar,.hero-actions{display:none}
+      .content{width:100%;padding:0}
+      .hero,.grid-2,.grid-3,.summary-grid{break-inside:avoid}
+      .panel,.brief-card,.metric,.hero-main{box-shadow:none}
+      .section{break-before:auto}
+      a{color:inherit}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="文件導覽">
+      <div class="brand">
+        <div class="brand-mark">TS</div>
+        <div class="brand-copy"><strong>和椿科技 CRM</strong><span>Frontend Handoff · Draft</span></div>
+      </div>
+      <nav class="nav">
+        <div class="nav-label">Document</div>
+        <a href="#overview"><span class="nav-dot"></span>文件概覽</a>
+        <a href="#scope"><span class="nav-dot"></span>交付範圍</a>
+        <a href="#architecture"><span class="nav-dot"></span>前端架構</a>
+        <a href="#domain"><span class="nav-dot"></span>資料與狀態</a>
+        <a href="#permissions"><span class="nav-dot"></span>權限與簽核</a>
+        <a href="#api"><span class="nav-dot"></span>API 對接</a>
+        <a href="#quality"><span class="nav-dot"></span>品質與驗收</a>
+        <a href="#artifacts"><span class="nav-dot"></span>交付檔案</a>
+      </nav>
+      <div class="sidebar-note"><strong>文件定位</strong>供 PM、RD 與 RD AI agent 共同閱讀。Prototype 用於確認操作與畫面；JSON、CSV、YAML 與 Markdown 用於實作對焦。</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="document-title">前端交付說明 <span>和椿科技 CRM · 2026-08-05</span></div>
+          <div class="topbar-meta"><span class="status-chip">Draft／待共同確認</span><span>版本 0.2</span></div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="hero" id="overview" data-spec-section="document-overview">
+          <div class="hero-main">
+            <div class="eyebrow">Frontend delivery brief</div>
+            <h1>和椿科技 CRM<br>前端交付說明</h1>
+            <p class="hero-summary">本文件整理目前 CRM 互動原型、UI Review Atlas 與工程規格草案，供 PM 確認產品規則、RD 評估實作方式，並協助 RD 的 AI agent 快速辨識資料模型、狀態、權限、API 與驗收來源。內容中的 Draft 項目仍請以 PM／RD 最終決議為準。</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="../和椿科技CRM_0804_UI修正版.html">開啟互動原型</a>
+              <a class="btn" href="../review-v2/review_atlas.html">開啟 UI Review Atlas</a>
+              <a class="btn" href="acceptance_checklist.md">查看驗收清單</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="summary-grid" aria-label="交付摘要">
+          <div class="metric"><span class="metric-label">UI Review 狀態</span><strong class="metric-value">41</strong><span class="metric-note">頁面、Modal、Drawer 與關鍵狀態</span></div>
+          <div class="metric"><span class="metric-label">核心使用流程</span><strong class="metric-value">4</strong><span class="metric-note">含主路徑、例外與待確認問題</span></div>
+          <div class="metric"><span class="metric-label">核心資料實體</span><strong class="metric-value">10</strong><span class="metric-note">Lead、商機、報價、權限與附件等</span></div>
+          <div class="metric"><span class="metric-label">結構化規格檔</span><strong class="metric-value">5</strong><span class="metric-note">適合 PM、RD 與 AI agent 共同解析</span></div>
+        </section>
+
+        <section class="section" id="scope" data-spec-section="delivery-scope">
+          <div class="section-header">
+            <div><span class="section-index">01 · Delivery scope</span><h2>交付範圍與文件狀態</h2></div>
+            <p class="section-description">本次將 UI 覆蓋與工程規格分開整理，方便不同角色使用相同來源進行確認，也降低將原型示意資料直接當成正式規則的風險。</p>
+          </div>
+          <div class="grid-3">
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>互動原型</h3><span class="tag tag-ready">可檢視</span></div>
+              <p>用於確認 TeamSync 系統架構、操作入口、資料表、Modal 與主要流程。</p>
+              <ul><li>涵蓋八個 CRM 功能頁</li><li>具自訂欄位、名片辨識、報價簽核與設定中心</li><li>Prototype 行為為示意，尚未串接正式 API</li></ul>
+            </article>
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>UI Review Atlas</h3><span class="tag tag-ready">可檢視</span></div>
+              <p>用於 PM、UI、RD 逐一核對 UI state、Flow、規格覆蓋與版本差異。</p>
+              <ul><li>41 個可直接開啟的 review state</li><li>4 條高風險核心流程</li><li>支援核對紀錄匯入與匯出</li></ul>
+            </article>
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>工程規格草案</h3><span class="tag tag-draft">Draft</span></div>
+              <p>用於 RD 與 AI agent 理解 domain model、狀態機、權限、API 與驗收條件。</p>
+              <ul><li>欄位與狀態名稱目前為建議值</li><li>端點路徑不代表正式服務路徑</li><li>請以 PM／RD 最終決議更新</li></ul>
+            </article>
+          </div>
+          <div class="callout"><div><strong>建議使用方式：</strong>如需確認畫面與操作，請以 Prototype／Atlas 為主；如需建立程式碼、schema 或測試，敬請先讀取本文件與 delivery 目錄中的結構化檔案，並保留所有標示為 Draft／待確認的項目。</div></div>
+        </section>
+
+        <section class="section" id="architecture" data-spec-section="frontend-architecture">
+          <div class="section-header">
+            <div><span class="section-index">02 · Frontend architecture</span><h2>正式開發建議架構</h2></div>
+            <p class="section-description">目前單檔 HTML 是 UX 與視覺交付物。正式版建議依功能與 domain 拆分，並由後端服務提供流程、權限與狀態定義。</p>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div><h3>建議元件與模組邊界</h3><p>名稱可依現有前端專案慣例調整，以下提供責任邊界參考。</p></div><span class="tag tag-draft">Architecture draft</span></div>
+            <div class="panel-body">
+              <div class="grid-2">
+                <article class="brief-card">
+                  <div class="brief-card-header"><h3>Shared UI</h3><span class="tag">Reusable</span></div>
+                  <ul>
+                    <li><span class="code">AppShell / ModuleTabs / PageHeader</span></li>
+                    <li><span class="code">FilterBar / DateRange / DataTable / Pagination</span></li>
+                    <li><span class="code">StatusTag / Avatar / EmptyState / Message</span></li>
+                    <li><span class="code">Modal / NestedModal / Drawer / FormSection</span></li>
+                    <li><span class="code">Upload / ColumnSettings / Kanban / ApprovalTimeline</span></li>
+                  </ul>
+                </article>
+                <article class="brief-card">
+                  <div class="brief-card-header"><h3>Feature modules</h3><span class="tag">Domain</span></div>
+                  <ul>
+                    <li><span class="code">dashboard / customers / leads / opportunities</span></li>
+                    <li><span class="code">registrations / quotes / tasks / settings</span></li>
+                    <li>每個 feature 建議自有 route、query、mutation 與 schema</li>
+                    <li>金額、狀態與權限規則不建議直接寫在視覺元件</li>
+                    <li>Atlas 的 <span class="code">reviewState</span> 僅供交付核對，不納入正式產品路由</li>
+                  </ul>
+                </article>
+              </div>
+            </div>
+          </div>
+          <div class="callout callout-warning"><div><strong>接手提醒：</strong>原型目前包含多個資料表與 24 個 Modal，並使用 inline handler 與靜態示意資料。敬請正式開發時完成元件拆分、真實 loading／error 狀態、route state、權限守門與測試，不建議直接延伸單檔原型作為 production code。</div></div>
+        </section>
+
+        <section class="section" id="domain" data-spec-section="domain-and-state">
+          <div class="section-header">
+            <div><span class="section-index">03 · Domain & state</span><h2>核心資料關聯與狀態責任</h2></div>
+            <p class="section-description">Lead、客戶、商機與案件報備並非只能單一路徑轉換。建議資料模型保留來源關聯，使各端可雙向追溯。</p>
+          </div>
+          <div class="flow" aria-label="核心資料流程">
+            <div class="flow-step"><div class="flow-number">1</div><strong>Lead／外部候選</strong><span>來源、聯絡資料、OCR 與匯入記錄</span></div>
+            <div class="flow-step"><div class="flow-number">2</div><strong>客戶與聯絡人</strong><span>公司主體、客戶類型與負責業務</span></div>
+            <div class="flow-step"><div class="flow-number">3</div><strong>商機／案件報備</strong><span>來源關聯、Pipeline、預估金額</span></div>
+            <div class="flow-step"><div class="flow-number">4</div><strong>報價／簽核／任務</strong><span>版本、產品、審核決策與跟進</span></div>
+          </div>
+          <div class="table-wrap" style="margin-top:10px">
+            <table>
+              <thead><tr><th>Domain</th><th>建議狀態</th><th>必要 Guard／驗證</th><th>建議狀態擁有者</th></tr></thead>
+              <tbody>
+                <tr><td>Lead 轉換</td><td>待轉換 → 已建立客戶／已建立商機／捨棄</td><td>必填欄位、重複檢查、不可重複轉換</td><td>CRM service</td></tr>
+                <tr><td>商機</td><td>大型直客／經銷商／SI 各自的 Pipeline</td><td>合法階段、流失原因、客戶類型相容</td><td>CRM service</td></tr>
+                <tr><td>案件報備</td><td>草稿／待審核／核准／退回／駁回／取消</td><td>報備類型、動態必填、附件與審核規則</td><td>CRM；審核責任待確認</td></tr>
+                <tr><td>報價簽核</td><td>未送簽／待簽核／簽核中／核准／退回／駁回</td><td>當前審核人、資料版本、冪等與稽核</td><td>TeamSync approval service</td></tr>
+                <tr><td>任務</td><td>待辦／進行中／完成／取消</td><td>今天到期為中性提示、逾期才使用警示色</td><td>CRM service</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="permissions" data-spec-section="permissions-and-approval">
+          <div class="section-header">
+            <div><span class="section-index">04 · Permission & approval</span><h2>權限與簽核責任建議</h2></div>
+            <p class="section-description">為避免前端誤判，建議將 CRM 資料權限、設定管理權限與動態簽核權限視為三個不同概念。</p>
+          </div>
+          <div class="grid-3">
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>CRM 資料權限</h3><span class="tag tag-ready">已確認方向</span></div>
+              <p>以 TeamSync 聊天室作為權限單位。綁定後，聊天室全體成員可查看並操作 CRM；目前不拆分功能頁或資料列。</p>
+            </article>
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>設定管理權限</h3><span class="tag tag-ready">已確認方向</span></div>
+              <p>以使用者為單位，控制誰可修改聊天室綁定、產品主檔、簽核流程選擇與自訂欄位。</p>
+            </article>
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>動態簽核權限</h3><span class="tag tag-confirm">請 RD 確認整合</span></div>
+              <p>僅由審核流程設定模組回傳的當前審核人可核可或退回；其餘使用者僅能查看進度。</p>
+            </article>
+          </div>
+          <div class="callout callout-warning"><div><strong>安全實作提醒：</strong>前端隱藏或停用按鈕僅屬操作提示，不能作為權限控制。敬請後端對設定異動、狀態轉換與簽核 decision 重新驗證，並記錄操作者、時間、前後值與 trace ID。</div></div>
+        </section>
+
+        <section class="section" id="api" data-spec-section="api-contract">
+          <div class="section-header">
+            <div><span class="section-index">05 · API contract</span><h2>API 對接重點</h2></div>
+            <p class="section-description">目前 API 文件為 contract draft，端點名稱可由 RD 依既有服務調整；敬請優先保留資源邊界、錯誤語意、版本控制、冪等與權限驗證。</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>功能領域</th><th>草案端點</th><th>前後端共同約定</th><th>狀態</th></tr></thead>
+              <tbody>
+                <tr><td>Lead</td><td class="code">/crm/leads · /convert</td><td>Cursor 分頁、來源與轉換篩選、重複資料處理、雙向關聯</td><td><span class="tag tag-draft">Draft</span></td></tr>
+                <tr><td>商機</td><td class="code">/crm/opportunities · /stage</td><td>後端提供 Pipeline 定義，並驗證合法階段與流失原因</td><td><span class="tag tag-confirm">規則待確認</span></td></tr>
+                <tr><td>案件報備</td><td class="code">/crm/registrations · /registration-types</td><td>Schema 驅動動態欄位；附件先上傳並取得 attachment ID</td><td><span class="tag tag-confirm">欄位待確認</span></td></tr>
+                <tr><td>報價</td><td class="code">/crm/quotes · /submit · /pdf</td><td>後端重算金額、冪等建立、核准版本鎖定</td><td><span class="tag tag-draft">Draft</span></td></tr>
+                <tr><td>簽核</td><td class="code">/approval/tasks/{id}/decision</td><td>驗證當前審核人；使用 If-Match 與 Idempotency-Key</td><td><span class="tag tag-confirm">整合待確認</span></td></tr>
+                <tr><td>匯入／OCR</td><td class="code">/imports/leads · /ocr/business-cards</td><td>背景 job、進度、部分成功、低信心、人工覆寫與重試</td><td><span class="tag tag-confirm">服務待確認</span></td></tr>
+                <tr><td>設定</td><td class="code">/settings/chat-bindings · /products · /approval-flow</td><td>設定管理權限、衝突保護與 Audit Log</td><td><span class="tag tag-draft">Draft</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout"><div><strong>AI agent 解析提醒：</strong>完整 path、response 與錯誤情境請讀取 <span class="code">crm_api_contract_draft.yaml</span>；資料欄位請讀取 <span class="code">crm_data_dictionary.json</span>；請勿只依本頁摘要產生正式 schema。</div></div>
+        </section>
+
+        <section class="section" id="quality" data-spec-section="quality-and-acceptance">
+          <div class="section-header">
+            <div><span class="section-index">06 · Quality gate</span><h2>開發與驗收建議</h2></div>
+            <p class="section-description">下列內容建議作為 Definition of Done 的最低基準；更完整的逐項清單請見 acceptance checklist。</p>
+          </div>
+          <div class="grid-3">
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>UX 狀態</h3><span class="tag">Required</span></div>
+              <ul><li>Loading、empty、error、no result</li><li>Permission denied、conflict、offline</li><li>Upload progress、retry、remove</li><li>Success、partial success、failed rows</li></ul>
+            </article>
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>可存取性</h3><span class="tag">Required</span></div>
+              <ul><li>Label 與欄位／錯誤訊息正確關聯</li><li>Modal focus trap、Esc 與返回焦點</li><li>Icon-only button 具 aria-label</li><li>鍵盤可操作且不只依賴顏色</li></ul>
+            </article>
+            <article class="brief-card">
+              <div class="brief-card-header"><h3>測試範圍</h3><span class="tag">Required</span></div>
+              <ul><li>金額、狀態機、Pipeline 單元測試</li><li>API contract 與權限整合測試</li><li>名片、匯入、報價簽核 E2E</li><li>關鍵畫面視覺回歸測試</li></ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="artifacts" data-spec-section="artifact-index">
+          <div class="section-header">
+            <div><span class="section-index">07 · Artifact index</span><h2>交付檔案索引</h2></div>
+            <p class="section-description">以下皆為單一來源檔案，適合納入版本控制。檔名與格式保持穩定，方便 PM、RD 與 AI agent 建立引用。</p>
+          </div>
+          <div class="file-list">
+            <a class="file-link" href="../和椿科技CRM_0804_UI修正版.html"><div class="file-link-main"><strong>互動原型</strong><span>../和椿科技CRM_0804_UI修正版.html</span></div><em>Open ↗</em></a>
+            <a class="file-link" href="../review-v2/review_atlas.html"><div class="file-link-main"><strong>UI Review Atlas</strong><span>../review-v2/review_atlas.html</span></div><em>Open ↗</em></a>
+            <a class="file-link" href="crm_data_dictionary.json"><div class="file-link-main"><strong>資料字典草案</strong><span>crm_data_dictionary.json</span></div><em>JSON ↗</em></a>
+            <a class="file-link" href="crm_state_transitions.json"><div class="file-link-main"><strong>狀態轉換草案</strong><span>crm_state_transitions.json</span></div><em>JSON ↗</em></a>
+            <a class="file-link" href="crm_permissions_matrix.csv"><div class="file-link-main"><strong>權限矩陣</strong><span>crm_permissions_matrix.csv</span></div><em>CSV ↗</em></a>
+            <a class="file-link" href="crm_api_contract_draft.yaml"><div class="file-link-main"><strong>API Contract 草案</strong><span>crm_api_contract_draft.yaml</span></div><em>YAML ↗</em></a>
+            <a class="file-link" href="acceptance_checklist.md"><div class="file-link-main"><strong>前端驗收清單</strong><span>acceptance_checklist.md</span></div><em>Markdown ↗</em></a>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <span>和椿科技 CRM · Frontend Handoff Draft · Version 0.2</span>
+          <span>如結構化規格與最終 PM／RD 決議不一致，敬請以決議更新規格後再進行實作。</span>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script type="application/json" id="handoff-machine-context">
+  {
+    "documentType": "frontend-handoff",
+    "module": "Hechun CRM",
+    "language": "zh-Hant",
+    "version": "0.2",
+    "status": "draft",
+    "audiences": ["PM", "RD", "RD_AI_AGENT"],
+    "sourceOfTruth": {
+      "uiAndInteraction": "../和椿科技CRM_0804_UI修正版.html",
+      "uiStateCoverage": "../review-v2/ui_states.json",
+      "flowAndStateSpecs": "../review-v2/specs/core-flows.md",
+      "dataModelDraft": "crm_data_dictionary.json",
+      "stateMachineDraft": "crm_state_transitions.json",
+      "permissionDraft": "crm_permissions_matrix.csv",
+      "apiContractDraft": "crm_api_contract_draft.yaml",
+      "acceptanceCriteria": "acceptance_checklist.md"
+    },
+    "implementationRules": [
+      "Prototype is a UX and visual reference, not production architecture.",
+      "Do not hard-code pipeline definitions, approval states, permissions, or money calculations in visual components.",
+      "Backend must validate permissions and state transitions.",
+      "All draft business rules require PM and RD confirmation before production implementation.",
+      "Keep reviewState routing out of the production product route."
+    ],
+    "confirmedDirections": [
+      "CRM data permission uses TeamSync chat rooms as the permission unit.",
+      "Settings management permission is user-based.",
+      "Non-current reviewers can only view approval progress.",
+      "Today-due task labels use a neutral style; overdue states use warning or danger semantics."
+    ]
+  }
+  </script>
+</body>
+</html>

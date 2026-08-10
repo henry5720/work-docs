@@ -1,0 +1,67 @@
+{
+  "document": "和椿科技 CRM 狀態轉換草案",
+  "status": "draft",
+  "machines": {
+    "leadConversion": {
+      "initial": "pending",
+      "transitions": [
+        { "from": "pending", "event": "CREATE_CUSTOMER", "to": "customer_created", "guard": "required fields valid and duplicate reviewed" },
+        { "from": "pending", "event": "CREATE_OPPORTUNITY", "to": "opportunity_created", "guard": "customer relation exists or is created atomically" },
+        { "from": "pending", "event": "DISCARD", "to": "discarded", "guard": "discard reason required" }
+      ],
+      "terminal": ["customer_created", "opportunity_created", "discarded"]
+    },
+    "opportunity": {
+      "pipelines": {
+        "large_direct": ["initial_contact", "needs_confirmation", "solution_planning", "quotation", "negotiation", "contract_review", "won", "lost"],
+        "distributor": ["initial_contact", "needs_confirmation", "quotation", "negotiation", "won", "lost"],
+        "si": ["initial_contact", "needs_confirmation", "quotation", "negotiation", "won", "lost"]
+      },
+      "rules": [
+        "stage transition must use backend-provided pipeline definition",
+        "moving to lost requires lostReasonCode and optional note",
+        "moving to won records wonAt and locks final amount unless reopened",
+        "changing customer type requires stage compatibility validation"
+      ]
+    },
+    "registration": {
+      "initial": "draft",
+      "transitions": [
+        { "from": "draft", "event": "SUBMIT", "to": "pending_review" },
+        { "from": "pending_review", "event": "APPROVE", "to": "approved" },
+        { "from": "pending_review", "event": "RETURN", "to": "returned", "guard": "reason required" },
+        { "from": "pending_review", "event": "REJECT", "to": "rejected", "guard": "reason required" },
+        { "from": "returned", "event": "RESUBMIT", "to": "pending_review" },
+        { "from": "draft|returned", "event": "CANCEL", "to": "cancelled" }
+      ],
+      "terminal": ["approved", "rejected", "cancelled"]
+    },
+    "quoteApproval": {
+      "initial": "not_required",
+      "transitions": [
+        { "from": "not_required|returned", "event": "SUBMIT", "to": "pending" },
+        { "from": "pending", "event": "START_FLOW", "to": "in_review" },
+        { "from": "in_review", "event": "APPROVE_FINAL", "to": "approved" },
+        { "from": "in_review", "event": "RETURN", "to": "returned", "guard": "reason required" },
+        { "from": "in_review", "event": "REJECT", "to": "rejected", "guard": "reason required" },
+        { "from": "pending|in_review", "event": "CANCEL", "to": "cancelled" }
+      ],
+      "rules": [
+        "approval status is owned by approval service, never edited as a normal quote field",
+        "only current assigned reviewer may approve or return",
+        "approved quote version is immutable; material edits create a new version",
+        "all decisions require idempotency and optimistic locking"
+      ]
+    },
+    "task": {
+      "initial": "todo",
+      "transitions": [
+        { "from": "todo", "event": "START", "to": "in_progress" },
+        { "from": "todo|in_progress", "event": "COMPLETE", "to": "completed" },
+        { "from": "todo|in_progress", "event": "CANCEL", "to": "cancelled" },
+        { "from": "completed", "event": "REOPEN", "to": "todo" }
+      ],
+      "rules": ["today due is a neutral date cue; overdue is danger; completed does not show due urgency"]
+    }
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "document": "和椿科技 CRM 資料字典草案",
+  "status": "draft",
+  "version": "2026-08-05",
+  "conventions": {
+    "ids": "後端產生的不可變 UUID；畫面單號另以 displayNo 表示",
+    "dates": "API 使用 ISO 8601；畫面依 Asia/Taipei 顯示",
+    "money": "以 amount + currency 傳輸，不使用已格式化字串",
+    "customFields": "customFields 為 fieldDefinitionId 對 value 的 map，欄位定義由設定 API 取得",
+    "audit": "所有主要實體需包含 createdAt、createdBy、updatedAt、updatedBy、version"
+  },
+  "entities": {
+    "Lead": {
+      "purpose": "尚未完成資格確認的潛在聯絡人或公司",
+      "required": ["id", "displayNo", "name", "source", "conversionStatus", "createdAt", "version"],
+      "fields": {
+        "id": "string",
+        "displayNo": "string",
+        "name": "string",
+        "companyName": "string|null",
+        "jobTitle": "string|null",
+        "phone": "string|null",
+        "email": "string|null",
+        "lineId": "string|null",
+        "source": "website_form|google_form|meta_lead_ads|line_oa|edm|event_qr|business_card|excel|manual|external_candidate",
+        "sourceReferenceId": "string|null",
+        "conversionStatus": "pending|customer_created|opportunity_created|discarded",
+        "ownerId": "string|null",
+        "duplicateStatus": "unchecked|possible|confirmed_unique|merged",
+        "businessCardAttachmentId": "string|null",
+        "ocrResultId": "string|null",
+        "customFields": "object"
+      }
+    },
+    "Customer": {
+      "purpose": "已建立正式關係的公司或客戶組織",
+      "required": ["id", "displayNo", "companyName", "customerType", "status", "version"],
+      "fields": {
+        "id": "string",
+        "displayNo": "string",
+        "companyName": "string",
+        "unifiedBusinessNo": "string|null",
+        "customerType": "large_direct|distributor|si",
+        "status": "new|negotiating|active|inactive|lost",
+        "industry": "string|null",
+        "region": "string|null",
+        "address": "string|null",
+        "ownerId": "string|null",
+        "sourceLeadId": "string|null",
+        "contacts": "CustomerContact[]",
+        "customFields": "object"
+      }
+    },
+    "Opportunity": {
+      "purpose": "可追蹤金額、階段、負責人與成交結果的銷售機會",
+      "required": ["id", "displayNo", "name", "customerId", "pipelineType", "stageId", "amount", "currency", "ownerId", "version"],
+      "fields": {
+        "id": "string",
+        "displayNo": "string",
+        "name": "string",
+        "customerId": "string",
+        "sourceLeadId": "string|null",
+        "sourceRegistrationId": "string|null",
+        "pipelineType": "large_direct|distributor|si",
+        "stageId": "string",
+        "amount": "integer",
+        "currency": "TWD|USD|CNY|JPY",
+        "probability": "integer 0..100",
+        "expectedCloseDate": "date|null",
+        "ownerId": "string",
+        "lostReasonCode": "string|null",
+        "lostReasonNote": "string|null",
+        "customFields": "object"
+      }
+    },
+    "Registration": {
+      "purpose": "經銷商或 SI 的案件報備與產品需求",
+      "required": ["id", "displayNo", "registrationType", "status", "partnerCustomerId", "reportedAt", "version"],
+      "fields": {
+        "id": "string",
+        "displayNo": "string",
+        "registrationType": "robot|robot_arm|teamsync_robot|agent_machine|blind_planning|other",
+        "status": "draft|pending_review|approved|returned|rejected|cancelled",
+        "partnerCustomerId": "string",
+        "endCustomerName": "string",
+        "endCustomerBusinessNo": "string|null",
+        "contactName": "string|null",
+        "contactPhone": "string|null",
+        "contactEmail": "string|null",
+        "industry": "string|null",
+        "application": "string|null",
+        "products": "RegistrationProduct[]",
+        "attachmentIds": "string[]",
+        "dynamicFields": "object",
+        "linkedOpportunityId": "string|null"
+      }
+    },
+    "Quote": {
+      "purpose": "以版本管理的商務報價與簽核狀態",
+      "required": ["id", "displayNo", "quoteVersion", "opportunityId", "ownerId", "status", "approvalStatus", "currency", "totalAmount", "version"],
+      "fields": {
+        "id": "string",
+        "displayNo": "string",
+        "quoteVersion": "string",
+        "opportunityId": "string",
+        "customerId": "string",
+        "ownerId": "string",
+        "status": "created|sent|customer_reply_pending|negotiating|won|expired|cancelled",
+        "approvalStatus": "not_required|pending|in_review|approved|returned|rejected|cancelled",
+        "currency": "TWD|USD|CNY|JPY",
+        "subtotalAmount": "integer",
+        "taxAmount": "integer",
+        "totalAmount": "integer",
+        "validUntil": "date|null",
+        "paymentTerms": "string|null",
+        "lineItems": "QuoteLineItem[]",
+        "approvalInstanceId": "string|null",
+        "pdfAttachmentId": "string|null",
+        "customFields": "object"
+      }
+    },
+    "Task": {
+      "purpose": "與 Lead、客戶、商機或報價關聯的待辦",
+      "required": ["id", "title", "status", "dueAt", "ownerId", "version"],
+      "fields": {
+        "id": "string",
+        "title": "string",
+        "taskType": "call|email|meeting|follow_up|internal_review|document|other",
+        "status": "todo|in_progress|completed|cancelled",
+        "priority": "low|medium|high|urgent",
+        "dueAt": "datetime",
+        "ownerId": "string",
+        "collaboratorIds": "string[]",
+        "relatedEntityType": "lead|customer|opportunity|quote|registration|null",
+        "relatedEntityId": "string|null",
+        "description": "string|null"
+      }
+    },
+    "Product": {
+      "purpose": "報價可選用的產品主檔",
+      "required": ["id", "sku", "name", "status", "unit", "listPrice", "currency", "version"],
+      "fields": {
+        "id": "string",
+        "sku": "string",
+        "name": "string",
+        "englishName": "string|null",
+        "category": "string|null",
+        "status": "active|inactive",
+        "unit": "string",
+        "listPrice": "integer",
+        "currency": "TWD|USD|CNY|JPY",
+        "erpReference": "string|null",
+        "customFields": "object"
+      }
+    },
+    "FieldDefinition": {
+      "purpose": "控制各列表與表單的自訂欄位",
+      "required": ["id", "entityType", "name", "dataType", "enabled", "displayOrder"],
+      "fields": {
+        "id": "string",
+        "entityType": "lead|customer|opportunity|registration|quote|task",
+        "name": "string",
+        "description": "string|null",
+        "dataType": "text|long_text|number|currency|date|datetime|single_select|multi_select|boolean|user|relation",
+        "required": "boolean",
+        "enabled": "boolean",
+        "displayOrder": "integer",
+        "options": "FieldOption[]"
+      }
+    },
+    "ChatPermissionBinding": {
+      "purpose": "TeamSync 聊天室與 CRM 模組資料權限綁定",
+      "required": ["chatRoomId", "chatRoomName", "memberCount", "updatedAt", "updatedBy"],
+      "fields": {
+        "chatRoomId": "string",
+        "chatRoomName": "string",
+        "memberCount": "integer",
+        "updatedAt": "datetime",
+        "updatedBy": "string"
+      }
+    },
+    "Attachment": {
+      "purpose": "名片、案件報備附件與報價 PDF 的統一檔案記錄",
+      "required": ["id", "fileName", "mimeType", "size", "status", "createdAt", "createdBy"],
+      "fields": {
+        "id": "string",
+        "fileName": "string",
+        "mimeType": "string",
+        "size": "integer",
+        "status": "uploading|ready|failed|deleted",
+        "purpose": "business_card|registration|quote_pdf|import|other",
+        "downloadUrl": "short-lived signed URL"
+      }
+    }
+  },
+  "openQuestions": [
+    "客戶與聯絡人是否拆成獨立 API 資源？本草案建議拆分。",
+    "商機三種 pipeline 的正式階段代碼、順序與退階規則。",
+    "案件報備六種類型的完整欄位 schema 與審核流程。",
+    "報價稅別、幣別、付款條件、折扣與毛利權限規則。",
+    "名片與附件的保存期限、下載權限與個資刪除流程。"
+  ]
+}
