@@ -4,6 +4,9 @@
 > **目的**：先建立心智模型,再談實作。這裡不是 API 文件,API 文件在 `custom-tables-docs`
 > **對應版本**：teamsync-backend `5.7.1`（`328f7817`）／custom-tables-docs（`ed5bc4c`, 2026-08-02）／teamsync-frontend（`cbd123f2`, 2026-08-03）
 > **撰寫日期**：2026-08-04
+>
+> ⚠️ **版本漂移**：[05](05_AI聊天室怎麼用資料表.md)、[06](06_前後端各自能動什麼.md) 與本頁「現況已知落差」表已於 2026-08-10
+> 重新核對到 backend `5.7.2`（`f19ce7af2`）／frontend（`bffd65693`）；**01–04 仍是 08-04 的基準**。
 
 ---
 
@@ -21,6 +24,8 @@
 | [02_IaC.md](02_IaC.md) | IaC 是什麼、為什麼一定要用它、plan/apply 怎麼跑 |
 | [03_設計時的三個決定.md](03_設計時的三個決定.md) | 動手前要按順序決定的三件事（哪些表一起寫 → 放哪一層 → tag 怎麼切），以及為什麼第二件不可逆 |
 | [04_AI讀不到怎麼查.md](04_AI讀不到怎麼查.md) | 「AI 查不到我的表」的四個獨立原因與八步診斷流程 |
+| [05_AI聊天室怎麼用資料表.md](05_AI聊天室怎麼用資料表.md) | 正常運作時的完整流程:`jobs` 怎麼組出工具箱、AI 靠什麼認識你的表、讀／寫／command 各自的機制與開關 |
+| [06_前後端各自能動什麼.md](06_前後端各自能動什麼.md) | 每個可動之處分成三層（後端寫死／前端設定／前端宣告）+ 「我想改變 AI 的行為該去哪改」的決策流程 |
 | [AUDIT.md](AUDIT.md) | 斷言自我審查紀錄 —— 哪些結論有 code 證據、哪些只有官方文件支持、以及過去改過哪些錯 |
 
 > 💡 **看到「只有 X」「必須 X」這類斷言時,可以去 [AUDIT.md](AUDIT.md) 查它的證據等級。** 這份文件集改過三次事實錯誤,所以驗證紀錄是公開的。
@@ -32,7 +37,9 @@
 | 第一次聽到 Custom Tables,想知道這是什麼 | README + **01** |
 | 要評估「我這個案子該不該用它」 | README + **01** |
 | 要開始設計 schema | **01 → 02 → 03**（03 一定要在建表前讀完,因為 scope 改不了） |
-| 已經上線,AI 讀不到資料 | **04** |
+| 想知道 AI 聊天室到底怎麼用這些表 | **05** |
+| 想改變 AI 的行為,但不知道該改哪裡 | **06** |
+| 已經上線,AI 讀不到資料 | **04**（查完還想懂原理 → **05**） |
 | 要接 API 寫前端 | 這份不夠 —— 直接看[官方文件站](https://docs.customtable.teamsync.com.tw/zh-TW/)與 Playground |
 
 ### 貫穿全部文件的一個視角:人 vs AI agent
@@ -44,8 +51,8 @@
 | **聊天室表** | 表格模組直接就能用 | **開 1 道關**（`custom_tables` job,UI 上叫「任務：智慧資料表」） |
 | **部門表** | ❌ 表格模組打不開,只能自己刻頁面 | **要開 3 道關**：grant + `custom_tables_department` job + 系統勾選 |
 | **權限層數** | 2 層：能不能用這張表 + 能看哪些列 | 聊天室表 3 層、**部門表 4 層** |
-| **command** | 一支 API 給前端呼叫 | 存好就自動變成工具（`agent_enabled`） |
-| **目前缺口** | 表格模組只認聊天室表 | job 選單沒有 `custom_tables_department` |
+| **command** | 一支 API 給前端呼叫 | `agent_enabled` 預設 true,但**還要房間開 `custom_table_commands` job** 才會露出（見 05 §⑥） |
+| **目前缺口** | 表格模組只認聊天室表 | job 選單沒有 `custom_table_commands`（2026-08-10 核對:v1 選單已補上 `custom_tables_department`,chatV2 還沒） |
 
 > ⚠️ **聊天室表對 AI 是最簡單的,部門表才最麻煩** —— 跟直覺相反,別搞錯方向。
 
@@ -137,12 +144,14 @@
 
 ## 現況已知落差
 
-這些是讀 code 讀出來的,不在官方文件裡:
+這些是讀 code 讀出來的,不在官方文件裡（**job 選單與 UI 兩條 2026-08-10 重新核對過**）:
 
 | 落差 | 影響 |
 | :--- | :--- |
-| 後端 `ChatroomJobType` 有 **`custom_tables_department`** 與 **`custom_table_commands`**,但前端兩份 job 選單（`app/chat/components/chatSettings/basic/JobsSelector.jsx`、`app/chatV2/components/settings/basic/jobOptions.ts`）**都只有 8 個選項,這兩個不在裡面** | **AI 讀不到部門表**,也不能把 command 當工具 —— 除非直接打 API 設 jobs。這是 department scope 目前最大的前端缺口 |
-| Insight system 開關（`GET/PUT /private/chatrooms/setting/custom-table-tags/{chatroom_id}`）**只有 service 層,0 個 UI consumer** | 就算 job 開了,要挑哪些部門表載入仍然沒有畫面 |
+| 後端 `ChatroomJobType` 有 12 個值,但**前端兩份 job 選單都沒有 `custom_table_commands`**（`JobsSelector.jsx` 11 個、`app/chatV2/components/settings/basic/jobOptions.ts` 10 個,後者另缺 `custom_tables_department`） | **command 完全無法從畫面開啟**,AI 因此只有通用寫入可用。後端 `validate_jobs` 只檢查 enum 與互斥,這個 job **沒有**任何 property 前置需求也不互斥 —— 現有 `PUT jobs` 端點原本就吃它,**缺的純粹是選單裡的一個選項** |
+| Insight system 開關（`GET/PUT /private/chatrooms/setting/custom-table-tags/{chatroom_id}`）**v1 已有 UI**（`app/chat/components/chatSettings/basic/CustomTableSystemsSelector.jsx`）,**chatV2 仍無** | 同一個房間在兩個前端版本的設定能力不一致 |
+| command 服務憑證（`CUSTOM_TABLE_COMMAND_SERVICE_TOKEN` + service URL）未設時,command 工具**靜默完全不載入** | 症狀與「模型不理工具」一模一樣。後端有針對這情境的 warning log,但畫面上分不出來 |
+| 寫入的兩段式確認需要 Redis,缺席時 **fail-open** 退回舊的 prompt-level 確認 | 不擋寫入,但「使用者核准的 payload 與實際執行的 payload 相同」這個保證消失,只留 log |
 | `src/components/tools/custom/` 下的 `dentist_booking.py`、`salon_booking.py`、`wms.py`、`panco.py`、`booking/` 是**舊做法**（硬刻垂直 agent toolkit,`booking/backend.py` 完全沒有 `custom_table` 字樣） | 新模組不要照抄那套,官方 use-cases 就是要取代它們 |
 | Custom Tables **沒有** MCP server 對外暴露。`src/routers/private/user/mcp.py` 是 Google OAuth 憑證管理,方向相反 | AI 存取一律走 agent toolkit 或 command 的 `agent_enabled`,不是 MCP |
 
