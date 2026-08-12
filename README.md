@@ -5,6 +5,9 @@
 ### 🔌 API 服務文件
 - [Skin Analyze API](./docs/api-services/skin-analyze.md) - 皮膚分析 API 完整說明
 
+### 🛠️ Agent Skills
+- [daily-worklog](./skills/daily-worklog/) - 從 git commit 產生給主管看的每日／每週工作日誌（symlink 進 `~/.claude/skills/` 即可用）
+
 ### 🤖 AI 系統分析
 - [AI數字人系統功能分析報告](./docs/ai-systems/ai-digital-human-analysis.md) - AI數字人系統需求與功能分析
 
