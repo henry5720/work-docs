@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>空檔推播 — 功能 Prototype v5</title>
+<style>
+  :root{
+    --green:#059669; --green-light:#ecfdf5; --green-border:#a7f3d0;
+    --amber:#f59e0b; --amber-light:#fffbeb; --amber-border:#fde68a;
+    --purple:#7c3aed; --purple-light:#f5f3ff; --purple-border:#ddd6fe;
+    --border:#e5e7eb; --text:#111827; --text-2:#6b7280; --text-3:#9ca3af;
+  }
+  html,body{ background:#f3f4f6 !important; margin:0; padding:0; }
+  *{ box-sizing:border-box; }
+  body{ font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif; color:var(--text); padding:28px; }
+  h1.page-title{ font-size:15px; color:var(--text-2); font-weight:600; margin:0 0 18px 2px; }
+  .layout{ display:flex; gap:24px; align-items:flex-start; max-width:1120px; margin:0 auto; }
+
+  .modal{ width:560px; background:#fff; border-radius:14px; border:1px solid var(--border);
+    box-shadow:0 1px 3px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.06); padding:26px 30px 30px; }
+  .modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .modal-head h2{ font-size:19px; margin:0; }
+  .modal-head .x{ color:var(--text-3); font-size:17px; }
+
+  /* Template selector — top priority action */
+  .tpl-box{ background:var(--purple-light); border:1.5px solid var(--purple-border); border-radius:12px;
+    padding:16px 18px; margin-bottom:22px; }
+  .tpl-box .lbl{ font-size:12.5px; font-weight:700; color:#5b21b6; margin-bottom:8px; display:flex;
+    align-items:center; justify-content:space-between; }
+  .tpl-box .lbl .manage{ font-size:11.5px; color:#7c3aed; font-weight:600; cursor:pointer; text-decoration:underline; }
+  .tpl-select{ width:100%; border:1px solid var(--purple-border); border-radius:8px; padding:10px 12px;
+    font-size:14px; font-weight:600; color:var(--text); background:#fff; }
+  .tpl-hint{ font-size:11px; color:#7c3aed; margin-top:7px; }
+
+  .section{ margin-bottom:20px; }
+  .section-label{ font-size:13.5px; font-weight:700; margin-bottom:9px; display:flex; align-items:center; gap:6px; }
+  .auto-badge{ font-size:10px; font-weight:700; color:#5b21b6; background:var(--purple-light);
+    border:1px solid var(--purple-border); padding:1px 7px; border-radius:20px; }
+
+  .radio-row{ display:flex; align-items:center; gap:9px; margin-bottom:8px; cursor:pointer; }
+  .radio-row input{ accent-color:var(--green); width:15px; height:15px; }
+  .radio-row span{ font-size:13.5px; }
+  .tag-chip-area{ margin:6px 0 2px 24px; display:flex; gap:8px; flex-wrap:wrap; }
+  .tag-chip{ background:var(--green-light); border:1px solid var(--green-border); color:#047857;
+    font-size:12px; font-weight:600; padding:4px 11px; border-radius:20px; display:flex; align-items:center; gap:5px; }
+
+  .slot-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .slot-chip{ display:flex; align-items:center; gap:7px; background:var(--amber-light);
+    border:1.5px solid var(--amber-border); border-radius:10px; padding:8px 13px; cursor:pointer; font-size:13px; }
+  .slot-chip input{ accent-color:var(--amber); width:14px; height:14px; }
+  .section-hint{ font-size:11px; color:var(--text-3); margin-top:8px; }
+
+  .text-input{ width:100%; border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+    font-size:13.5px; font-family:inherit; color:var(--text); }
+  textarea.text-input{ min-height:76px; resize:vertical; }
+  .divider{ border:none; border-top:1px solid var(--border); margin:18px 0; }
+
+  .chip-btn-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .chip-btn{ background:#f3f4f6; border:1px solid var(--border); border-radius:8px; padding:8px 16px;
+    font-size:13px; font-weight:600; color:var(--text-2); cursor:pointer; }
+  .chip-btn:hover{ border-color:var(--green); color:var(--green); background:var(--green-light); }
+
+  .rich-editor{ width:100%; min-height:90px; border:1px solid var(--border); border-radius:8px;
+    padding:12px; font-size:13.5px; line-height:2.1; color:var(--text); }
+  .rich-editor:focus{ outline:2px solid var(--green-border); border-color:var(--green); }
+  .var-chip-inline{ display:inline-flex; align-items:center; background:var(--green); color:#fff;
+    font-size:12.5px; font-weight:600; padding:3px 12px; border-radius:20px; margin:0 2px; user-select:none; }
+
+  .send-btn{ width:100%; background:var(--green); color:#fff; border:none; border-radius:9px;
+    padding:12px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; }
+
+  .preview-col{ flex:1; display:flex; flex-direction:column; gap:16px; position:sticky; top:28px; }
+  .preview-label{ font-size:12px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.03em; }
+
+  .phone{ width:280px; background:#f3f4f6; border-radius:24px; border:8px solid #1f2937; overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,.16); }
+  .phone-head{ background:#fff; padding:10px 13px; border-bottom:1px solid var(--border); font-size:12.5px;
+    font-weight:700; display:flex; align-items:center; gap:8px; }
+  .phone-head .dot{ width:24px; height:24px; border-radius:50%; background:#d1fae5; }
+  .phone-body{ padding:14px 11px; display:flex; flex-direction:column; gap:10px; background:#f3f4f6; }
+
+  .text-bubble{ background:#fff; border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.75;
+    max-width:220px; box-shadow:0 1px 3px rgba(0,0,0,.08); white-space:pre-line; }
+
+  .note-box{ background:#fff; border:1px solid var(--border); border-radius:10px; padding:13px 15px;
+    font-size:11.5px; color:var(--text-2); line-height:1.6; }
+  .note-box b{ color:var(--text); }
+
+  .flow-steps{ display:flex; flex-direction:column; gap:6px; }
+  .flow-step{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-2); }
+  .flow-step .n{ width:18px; height:18px; border-radius:50%; background:var(--green); color:#fff; font-size:10.5px;
+    font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .flow-step .fast{ color:#7c3aed; font-weight:700; }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Prototype v5 ｜ 空檔推播 — 純文字訊息 ＋ 範本（標籤＋文案一起存）</h1>
+
+<div class="layout">
+
+  <div class="modal">
+    <div class="modal-head"><h2>群發訊息</h2><span class="x">✕</span></div>
+
+    <div class="tpl-box">
+      <div class="lbl"><span>訊息範本</span><span class="manage">管理範本</span></div>
+      <select class="tpl-select" id="tplSelect" onchange="applyTpl()">
+        <option value="passive">被動型客戶・空檔通知（上次使用）</option>
+        <option value="vip">VIP客戶・優先預約通知</option>
+        <option value="blank">空白，不套用範本</option>
+      </select>
+      <div class="tpl-hint">選擇範本會自動帶入下方「發送對象」與「訊息內容」，兩者皆可再調整</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">發送對象 <span class="auto-badge">範本自動帶入</span></div>
+      <label class="radio-row"><input type="radio" name="target"><span>所有客戶</span></label>
+      <label class="radio-row"><input type="radio" name="target" checked><span>依標籤篩選</span></label>
+      <div class="tag-chip-area" id="tagArea">
+        <div class="tag-chip">預約行為：被動型</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-label">空檔時段 <span class="auto-badge" style="background:var(--amber-light);border-color:var(--amber-border);color:#92400e;">每日不同・需人工確認</span></div>
+      <div class="slot-row">
+        <label class="slot-chip"><input type="checkbox" checked><span>⏰ 18:00</span></label>
+        <label class="slot-chip"><input type="checkbox" checked><span>⏰ 18:30</span></label>
+      </div>
+      <div class="section-hint">系統偵測到的空檔預設全部勾選，不想發送的取消勾選即可；此欄位每天內容不同，無法存進範本</div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-label">訊息內容 <span class="auto-badge">範本自動帶入</span></div>
+      <div class="chip-btn-row">
+        <button type="button" class="chip-btn" onclick="insertChip('顧客姓名','name')">顧客姓名</button>
+        <button type="button" class="chip-btn" onclick="insertChip('空檔時段','slot')">空檔時段</button>
+      </div>
+      <div class="rich-editor" id="richEditor" contenteditable="true"></div>
+      <div class="char-count" id="charCount">0 / 1000</div>
+    </div>
+
+    <div class="section" id="saveAsTplSection" style="display:none;">
+      <label class="radio-row" style="margin-bottom:0;">
+        <input type="checkbox" id="saveAsTplCheck" onchange="toggleTplName()">
+        <span>將此訊息存成範本</span>
+      </label>
+      <div id="tplNameField" style="display:none;margin-top:10px;margin-left:24px;">
+        <div class="text-input" style="padding:0;border:none;">
+          <input class="text-input" placeholder="範本名稱，例如：被動型客戶・空檔通知">
+        </div>
+      </div>
+    </div>
+
+    <button class="send-btn">發送</button>
+  </div>
+
+  <div class="preview-col">
+    <div class="preview-label">客戶端預覽（純文字訊息・變數已代入）</div>
+    <div class="phone">
+      <div class="phone-head"><div class="dot"></div> VIVISPA 官方帳號</div>
+      <div class="phone-body">
+        <div class="text-bubble" id="bubblePreview1">水水們～今日空檔更新<br>⏰ 18:00<br>需預約的水水趕緊手刀預約🔥</div>
+        <div class="text-bubble" id="bubblePreview2">水水們～今日空檔更新<br>⏰ 18:30<br>需預約的水水趕緊手刀預約🔥</div>
+      </div>
+    </div>
+
+    <div class="preview-label">最快情境下，每天要做的事</div>
+    <div class="note-box">
+      <div class="flow-steps">
+        <div class="flow-step"><span class="n">1</span> 開啟群發訊息（範本已預設上次使用的那個）</div>
+        <div class="flow-step"><span class="n">2</span> 掃一眼空檔時段，有不想發的才取消勾選</div>
+        <div class="flow-step"><span class="n">3</span> 掃一眼文字內容，通常不用改</div>
+        <div class="flow-step"><span class="n">4</span> 按發送</div>
+      </div>
+      <div style="margin-top:10px;">
+        <span class="fast">最快情境下＝ 3 個動作、幾乎不用打字。</span>標籤篩選跟文字內容都被範本帶走了，只剩「空檔時段」這個每天都會變、真的需要人工看一眼的部分需要手動確認。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var templates = {
+    passive: { tag: '預約行為：被動型', html: '<span class="var-chip-inline" contenteditable="false">顧客姓名</span> 您好～水水們今日空檔更新<br>⏰ <span class="var-chip-inline" contenteditable="false">空檔時段</span><br>需預約的水水趕緊手刀預約🔥' },
+    vip: { tag: 'VIP 貴賓', html: '親愛的 <span class="var-chip-inline" contenteditable="false">顧客姓名</span> 您好，現在剛好有空檔 <span class="var-chip-inline" contenteditable="false">空檔時段</span>，優先為您保留，需要的話請盡快回覆喔～' },
+    blank: { tag: '', html: '' }
+  };
+
+  function insertChip(label, varName){
+    var editor = document.getElementById('richEditor');
+    editor.focus();
+    var sel = window.getSelection();
+    var range;
+    if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+      range = sel.getRangeAt(0);
+    } else {
+      range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+    }
+    var chip = document.createElement('span');
+    chip.className = 'var-chip-inline';
+    chip.contentEditable = 'false';
+    chip.dataset.var = varName;
+    chip.textContent = label;
+    range.deleteContents();
+    range.insertNode(chip);
+    range.setStartAfter(chip);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    updatePreview();
+  }
+
+  function updatePreview(){
+    var editor = document.getElementById('richEditor');
+    document.getElementById('charCount').innerText = editor.innerText.length + ' / 1000';
+    var previewHtml = editor.innerHTML
+      .replace(/<span class="var-chip-inline"[^>]*>顧客姓名<\/span>/g, '王小姐')
+      .replace(/<span class="var-chip-inline"[^>]*>空檔時段<\/span>/g, '18:00');
+    document.getElementById('bubblePreview1').innerHTML = previewHtml;
+    var previewHtml2 = editor.innerHTML
+      .replace(/<span class="var-chip-inline"[^>]*>顧客姓名<\/span>/g, '王小姐')
+      .replace(/<span class="var-chip-inline"[^>]*>空檔時段<\/span>/g, '18:30');
+    document.getElementById('bubblePreview2').innerHTML = previewHtml2;
+  }
+
+  function applyTpl(){
+    var key = document.getElementById('tplSelect').value;
+    var t = templates[key];
+    document.getElementById('richEditor').innerHTML = t.html;
+    var area = document.getElementById('tagArea');
+    area.innerHTML = t.tag ? '<div class="tag-chip">' + t.tag + '</div>' : '<span style="font-size:12px;color:#9ca3af;">（尚未選擇標籤）</span>';
+
+    var saveSection = document.getElementById('saveAsTplSection');
+    saveSection.style.display = (key === 'blank') ? 'block' : 'none';
+    if(key !== 'blank'){
+      document.getElementById('saveAsTplCheck').checked = false;
+      document.getElementById('tplNameField').style.display = 'none';
+    }
+    updatePreview();
+  }
+  function toggleTplName(){
+    var checked = document.getElementById('saveAsTplCheck').checked;
+    document.getElementById('tplNameField').style.display = checked ? 'block' : 'none';
+  }
+  document.getElementById('richEditor').addEventListener('input', updatePreview);
+  // initialize on load
+  applyTpl();
+</script>
+
+</body>
+</html>
