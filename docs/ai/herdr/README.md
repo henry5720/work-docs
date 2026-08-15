@@ -4,7 +4,8 @@
 
 ## 文件
 
-- [用 Herdr 開 Agent Fleet 處理 PM 的待辦](./agent-fleet-workflow.md)：把 Slack 上一整排需求變成「同時跑的 N 個 agent + 集中一次做決策」。指令都實測過。
+- [用 Herdr 開 Agent Fleet 處理 PM 的待辦](./agent-fleet-workflow.md)：把 Slack 上一整排需求變成「同時跑的 N 個 agent + 集中一次做決策」。待辦載體是 GitHub issue、一個模組一條整合分支、人測只在整合分支。指令都實測過。
+- [Fleet 工作流試跑清單](./fleet-dry-run-checklist.md)：拿一件真的待辦照上面那份跑一輪，邊跑邊打勾。跑完把結論寫回主文件、勾清空。
 - [通知聲配置](./notification-sound.md)：Linux 與 Android / Termux PRoot 的通知音播放方式。
 - [Phone 與 Pad 共用 PRoot Herdr](./shared-proot-remote-access.md)：從 Pad SSH 進 Phone Termux，再進 PRoot 並附加同一個 Herdr server。
 
