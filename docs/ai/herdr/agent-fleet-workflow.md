@@ -103,34 +103,71 @@ Slack PM 需求 → 我先過一層，翻 repo 整理 context → 討論對齊 �
 
 第一版寫的是兩階段。實跑後多出一個「分流」，因為不是每件需求都值得走完整條路。
 
+> **2026-08-15 再修訂**：粗單那步拿掉了，issue 改由第一波 agent 查完自己開，理由見 ②。
+
 ```
 PM 需求
   → ① 你 30 秒分流 ────────────────────────── 只有這步一定要你
-  → ② 粗單進 issue（先不掛 label）
-  → ③ [平行 N 個] agent 查現況、簡報貼回 issue、自己標 ✅ / ⚠️
-  → ④ 你一次看 N 則簡報：
+  → ② 派第一波 agent（一句話，不開 worktree、不開 issue）
+  → ③ [平行 N 個] agent 查現況 → gh issue create（簡報當 body、埋指紋）→ 自己標 ✅ / ⚠️
+  → ④ 你一次看 N 張 issue：
          ✅ → 掛 ready-for-agent → 開 worktree 派工
          ⚠️ → 這幾件才進 /grill-with-docs 對齊
   → ⑤ worktree 裡實作 + 自我驗證
   → ⑥ merge 進整合分支，你在那裡人測
 ```
 
-### ① 分流：判準只有一句話
+### ① 分流：四個性質
 
-> 你能不能一句話說出「改完之後畫面或行為長怎樣」？
+主流框架是四個性質，重點是**按性質判斷，不要憑直覺**：
 
-- **能** → 直接開單，不用討論。（例：`#1766 建單表單的單號必填卻不會寫入單據`）
-- **不能** → 標記起來，等第三階段的簡報回來再決定要不要 grill。
-- **這需求根本不該做** → 不進 issue，回 PM。
+| 性質 | 白話 | 例 |
+| --- | --- | --- |
+| **recurring** | 這種事會再來第二次嗎 | 「把某欄位從三個地方拿掉」會再來；「幫我改一次這行字」不會 |
+| **bounded** | 做完了算不算得出來 | 「改這三個檔案」有邊界；「讓庫存頁好用一點」沒有 |
+| **reversible** | 做錯收得回來嗎 | 改 code 有 git，收得回；**發訊息給 PM、關 issue、改 Slack 表，收不回** |
+| **verifiable** | 對不對驗得出來嗎 | 測試紅、typecheck 噴、畫面看得到 → 驗得出；「體驗有沒有變好」→ 驗不出 |
+
+**這份文件本來就在用其中兩個，只是沒給名字** —— 〈中途介入怎麼運作〉那句「真的該擋著等你的只有三種」是 **reversible**，〈兩道關〉第一道那三項是 **verifiable**。
+
+分流的時候不用四條全跑一遍。**一句話版本：答案在哪。**
+
+| 答案在哪 | 怎麼處理 |
+| --- | --- |
+| 全在 repo 裡 | 直接派第一波。grep 比你快，不用給 context |
+| repo ＋ 一個外部事實（後端行為、PM 需求文件、UI 稿） | 也派，但**派工那句話裡要附上那個來源** |
+| 答案不存在，要人決定（兩種做法都合理、PM 沒想清楚） | 不派。grill，或回去問 PM |
+| 看不懂 PM 在講什麼（`敘述` 只有「功能...」） | **回去問 PM。** 不是自己復現，也不是派 agent 猜 |
+| 這需求根本不該做 | 不進 issue，回 PM |
+
+⚠️ **分流不等於復現。** 復現是第一波 agent 的工作。你在這步只判斷「答案在哪」；判斷不了就落在最後兩格，而那兩格都是回去問人，不是自己動手。
 
 這步要壓在 30 秒內。它不是在做決定，是在決定「這件事值不值得你花時間做決定」。
 
+### ② 為什麼不先開粗單
+
+**第一波不需要 issue 編號。** slug ＝ issue 編號 + 短名，決定 branch / worktree / agent name —— 但第一波不開 worktree，它不改檔案。**slug 是第二波才需要的東西。**
+
+所以第一波在沒有 issue 的情況下跑，查完自己 `gh issue create`，簡報就是 body。你省掉「為每件事寫一次粗單」，而且 issue 一出生就有內容，不是「功能...」那種粗單。
+
+規則上也過得去：擋著等你的是推 code、開 PR、**關** issue —— **開** issue 不在裡面。
+
+代價有兩個，都要處理：
+
+⚠️ **重複開單從「不太可能」變成「一定會發生」。** 你自己開粗單時會看到已經有了，agent 不會。指紋因此是這個做法的**前置條件**，不是加分項（見〈要先準備什麼〉）。
+
+⚠️ **issue 開得合不合規變成 prompt 的責任。** 派工那句話裡要明寫「開單前先讀
+`teamsync-frontend/docs/guides/workflow/github-issue-standards.md` 和
+`teamsync-frontend/docs/agents/issue-tracker.md`」，不要指望它自己知道。
+
 ### ③ 簡報：交付物不是 code
 
-**第一階段的交付物是一份兩分鐘看得完的簡報。** 這是解「AI 輸出不是我要的」的關鍵 ——
+**第一波的交付物是一份兩分鐘看得完的簡報。** 這是解「AI 輸出不是我要的」的關鍵 ——
 不是給它更多 context，是換掉它要交什麼。
 
-```markdown
+````markdown
+<!-- slack-list-item: Rec0B… -->
+
 ### 現況（我查到的）
 - 欄位定義在 frontend/src/.../ReturnTable.tsx:88
 - 有 3 個地方讀它：ReturnTable.tsx:120、ReturnDetail.tsx:45、api/return.ts:33
@@ -138,18 +175,53 @@ PM 需求
 ### 我認為要做的
 刪掉欄位定義，同時處理那 3 個讀取點
 
+### 怎麼驗
+```bash
+npx vitest run src/app/modules/xxx
+npm run build          # 含 tsc --noEmit
+```
+畫面上：開 /returns，確認供應商欄位不見了，既有資料還打得開
+
+### 考慮過的做法（只有標 ⚠️ 才要寫）
+A. 前端直接刪 → 後端還回這欄位，多的資料被忽略
+B. 等後端一起拿掉 → 要跨 repo 排程
+選 A，理由：…
+
 ### 我不確定的
 1. 後端 API 還會回這個欄位嗎？要一起拿掉還是先留著？
 2. 已經填過值的歷史資料要怎麼顯示？
 
 ### 判斷：⚠️ 需要你對齊
-```
+````
+
+**先做機械檢查，再做判斷。** 業界對 agent 交出來的計畫有一條現成的 gate：
+
+> 切到實作前，檢查「要改哪些檔案」和「驗證指令」在不在 —— **少任何一個，這份計畫就沒準備好。**
+
+這條 2 秒看得完、不用動腦，先用它擋掉一半。過了才輪到下面那個要判斷的標籤。
+
+⚠️ **「怎麼驗」不是寫給你看的，它會一路流到 PM。** agent 實作時照它自我驗證，
+最後 `work-helper` 的 `slack-list ready --verify` 直接用同一份。
+少了它，驗收步驟會變成實作完才現編，品質沒人保證。
+
+「考慮過的做法」只在標 ⚠️ 時要求 —— ✅ 的定義就是只有一條明顯的路；
+⚠️ 的定義就是「兩種做法都合理」，那正是你要拍板的東西，先列出來你才選得下去。
 
 最後那行是重點：**它自己標「✅ 可以直接做」還是「⚠️ 需要你對齊」，你 review 的其實是那個標籤。**
 標錯了你馬上知道它沒搞懂，代價是兩分鐘，不是一個爛 diff。
 
-⚠️ **簡報一律 `gh issue comment` 貼回 issue，不要留在 agent 的 terminal 裡。**
+**標籤的判準跟分流同一把尺：答案在哪。** 查完之後答案全在 repo 裡、改動點列得完 → ✅；
+有一件「你答了會改變做法」的事 → ⚠️，而且要指名是哪一件。
+
+⚠️ **「我不確定的」只准放「你答了會改變做法」的問題。**
+「我沒去查後端」不算 —— 那叫還沒查完，回去查。這條同時堵住 agent 拿「不確定」當偷懶的出口。
+沒有這條，每份簡報都會標 ⚠️，而審閱者被大量 flag 淹沒、真正緊急的那幾件被蓋掉，
+是 agentic 系統已知的失敗模式。
+
+⚠️ **簡報一律進 issue（`gh issue create` 當 body，後續更新用 `gh issue comment`），不要留在 agent 的 terminal 裡。**
 那是後面 worktree bootstrap 要撈的東西，也是你三天後回頭看「這件事當初查到什麼」的唯一來源。
+更實際的理由：第一波是 N 個平行 agent，簡報留在各自的 pane 就沒辦法「一次看 N 則」，
+而集中一次做決策正是整套的目的。
 
 ### ④ 對齊只花在標 ⚠️ 的那幾件
 
@@ -169,8 +241,8 @@ PM 需求
 
 規則只有一條：**會不會改檔案。**
 
-- 第三階段（只讀 repo、產簡報）→ **不用開 worktree**，全部在整合分支那份 checkout 跑
-- 第五階段（真的動手改）→ **一個 slug 一個 worktree**，沒有例外
+- **第一波**（③ 只讀 repo、產簡報）→ **不用開 worktree**，全部在整合分支那份 checkout 跑
+- **第二波**（⑤ 真的動手改）→ **一個 slug 一個 worktree**，沒有例外
 
 ---
 
@@ -300,7 +372,32 @@ herdr agent attach <slug>             # 切過去自己打（要來回討論才�
 
 ## 實際指令
 
-### 開一個中層 agent
+### 開一個第一波 agent（不開 worktree）
+
+第一波只讀 repo，**不要用 `worktree create`** —— 用 `workspace create`，
+cwd 指到整合分支那份 checkout：
+
+```bash
+SLUG=brief-T07          # 還沒有 issue 編號，用 Slack「名稱」欄的代號
+
+PANE=$(herdr workspace create \
+  --cwd ~/code/teamsync-frontend \
+  --label "$SLUG" --no-focus \
+  | jq -r '.result.root_pane.pane_id')
+
+herdr agent start "$SLUG" --kind claude --pane "$PANE"
+herdr agent prompt "$SLUG" "<一句話：要查什麼 + repo 外的來源路徑>"
+```
+
+回傳結構跟 `worktree create` 一樣（實測 `result.root_pane.pane_id` = `w1D:p1`）。
+
+收掉用 **`herdr workspace close <workspace_id>`** —— 注意是**位置參數**，
+跟 `herdr worktree remove --workspace <ID>` 的寫法不一樣，這裡會踩到。
+
+⚠️ **name 一樣不能省。** 第一波沒有 issue 編號，所以用不了 `fix/1769-…` 那套 slug；
+用 `brief-<PM 代號>`，開完 issue 進第二波才換成正式 slug。
+
+### 開一個第二波 agent（開 worktree）
 
 ```bash
 SLUG=fix-1769-export-warehouse-only
@@ -358,7 +455,8 @@ claude agents --json      # interactive 和 background 都列，含 pid 和 sess
 
 | 指令 | 用途 |
 | --- | --- |
-| `herdr worktree create --base --branch --label --no-focus` | 從整合分支開 worktree，回傳 `root_pane.pane_id` |
+| `herdr workspace create --cwd --label --no-focus` | **第一波**：只開 pane 不開 worktree，回傳 `root_pane.pane_id` |
+| `herdr worktree create --base --branch --label --no-focus` | **第二波**：從整合分支開 worktree，回傳 `root_pane.pane_id` |
 | `herdr agent start <SLUG> --kind claude --pane <ID>` | 在 pane 裡起 claude（**一定要給 name**） |
 | `herdr agent prompt <SLUG> <TEXT>` | 從任何 pane 丟一句進去 |
 | `herdr agent wait <SLUG> --until idle --until blocked` | 擋著等它需要人 |
@@ -367,7 +465,8 @@ claude agents --json      # interactive 和 background 都列，含 pid 和 sess
 | `herdr agent read <SLUG>` | 讀它的終端輸出 |
 | `herdr agent list` | 列所有 agent 和狀態 |
 | `herdr notification show` | 發通知給你 |
-| `herdr worktree remove --workspace <ID>` | 收掉（整合測試過了才收） |
+| `herdr workspace close <WORKSPACE_ID>` | 收掉第一波（**位置參數**，不是 `--workspace`） |
+| `herdr worktree remove --workspace <ID>` | 收掉第二波（整合測試過了才收） |
 
 `--kind` 支援的值有 `claude`、`codex`、`gemini`、`cursor` 等 20 幾種。
 
@@ -382,6 +481,27 @@ claude agents --json      # interactive 和 background 都列，含 pid 和 sess
   issue 標題前綴（`[modules/inventory]`、`[inventory/docs]`）已經在做這件事，
   再開一份對照表就是第二套會過期的東西。
 - **不用建 `backlog/` 目錄。** issue 就是 backlog。
+
+### 需要準備的：指紋
+
+**這是 issue 由 agent 自己開（②）的前置條件，不是加分項。** 沒有它一定會重複開單。
+
+issue body 埋一行：
+
+```markdown
+<!-- slack-list-item: Rec0B… -->
+```
+
+開單前先比對：
+
+```bash
+gh issue list --search "Rec0B…" --state all
+```
+
+⚠️ **不要靠 GitHub 原生的重複偵測。** 它會在填表時列出最多 3 筆相似 issue，
+但官方說明只講網頁表單，**沒有講 `gh issue create` 走不走得到**。當它不存在。
+
+指紋從 `Rec…` 開頭那串來，`work-helper` 的 `bin/slack-list mine` 每列開頭就印著。
 
 ### issue 的格式在哪
 
@@ -436,7 +556,8 @@ claude agents --json      # interactive 和 background 都列，含 pid 和 sess
 - **`bin/fleet` script 還沒寫。** 上面的指令都手動驗證過，但還沒串成腳本。
   第一件該包進去的是 bootstrap 那兩行，不是 spawn —— spawn 你手打很快，
   環境沒起來才是每次都卡住的地方。
-- **判準還沒定。** 什麼樣的簡報算「可以直接做」，這是整套好不好用的關鍵。
+- ~~**判準還沒定。**~~ 2026-08-15 定了：四個性質當骨架、「答案在哪」當一句話版本，
+  簡報的 ✅ / ⚠️ 用同一把尺。**還沒實跑驗證過**，跑個兩三件再回來修。
 - **調度層還沒有。** 現在是手動開 session。
 - **策略層（日記 agent）先不做。** 那層管的是「你有沒有在做對的事」，不是「事情做完沒」，
   等中層跑順了再說。
