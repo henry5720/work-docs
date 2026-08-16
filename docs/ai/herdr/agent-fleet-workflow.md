@@ -556,7 +556,23 @@ herdr agent list          # agent_status: idle / working / blocked，有 name �
 claude agents --json      # interactive 和 background 都列，含 pid 和 sessionId
 ```
 
-### herdr 指令速查
+### herdr 指令速查（給人看的，不是權威）
+
+⚠️ **語法的權威是 `herdr --help` 和 `herdr --skill`。** 下面這張表是手打時的快速參考，
+會過期 —— 已經過期過一次（`workspace close` 是位置參數，`worktree remove` 是 `--workspace`，
+兩支寫法不一樣）。跟實際不符時以 CLI 為準，回來修這張表。
+
+**agent 不看這張表。** 它讀 `~/.agents/skills/herdr/SKILL.md`，那是官方版、跟 binary 同版：
+
+```bash
+mkdir -p ~/.agents/skills/herdr && herdr --skill > ~/.agents/skills/herdr/SKILL.md
+ln -sfn ../../.agents/skills/herdr ~/.claude/skills/herdr
+```
+
+⚠️ **`herdr update` 之後要重跑第一行**，否則 skill 會停在舊版的指令語法。
+用 `herdr --skill` 而不是 `npx skills add herdrdev/herdr@herdr`，因為前者印的是你這顆
+binary 的版本，後者是發布當下那版。
+
 
 | 指令 | 用途 |
 | --- | --- |
