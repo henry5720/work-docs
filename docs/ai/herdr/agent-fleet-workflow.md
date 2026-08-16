@@ -247,7 +247,7 @@ PM 需求
 不是給它更多 context，是換掉它要交什麼。
 
 ````markdown
-<!-- slack-list-item: Rec0B… -->
+> Slack 來源：[Rec0B…](https://shuchenai-rdpm.slack.com/lists/T0B54FC26FR/<LIST_ID>?record_id=Rec0B…)
 
 ### 現況（我查到的）
 - 欄位定義在 frontend/src/.../ReturnTable.tsx:88
@@ -611,22 +611,44 @@ binary 的版本，後者是發布當下那版。
 
 **這是 issue 由 agent 自己開（②）的前置條件，不是加分項。** 沒有它一定會重複開單。
 
-issue body 埋一行：
-
-```markdown
-<!-- slack-list-item: Rec0B… -->
-```
-
-開單前先比對：
+開單前先比對，命中就不要開：
 
 ```bash
 gh issue list --search "Rec0B…" --state all
 ```
 
+沒命中才開，issue body **第一行**放一句看得見的來源，然後才是簡報：
+
+```markdown
+> Slack 來源：[Rec0B…](https://shuchenai-rdpm.slack.com/lists/T0B54FC26FR/<LIST_ID>?record_id=Rec0B…)
+```
+
+⚠️ **指紋要看得見，不要藏在 `<!-- -->` 裡。** GitHub 搜尋會不會索引 HTML 註解沒有定論，
+而整套去重就靠這個查詢，賭不起。可見那行還順便讓人點得回 Slack 那列。
+
 ⚠️ **不要靠 GitHub 原生的重複偵測。** 它會在填表時列出最多 3 筆相似 issue，
 但官方說明只講網頁表單，**沒有講 `gh issue create` 走不走得到**。當它不存在。
 
 指紋從 `Rec…` 開頭那串來，`work-helper` 的 `bin/slack-list mine` 每列開頭就印著。
+
+### 快取：`state/threads.json`
+
+開完 issue 順手記一筆，之後不用每次都去搜：
+
+```bash
+bin/slack-list link Rec0B… 1801        # 拆單才會有多個編號
+bin/slack-list link Rec0B…             # 不帶編號＝印出已知的
+```
+
+**這是快取不是正本。** 正本是 issue body 那行，忘了 `link` 也不會壞 ——
+回去搜就有，查到再補記。快取可以錯，正本不能錯。
+
+檔案裡也存 `title`（Slack 那列的名稱），純粹是讓你打開檔案看得懂哪筆是哪筆。
+**不存 `敘述` 和 issue title** —— 那兩個人會當內容讀，存了就是養一份會騙人的副本。
+
+⚠️ **一列預設一張 issue。** 拆單是例外（顆粒度還沒定案）。真的拆了，
+除了 `link` 多個編號，還要在討論串貼一則「拆成 #A #B #C」；
+而且該列要 `ready` 之前，那幾張**全部**都得關掉。
 
 ### issue 的格式在哪
 
