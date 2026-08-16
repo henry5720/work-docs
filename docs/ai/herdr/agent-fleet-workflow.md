@@ -483,7 +483,7 @@ herdr agent attach <slug>             # 切過去自己打（要來回討論才�
 cwd 指到整合分支那份 checkout：
 
 ```bash
-SLUG=brief-T07          # 還沒有 issue 編號，用 Slack「名稱」欄的代號
+SLUG=brief-t07          # 還沒有 issue 編號，用 Slack「名稱」欄的代號（小寫）
 
 PANE=$(herdr workspace create \
   --cwd ~/code/teamsync-frontend \
@@ -501,6 +501,10 @@ herdr agent prompt "$SLUG" "<一句話：要查什麼 + repo 外的來源路徑>
 
 ⚠️ **name 一樣不能省。** 第一波沒有 issue 編號，所以用不了 `fix/1769-…` 那套 slug；
 用 `brief-<PM 代號>`，開完 issue 進第二波才換成正式 slug。
+
+⚠️ **name 必須符合 `[a-z][a-z0-9_-]{0,31}` —— 不接受大寫。** Slack 表的代號是 `T07`、`V01`
+這種大寫，**要轉小寫**（`brief-t07`）。而且 name 在 agent 退出、被釋放或被取代時會清掉，
+不是永久的。（規則出處：`herdr --skill`）
 
 ### 開一個第二波 agent（開 worktree）
 
